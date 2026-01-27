@@ -1,7 +1,7 @@
 # Elasticsearch Seed Data Loader
 # Lightweight container to seed Elasticsearch with sample data
 
-FROM alpine:3.19
+FROM alpine:3.23
 
 # Install required tools
 RUN apk add --no-cache \
