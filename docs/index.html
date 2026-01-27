@@ -10,8 +10,28 @@
     <meta property="og:description"
         content="A feature-rich, open-source web application for managing and exploring Elasticsearch clusters">
     <meta property="og:type" content="website">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <title>ElasticScope - Modern Elasticsearch Management</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --text-main: #1e293b;
+            --text-secondary: #64748b;
+            --bg-body: #f8fafc;
+            --bg-white: #ffffff;
+            --border-light: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -19,477 +39,919 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
             line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-font-smoothing: antialiased;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 0 24px;
         }
 
-        /* Header */
-        header {
-            padding: 60px 0;
-            text-align: center;
-            color: white;
+        /* Navbar */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-light);
         }
 
-        header h1 {
-            font-size: 3.5rem;
-            margin-bottom: 20px;
+        .nav-content {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
             font-weight: 700;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            font-size: 1.25rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        header p {
-            font-size: 1.3rem;
-            margin-bottom: 30px;
-            opacity: 0.95;
+        .logo img {
+            height: 28px;
+            width: 28px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        /* Hero */
+        header {
+            padding: 100px 0 80px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        .hero-text {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 40px;
         }
 
         .badges {
             display: flex;
             justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 30px;
+            gap: 8px;
+            margin-bottom: 40px;
+            opacity: 0.9;
         }
 
-        .badges img {
-            height: 20px;
-        }
-
-        .cta-buttons {
+        .cta-group {
             display: flex;
-            gap: 15px;
             justify-content: center;
+            gap: 16px;
             flex-wrap: wrap;
-            margin-top: 30px;
         }
 
         .btn {
-            padding: 12px 30px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            padding: 12px 24px;
+            border-radius: 9999px;
+            /* Pill shape */
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-size: 1rem;
         }
 
         .btn-primary {
-            background: white;
-            color: #667eea;
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.3);
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 8px -1px rgba(99, 102, 241, 0.4);
         }
 
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 2px solid white;
+            background-color: white;
+            color: var(--text-main);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-sm);
         }
 
         .btn-secondary:hover {
-            background: white;
-            color: #667eea;
+            background-color: #f1f5f9;
+            border-color: #cbd5e1;
         }
 
-        /* Main Content */
-        main {
-            background: white;
-            border-radius: 20px 20px 0 0;
-            margin-top: 40px;
-        }
-
+        /* Sections */
         section {
             padding: 80px 0;
         }
 
         section h2 {
-            font-size: 2.5rem;
+            font-size: 2rem;
+            font-weight: 700;
             text-align: center;
-            margin-bottom: 50px;
-            color: #2d3748;
+            margin-bottom: 60px;
+            letter-spacing: -0.01em;
+            color: var(--text-main);
         }
 
         /* Features */
         .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
+            gap: 24px;
         }
 
         .feature-card {
-            padding: 30px;
-            border-radius: 12px;
-            background: #f7fafc;
-            border: 2px solid #e2e8f0;
-            transition: all 0.3s ease;
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            border: 1px solid var(--border-light);
+            transition: all 0.2s ease;
         }
 
         .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            border-color: #667eea;
+            border-color: var(--primary);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            display: inline-block;
+            background: #eff6ff;
+            padding: 12px;
+            border-radius: 12px;
+            color: var(--primary);
         }
 
         .feature-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 15px;
-            color: #667eea;
+            font-size: 1.25rem;
+            margin-bottom: 12px;
+            color: var(--text-main);
         }
 
         .feature-card p {
-            color: #4a5568;
-            line-height: 1.8;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Installation Tabs */
+        .tabs {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid var(--border-light);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .tab-header {
+            display: flex;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: white;
+        }
+
+        .tab-content {
+            padding: 32px;
+            display: none;
+            position: relative;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content h3 {
+            font-size: 1.25rem;
+            margin-bottom: 16px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: flex-start;
+            /* Override section h2 align */
+            text-align: left;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #d4d4d4;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Tech Stack */
         .tech-stack {
-            background: #f7fafc;
+            background: white;
+            border-top: 1px solid var(--border-light);
+            border-bottom: 1px solid var(--border-light);
         }
 
         .tech-grid {
             display: flex;
             justify-content: center;
-            gap: 40px;
+            align-items: center;
+            gap: 16px;
             flex-wrap: wrap;
-        }
-
-        .tech-item {
-            text-align: center;
-        }
-
-        .tech-item img {
-            height: 60px;
-            margin-bottom: 10px;
         }
 
         .tech-badge {
-            display: inline-block;
             padding: 8px 16px;
-            background: white;
-            border-radius: 20px;
-            font-weight: 600;
-            color: #2d3748;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Installation */
-        .installation {
-            background: #2d3748;
-            color: white;
-        }
-
-        .installation h2 {
-            color: white;
-        }
-
-        .install-methods {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
-
-        .install-card {
-            background: #4a5568;
-            padding: 30px;
-            border-radius: 12px;
-        }
-
-        .install-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-            color: #90cdf4;
-        }
-
-        .code-block {
-            background: #1a202c;
-            padding: 20px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin-top: 15px;
-        }
-
-        .code-block code {
-            color: #68d391;
-            font-family: 'Courier New', monospace;
+            background: #f8fafc;
+            border: 1px solid var(--border-light);
+            border-radius: 999px;
             font-size: 0.9rem;
-        }
-
-        /* Contributing */
-        .contributing {
-            text-align: center;
-        }
-
-        .contrib-icons {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin: 40px 0;
-            flex-wrap: wrap;
-        }
-
-        .contrib-icon {
-            text-align: center;
-        }
-
-        .icon-circle {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
+            font-weight: 500;
+            color: var(--text-secondary);
             display: flex;
             align-items: center;
-            justify-content: center;
-            margin: 0 auto 15px;
-            font-size: 2rem;
-            color: white;
+            gap: 8px;
+        }
+
+        /* Installation Code Block */
+        .code-preview {
+            background: #1e1e1e;
+            padding: 24px;
+            border-radius: 12px;
+            color: #d4d4d4;
+            font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            border: 1px solid #333;
+            margin-top: 24px;
+            position: relative;
+        }
+
+        .code-preview::before {
+            content: "Shell";
+            position: absolute;
+            top: 0;
+            right: 12px;
+            font-size: 0.7rem;
+            color: #666;
+            text-transform: uppercase;
+            padding: 4px;
+        }
+
+        .code-line {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .comment {
+            color: #6a9955;
+        }
+
+        .command {
+            color: #569cd6;
         }
 
         /* Footer */
         footer {
-            background: #1a202c;
-            color: white;
-            padding: 40px 0;
+            border-top: 1px solid var(--border-light);
+            padding: 60px 0;
+            background: white;
             text-align: center;
-        }
-
-        footer a {
-            color: #90cdf4;
-            text-decoration: none;
-        }
-
-        footer a:hover {
-            text-decoration: underline;
         }
 
         .footer-links {
             display: flex;
             justify-content: center;
-            gap: 30px;
-            margin: 20px 0;
-            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
         }
 
         @media (max-width: 768px) {
-            header h1 {
+            h1 {
                 font-size: 2.5rem;
             }
 
-            section h2 {
-                font-size: 2rem;
+            .tab-btn {
+                padding: 12px 8px;
+                font-size: 0.85rem;
             }
+        }
 
-            .features-grid {
-                grid-template-columns: 1fr;
+        /* Gallery Slider */
+        .gallery-container {
+            position: relative;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px 0;
+        }
+
+        .gallery-track {
+            display: flex;
+            gap: 24px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            padding: 10px 4px 30px 4px;
+            /* Space for shadows and click area */
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            /* Firefox */
+            cursor: grab;
+            /* Indicates draggable */
+        }
+
+        .gallery-track.active {
+            cursor: grabbing;
+            scroll-snap-type: none;
+            /* Disable snap while dragging for smoother feel */
+        }
+
+        .gallery-track::-webkit-scrollbar {
+            display: none;
+            /* Chrome/Safari */
+        }
+
+        .gallery-item {
+            flex: 0 0 80%;
+            /* Mobile: Show 80% to indicate scroll */
+            max-width: 600px;
+            scroll-snap-align: center;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-light);
+            transition: all 0.3s ease;
+            position: relative;
+            user-select: none;
+            /* Prevent image selection while dragging */
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .gallery-hint {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: -10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            opacity: 0.7;
+        }
+
+        /* Lightbox */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .lightbox.active {
+            display: flex;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        .lightbox-content {
+            max-width: 95%;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            transform: scale(0.95);
+            transition: transform 0.2s;
+            object-fit: contain;
+        }
+
+        .lightbox.active .lightbox-content {
+            transform: scale(1);
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 2.5rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 10px;
+            line-height: 0.5;
+            transition: transform 0.2s;
+            z-index: 1001;
+        }
+
+        .lightbox-close:hover {
+            transform: scale(1.1);
+        }
+
+        @media (min-width: 768px) {
+            .gallery-item {
+                flex: 0 0 45%;
+                /* Desktop: Show 2 items mostly */
             }
         }
     </style>
 </head>
 
 <body>
+    <nav>
+        <div class="container nav-content">
+            <div class="logo">
+                <img src="favicon.svg" alt="Logo">
+                ElasticScope
+            </div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#installation">Install</a>
+                <a href="https://github.com/fuykun/ElasticScope">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
     <header>
         <div class="container">
-            <h1>⚡ ElasticScope</h1>
-            <p>Modern, powerful web UI for Elasticsearch</p>
-
             <div class="badges">
-                <img src="https://img.shields.io/github/actions/workflow/status/fuykun/ElasticScope/ci.yml?branch=main&style=flat-square&logo=github"
-                    alt="CI Status">
-                <img src="https://img.shields.io/github/v/release/fuykun/ElasticScope?style=flat-square&logo=github"
+                <img src="https://img.shields.io/github/v/release/fuykun/ElasticScope?style=flat-square&color=6366f1&labelColor=e2e8f0"
                     alt="Release">
-                <img src="https://img.shields.io/github/license/fuykun/ElasticScope?style=flat-square" alt="License">
-                <img src="https://img.shields.io/github/stars/fuykun/ElasticScope?style=flat-square&logo=github"
-                    alt="Stars">
+                <img src="https://img.shields.io/github/stars/fuykun/ElasticScope?style=social" alt="Stars">
             </div>
 
-            <div class="cta-buttons">
-                <a href="https://github.com/fuykun/ElasticScope" class="btn btn-primary">
-                    📦 View on GitHub
+            <h1>ElasticScope</h1>
+            <p class="hero-text">
+                A powerful, beautiful, and open-source web interface for managing your Elasticsearch clusters with ease.
+            </p>
+
+            <div class="cta-group">
+                <a href="#installation" class="btn btn-primary">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    Get Started
                 </a>
-                <a href="https://github.com/fuykun/ElasticScope/releases" class="btn btn-secondary">
-                    ⬇️ Download
-                </a>
-                <a href="https://github.com/fuykun/ElasticScope#docker" class="btn btn-secondary">
-                    🐳 Docker Hub
+                <a href="#features" class="btn btn-secondary">
+                    Learn More
                 </a>
             </div>
         </div>
     </header>
 
     <main>
-        <!-- Features Section -->
+        <section class="tech-stack">
+            <!-- ... existing tech stack content ... -->
+            <div class="container">
+                <div class="tech-grid">
+                    <span class="tech-badge">⚛️ React 18</span>
+                    <span class="tech-badge">📘 TypeScript 5</span>
+                    <span class="tech-badge">⚡ Vite 7</span>
+                    <span class="tech-badge">🔍 Elasticsearch 8.x</span>
+                    <span class="tech-badge">🐳 Docker</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Gallery Section -->
+        <section id="gallery" style="background-color: white;">
+            <div class="container">
+                <h2>See it in Action</h2>
+                <div class="gallery-container">
+                    <div class="gallery-track" id="gallery-track">
+                        <div class="gallery-item" data-src="screenshots/dashboard.png">
+                            <img src="screenshots/dashboard.png" alt="Dashboard" loading="lazy" draggable="false">
+                        </div>
+                        <div class="gallery-item" data-src="screenshots/document-viewer.png">
+                            <img src="screenshots/document-viewer.png" alt="Document Viewer" loading="lazy"
+                                draggable="false">
+                        </div>
+                        <div class="gallery-item" data-src="screenshots/rest-console.png">
+                            <img src="screenshots/rest-console.png" alt="REST Console" loading="lazy" draggable="false">
+                        </div>
+                        <div class="gallery-item" data-src="screenshots/comparison.png">
+                            <img src="screenshots/comparison.png" alt="Cluster Comparison" loading="lazy"
+                                draggable="false">
+                        </div>
+                    </div>
+                    <div class="gallery-hint">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122">
+                            </path>
+                        </svg>
+                        Drag to scroll • Click to enlarge
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section id="features">
             <div class="container">
-                <h2>✨ Key Features</h2>
+                <h2>Why ElasticScope?</h2>
                 <div class="features-grid">
                     <div class="feature-card">
-                        <h3>🔌 API Proxy</h3>
-                        <p>Built-in Node.js proxy server eliminates CORS problems. Connect to any Elasticsearch cluster
-                            without browser restrictions.</p>
+                        <div class="feature-icon">🔌</div>
+                        <h3>Smart Proxy</h3>
+                        <p>Built-in Node.js proxy server eliminates CORS headaches, allowing you to connect to any
+                            cluster instantly.</p>
                     </div>
 
                     <div class="feature-card">
-                        <h3>🔄 Multi-Connection</h3>
-                        <p>Save and switch between multiple Elasticsearch connections with color-coded identification
-                            and basic authentication support.</p>
+                        <div class="feature-icon">📂</div>
+                        <h3>Multi-Connection</h3>
+                        <p>Manage multiple environments seamlessly. Switch between local, dev, and production clusters
+                            with one click.</p>
                     </div>
 
                     <div class="feature-card">
-                        <h3>📊 Index Management</h3>
-                        <p>Comprehensive index operations: create, delete, update mappings, view statistics, and manage
-                            index lifecycle.</p>
+                        <div class="feature-icon">📊</div>
+                        <h3>Visual Analytics</h3>
+                        <p>Understand your data at a glance with beautiful visualizations for index stats, storage, and
+                            cluster health.</p>
                     </div>
 
                     <div class="feature-card">
-                        <h3>📄 Document Viewer</h3>
-                        <p>Beautiful JSON viewer with syntax highlighting, copy documents, edit inline, and powerful
-                            search capabilities.</p>
+                        <div class="feature-icon">🔍</div>
+                        <h3>Powerful Search</h3>
+                        <p>Construct complex queries with our visual builder or write raw DSL. Includes syntax
+                            highlighting and history.</p>
                     </div>
 
                     <div class="feature-card">
-                        <h3>🔍 Advanced Search</h3>
-                        <p>Query DSL builder, full-text search, filters, sorting, and pagination with query history and
-                            saved searches.</p>
+                        <div class="feature-icon">📝</div>
+                        <h3>Document Editor</h3>
+                        <p>Create, read, update, and delete documents with a rich JSON editor. Full CRUD support out of
+                            the box.</p>
                     </div>
 
                     <div class="feature-card">
-                        <h3>🎨 Modern UI</h3>
-                        <p>Clean, intuitive interface with dark mode support, responsive design, and keyboard shortcuts
-                            for power users.</p>
-                    </div>
-
-                    <div class="feature-card">
-                        <h3>📈 Analytics</h3>
-                        <p>Index statistics, document count visualizations, storage size metrics, and cluster health
-                            monitoring.</p>
-                    </div>
-
-                    <div class="feature-card">
-                        <h3>🌐 i18n Support</h3>
-                        <p>Multi-language support (English, Turkish) with easy extensibility for adding new languages.
-                        </p>
-                    </div>
-
-                    <div class="feature-card">
-                        <h3>🐳 Docker Ready</h3>
-                        <p>One-command deployment with Docker and Docker Compose. Includes sample data for quick start.
+                        <div class="feature-icon">🐳</div>
+                        <h3>Docker Ready</h3>
+                        <p>Deploy in seconds. Our optimized Docker image gets you up and running with a single command.
                         </p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Tech Stack -->
-        <section class="tech-stack">
+        <section id="installation" style="background-color: white;">
             <div class="container">
-                <h2>🛠️ Built With Modern Technologies</h2>
-                <div class="tech-grid">
-                    <div class="tech-item">
-                        <span class="tech-badge">⚛️ React 18</span>
+                <h2>Choose Your Installation Method</h2>
+
+                <div class="tabs">
+                    <div class="tab-header">
+                        <button class="tab-btn active" onclick="openTab(event, 'npm')">📦 NPM / Source</button>
+                        <button class="tab-btn" onclick="openTab(event, 'docker-hub')">🐳 Docker Hub</button>
+                        <button class="tab-btn" onclick="openTab(event, 'docker-build')">🏗️ Docker Build</button>
                     </div>
-                    <div class="tech-item">
-                        <span class="tech-badge">📘 TypeScript 5</span>
+
+                    <!-- NPM Tab -->
+                    <div id="npm" class="tab-content active">
+                        <h3>Run from Source</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                            Best for development and modification. Requires Node.js.
+                        </p>
+                        <div class="code-preview">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <span class="code-line"><span class="comment"># Clone repository</span></span>
+                            <span class="code-line"><span class="command">git</span> clone
+                                https://github.com/fuykun/ElasticScope.git</span>
+                            <span class="code-line"><span class="command">cd</span> ElasticScope</span>
+                            <span class="code-line"></span>
+                            <span class="code-line"><span class="comment"># Install dependencies</span></span>
+                            <span class="code-line"><span class="command">npm</span> install</span>
+                            <span class="code-line"></span>
+                            <span class="code-line"><span class="comment"># Start frontend and backend
+                                    concurrently</span></span>
+                            <span class="code-line"><span class="command">npm</span> run dev:all</span>
+                        </div>
                     </div>
-                    <div class="tech-item">
-                        <span class="tech-badge">⚡ Vite 7</span>
+
+                    <!-- Docker Hub Tab -->
+                    <div id="docker-hub" class="tab-content">
+                        <h3>Pull from Docker Hub</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                            Quickest way to get started without installing Node.js.
+                        </p>
+                        <div class="code-preview">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <span class="code-line"><span class="comment"># Run latest image</span></span>
+                            <span class="code-line"><span class="command">docker</span> run -d -p 3000:3000 -p 5000:5000
+                                \</span>
+                            <span class="code-line"> ghcr.io/fuykun/elasticscope:latest</span>
+                        </div>
                     </div>
-                    <div class="tech-item">
-                        <span class="tech-badge">🔍 Elasticsearch 8.x</span>
-                    </div>
-                    <div class="tech-item">
-                        <span class="tech-badge">🟢 Node.js + Express</span>
-                    </div>
-                    <div class="tech-item">
-                        <span class="tech-badge">🐳 Docker</span>
+
+                    <!-- Docker Build Tab -->
+                    <div id="docker-build" class="tab-content">
+                        <h3>Build Locally</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                            Build the container image on your own machine.
+                        </p>
+                        <div class="code-preview">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <span class="code-line"><span class="comment"># Clone & Enter</span></span>
+                            <span class="code-line"><span class="command">git</span> clone
+                                https://github.com/fuykun/ElasticScope.git</span>
+                            <span class="code-line"><span class="command">cd</span> ElasticScope</span>
+                            <span class="code-line"></span>
+                            <span class="code-line"><span class="comment"># Build Image</span></span>
+                            <span class="code-line"><span class="command">docker</span> build -t elasticscope .</span>
+                            <span class="code-line"></span>
+                            <span class="code-line"><span class="comment"># Run Container</span></span>
+                            <span class="code-line"><span class="command">docker</span> run -d -p 3000:3000 -p 5000:5000
+                                elasticscope</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Installation -->
-        <section class="installation">
-            <div class="container">
-                <h2>🚀 Quick Start</h2>
-                <div class="install-methods">
-                    <div class="install-card">
-                        <h3>🐳 Docker (Recommended)</h3>
-                        <p>Get started in seconds with Docker:</p>
-                        <div class="code-block">
-                            <code>docker run -d -p 3000:3000 -p 5000:5000 \<br>
-  ghcr.io/fuykun/elasticscope:latest</code>
-                        </div>
-                        <p style="margin-top: 15px;">Then open <strong>http://localhost:3000</strong></p>
-                    </div>
+        <!-- Lightbox Modal -->
+        <div id="lightbox" class="lightbox" onclick="closeLightbox(event)">
+            <button class="lightbox-close">&times;</button>
+            <img id="lightbox-img" class="lightbox-content" src="" alt="Enlarged screenshot">
+        </div>
 
-                    <div class="install-card">
-                        <h3>📦 From Source</h3>
-                        <p>Clone and run locally:</p>
-                        <div class="code-block">
-                            <code>git clone https://github.com/fuykun/ElasticScope.git<br>
-cd ElasticScope<br>
-npm install<br>
-npm run dev</code>
-                        </div>
-                    </div>
+        <script>
+            // Tabs Logic
+            function openTab(evt, tabName) {
+                // Hide all tab contents
+                var i, tabcontent, tablinks;
+                tabcontent = document.getElementsByClassName("tab-content");
+                for (i = 0; i < tabcontent.length; i++) {
+                    tabcontent[i].classList.remove("active");
+                }
 
-                    <div class="install-card">
-                        <h3>🎯 Docker Compose</h3>
-                        <p>With Elasticsearch included:</p>
-                        <div class="code-block">
-                            <code>curl -O https://raw.githubusercontent.com/fuykun/ElasticScope/main/docker-compose.yml<br>
-docker-compose up -d</code>
-                        </div>
-                        <p style="margin-top: 15px;">Includes Elasticsearch 8.11 + Sample data</p>
-                    </div>
-                </div>
-            </div>
-        </section>
+                // Remove active class from all buttons
+                tablinks = document.getElementsByClassName("tab-btn");
+                for (i = 0; i < tablinks.length; i++) {
+                    tablinks[i].classList.remove("active");
+                }
 
-        <!-- Contributing -->
+                // Show current tab and add active class to button
+                document.getElementById(tabName).classList.add("active");
+                evt.currentTarget.classList.add("active");
+            }
+
+            function copyCode(btn) {
+                const codeBlock = btn.parentElement;
+                const lines = codeBlock.querySelectorAll('.code-line');
+                let text = '';
+                lines.forEach(line => {
+                    text += line.textContent + '\n';
+                });
+
+                navigator.clipboard.writeText(text).then(() => {
+                    const originalText = btn.textContent;
+                    btn.textContent = 'Copied!';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                    }, 2000);
+                });
+            }
+
+            // Lightbox Logic
+            function openLightbox(imageSrc) {
+                const lightbox = document.getElementById('lightbox');
+                const img = document.getElementById('lightbox-img');
+                img.src = imageSrc;
+                lightbox.classList.add('active');
+                document.body.style.overflow = 'hidden'; // Prevent scrolling background
+            }
+
+            function closeLightbox(event) {
+                // Close if clicked on background or close button
+                if (event.target.id === 'lightbox' || event.target.classList.contains('lightbox-close')) {
+                    const lightbox = document.getElementById('lightbox');
+                    lightbox.classList.remove('active');
+                    document.body.style.overflow = ''; // Restore scrolling
+                }
+            }
+
+            // Close on Escape key
+            document.addEventListener('keydown', function (event) {
+                if (event.key === "Escape") {
+                    const lightbox = document.getElementById('lightbox');
+                    if (lightbox && lightbox.classList.contains('active')) {
+                        lightbox.classList.remove('active');
+                        document.body.style.overflow = '';
+                    }
+                }
+            });
+            // Drag to Scroll & Click Handling
+            const slider = document.getElementById('gallery-track');
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+            let isDragging = false;
+            let startTimestamp = 0;
+
+            slider.addEventListener('mousedown', (e) => {
+                isDown = true;
+                isDragging = false;
+                startTimestamp = Date.now();
+                slider.classList.add('active');
+                startX = e.pageX - slider.offsetLeft;
+                scrollLeft = slider.scrollLeft;
+            });
+
+            slider.addEventListener('mouseleave', () => {
+                isDown = false;
+                isDragging = false;
+                slider.classList.remove('active');
+            });
+
+            slider.addEventListener('mouseup', (e) => {
+                isDown = false;
+                slider.classList.remove('active');
+
+                // Check if it was a click (short duration, little movement)
+                const endTimestamp = Date.now();
+                const duration = endTimestamp - startTimestamp;
+
+                if (!isDragging && duration < 200) {
+                    // It's a click! Check if we clicked on an item
+                    const item = e.target.closest('.gallery-item');
+                    if (item && item.dataset.src) {
+                        openLightbox(item.dataset.src);
+                    }
+                }
+                isDragging = false;
+            });
+
+            slider.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                const x = e.pageX - slider.offsetLeft;
+                const walk = (x - startX) * 2; // Scroll speed
+                if (Math.abs(walk) > 5) { // Threshold to consider it a drag
+                    isDragging = true;
+                    e.preventDefault();
+                    slider.scrollLeft = scrollLeft - walk;
+                }
+            });
+
+            // Touch support for swiping (native overflow handles it mostly, 
+            // but we need click detection for lightbox)
+            // We can rely on onclick for touch if we didn't drag much, 
+            // but simple click listener is safer on the items themselves if we separate logic.
+            // However, mixing mouse drag and touch scroll needs care.
+            // For simplicity, let's add a click listener to items that checks a flag managed by touchmove.
+
+            // Actually, for mobile, native scroll is best. 
+            // We just need to make sure 'tap' opens modal.
+            // The above mouseup logic works for mouse. 
+            // For touch, let's use a simple click handler that respects the "scrolling" state.
+
+            let isScrolling = false;
+
+            slider.addEventListener('touchstart', () => {
+                isScrolling = false;
+            });
+
+            slider.addEventListener('touchmove', () => {
+                isScrolling = true;
+            });
+
+            slider.addEventListener('touchend', (e) => {
+                if (!isScrolling) {
+                    const item = e.target.closest('.gallery-item');
+                    if (item && item.dataset.src) {
+                        openLightbox(item.dataset.src);
+                    }
+                }
+            });
+        </script>
+
         <section class="contributing">
-            <div class="container">
-                <h2>🤝 Contributing</h2>
-                <p style="font-size: 1.2rem; margin-bottom: 30px;">We welcome contributions from the community!</p>
-
-                <div class="contrib-icons">
-                    <div class="contrib-icon">
-                        <div class="icon-circle">🐛</div>
-                        <strong>Report Bugs</strong>
-                    </div>
-                    <div class="contrib-icon">
-                        <div class="icon-circle">💡</div>
-                        <strong>Suggest Features</strong>
-                    </div>
-                    <div class="contrib-icon">
-                        <div class="icon-circle">📖</div>
-                        <strong>Improve Docs</strong>
-                    </div>
-                    <div class="contrib-icon">
-                        <div class="icon-circle">🔧</div>
-                        <strong>Submit PRs</strong>
-                    </div>
-                </div>
-
-                <div class="cta-buttons">
-                    <a href="https://github.com/fuykun/ElasticScope/blob/main/CONTRIBUTING.md" class="btn btn-primary">
-                        📋 Contributing Guide
+            <div class="container" style="text-align: center;">
+                <h2>Open Source & Community Driven</h2>
+                <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto 32px;">
+                    We believe in the power of open source. Join us in building the best Elasticsearch management tool.
+                </p>
+                <div class="cta-group">
+                    <a href="https://github.com/fuykun/ElasticScope" class="btn btn-secondary">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                        </svg>
+                        Star on GitHub
                     </a>
-                    <a href="https://github.com/fuykun/ElasticScope/issues" class="btn btn-secondary"
-                        style="color: #667eea; background: white; border-color: #667eea;">
-                        🎯 View Issues
+                    <a href="https://github.com/fuykun/ElasticScope/issues" class="btn btn-secondary">
+                        Report an Issue
                     </a>
                 </div>
             </div>
@@ -503,10 +965,10 @@ docker-compose up -d</code>
                 <a href="https://github.com/fuykun/ElasticScope/blob/main/README.md">Documentation</a>
                 <a href="https://github.com/fuykun/ElasticScope/releases">Releases</a>
                 <a href="https://github.com/fuykun/ElasticScope/blob/main/LICENSE">License</a>
-                <a href="https://github.com/fuykun/ElasticScope/blob/main/CONTRIBUTING.md">Contributing</a>
             </div>
-            <p style="margin-top: 20px;">Made with ❤️ for the Elasticsearch community</p>
-            <p style="margin-top: 10px;">Licensed under MIT • © 2026 ElasticScope</p>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                © 2026 ElasticScope. Licensed under MIT.
+            </p>
         </div>
     </footer>
 </body>
