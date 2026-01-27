@@ -5,9 +5,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/fuykun/ElasticScope/stargazers"><img src="https://img.shields.io/github/stars/fuykun/ElasticScope?style=social" alt="GitHub stars" /></a>
-  <a href="https://github.com/fuykun/ElasticScope/fork"><img src="https://img.shields.io/github/forks/fuykun/ElasticScope?style=social" alt="GitHub forks" /></a>
-  <a href="https://hub.docker.com/r/fuykun/elasticscope"><img src="https://img.shields.io/docker/pulls/fuykun/elasticscope?style=social&logo=docker" alt="Docker Pulls" /></a>
+  <a href="https://github.com/fuykun/ElasticScope/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/fuykun/ElasticScope/ci.yml?branch=main&style=flat-square&logo=github" alt="CI Status" /></a>
+  <a href="https://github.com/fuykun/ElasticScope/releases"><img src="https://img.shields.io/github/v/release/fuykun/ElasticScope?style=flat-square&logo=github" alt="Release" /></a>
+  <a href="https://github.com/fuykun/ElasticScope/blob/main/LICENSE"><img src="https://img.shields.io/github/license/fuykun/ElasticScope?style=flat-square" alt="License" /></a>
+  <a href="https://github.com/fuykun/ElasticScope/stargazers"><img src="https://img.shields.io/github/stars/fuykun/ElasticScope?style=flat-square&logo=github" alt="GitHub stars" /></a>
+  <a href="https://ghcr.io/fuykun/elasticscope"><img src="https://img.shields.io/badge/docker-ghcr.io-2496ED?style=flat-square&logo=docker" alt="Docker" /></a>
 </p>
 
 <p align="center">
@@ -307,20 +309,35 @@ elasticscope/
 
 ## Contributing
 
-Contributions are welcome! Please read our contributing guidelines for details.
+🎉 We welcome contributions from the community! Whether you're fixing bugs, adding features, or improving documentation, your help is appreciated.
+
+### Ways to Contribute
+
+- 🐛 **Report Bugs**: Found a bug? [Open an issue](https://github.com/fuykun/ElasticScope/issues/new?template=bug_report.md)
+- 💡 **Suggest Features**: Have an idea? [Create a feature request](https://github.com/fuykun/ElasticScope/issues/new?template=feature_request.md)
+- 📖 **Improve Documentation**: Help others by improving our docs
+- 🔧 **Submit Pull Requests**: Fix bugs or add features
+- ⭐ **Star the Project**: Show your support!
+
+### Getting Started
+
+Please read our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
 
 ### Development Setup
 
 ```bash
 # Fork and clone the repo
-git clone https://github.com/fuykun/ElasticScope.git
+git clone https://github.com/YOUR_USERNAME/ElasticScope.git
+cd ElasticScope
 
 # Install dependencies
-cd elasticscope
 npm install
 
 # Start development server
-npm run dev:all
+npm run dev
+
+# In another terminal, start the backend
+npm run server
 
 # Run type checking
 npm run typecheck
@@ -329,12 +346,31 @@ npm run typecheck
 npm run build
 ```
 
+### Good First Issues
+
+New to the project? Look for issues labeled [`good first issue`](https://github.com/fuykun/ElasticScope/labels/good%20first%20issue).
+
 ### Code Style
 
 - Use TypeScript strict mode
 - Follow the existing code patterns
 - Use Lucide icons (no emojis in UI)
 - Keep components small and focused
+- Write meaningful commit messages
+- Add tests when applicable
+
+## Community & Support
+
+### Need Help?
+
+- 📖 **Documentation**: Check our [README](README.md) and [Docker Guide](DOCKER_README.md)
+- 💬 **Questions**: Open a [question issue](https://github.com/fuykun/ElasticScope/issues/new?template=question.md)
+- 🐛 **Bug Reports**: [Report bugs](https://github.com/fuykun/ElasticScope/issues/new?template=bug_report.md)
+- 💡 **Feature Requests**: [Suggest features](https://github.com/fuykun/ElasticScope/issues/new?template=feature_request.md)
+
+### Security
+
+Found a security vulnerability? Please review our [Security Policy](SECURITY.md) for responsible disclosure.
 
 ## License
 
