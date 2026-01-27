@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ElasticScope - Modern Elasticsearch management tool with intuitive UI">
+    <meta name="keywords" content="Elasticsearch, GUI, Management Tool, Data Visualization, TypeScript, React">
+    <meta property="og:title" content="ElasticScope - Modern Elasticsearch Management">
+    <meta property="og:description"
+        content="A feature-rich, open-source web application for managing and exploring Elasticsearch clusters">
+    <meta property="og:type" content="website">
+    <title>ElasticScope - Modern Elasticsearch Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            padding: 60px 0;
+            text-align: center;
+            color: white;
+        }
+
+        header h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        header p {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            opacity: 0.95;
+        }
+
+        .badges {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .badges img {
+            height: 20px;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        /* Main Content */
+        main {
+            background: white;
+            border-radius: 20px 20px 0 0;
+            margin-top: 40px;
+        }
+
+        section {
+            padding: 80px 0;
+        }
+
+        section h2 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #2d3748;
+        }
+
+        /* Features */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-card {
+            padding: 30px;
+            border-radius: 12px;
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .feature-card p {
+            color: #4a5568;
+            line-height: 1.8;
+        }
+
+        /* Tech Stack */
+        .tech-stack {
+            background: #f7fafc;
+        }
+
+        .tech-grid {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .tech-item {
+            text-align: center;
+        }
+
+        .tech-item img {
+            height: 60px;
+            margin-bottom: 10px;
+        }
+
+        .tech-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: white;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #2d3748;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Installation */
+        .installation {
+            background: #2d3748;
+            color: white;
+        }
+
+        .installation h2 {
+            color: white;
+        }
+
+        .install-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .install-card {
+            background: #4a5568;
+            padding: 30px;
+            border-radius: 12px;
+        }
+
+        .install-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #90cdf4;
+        }
+
+        .code-block {
+            background: #1a202c;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        .code-block code {
+            color: #68d391;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        /* Contributing */
+        .contributing {
+            text-align: center;
+        }
+
+        .contrib-icons {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+
+        .contrib-icon {
+            text-align: center;
+        }
+
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 2rem;
+            color: white;
+        }
+
+        /* Footer */
+        footer {
+            background: #1a202c;
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+
+        footer a {
+            color: #90cdf4;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2.5rem;
+            }
+
+            section h2 {
+                font-size: 2rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <h1>⚡ ElasticScope</h1>
+            <p>Modern, powerful web UI for Elasticsearch</p>
+
+            <div class="badges">
+                <img src="https://img.shields.io/github/actions/workflow/status/fuykun/ElasticScope/ci.yml?branch=main&style=flat-square&logo=github"
+                    alt="CI Status">
+                <img src="https://img.shields.io/github/v/release/fuykun/ElasticScope?style=flat-square&logo=github"
+                    alt="Release">
+                <img src="https://img.shields.io/github/license/fuykun/ElasticScope?style=flat-square" alt="License">
+                <img src="https://img.shields.io/github/stars/fuykun/ElasticScope?style=flat-square&logo=github"
+                    alt="Stars">
+            </div>
+
+            <div class="cta-buttons">
+                <a href="https://github.com/fuykun/ElasticScope" class="btn btn-primary">
+                    📦 View on GitHub
+                </a>
+                <a href="https://github.com/fuykun/ElasticScope/releases" class="btn btn-secondary">
+                    ⬇️ Download
+                </a>
+                <a href="https://github.com/fuykun/ElasticScope#docker" class="btn btn-secondary">
+                    🐳 Docker Hub
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Features Section -->
+        <section id="features">
+            <div class="container">
+                <h2>✨ Key Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>🔌 API Proxy</h3>
+                        <p>Built-in Node.js proxy server eliminates CORS problems. Connect to any Elasticsearch cluster
+                            without browser restrictions.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>🔄 Multi-Connection</h3>
+                        <p>Save and switch between multiple Elasticsearch connections with color-coded identification
+                            and basic authentication support.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>📊 Index Management</h3>
+                        <p>Comprehensive index operations: create, delete, update mappings, view statistics, and manage
+                            index lifecycle.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>📄 Document Viewer</h3>
+                        <p>Beautiful JSON viewer with syntax highlighting, copy documents, edit inline, and powerful
+                            search capabilities.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>🔍 Advanced Search</h3>
+                        <p>Query DSL builder, full-text search, filters, sorting, and pagination with query history and
+                            saved searches.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>🎨 Modern UI</h3>
+                        <p>Clean, intuitive interface with dark mode support, responsive design, and keyboard shortcuts
+                            for power users.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>📈 Analytics</h3>
+                        <p>Index statistics, document count visualizations, storage size metrics, and cluster health
+                            monitoring.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>🌐 i18n Support</h3>
+                        <p>Multi-language support (English, Turkish) with easy extensibility for adding new languages.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>🐳 Docker Ready</h3>
+                        <p>One-command deployment with Docker and Docker Compose. Includes sample data for quick start.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tech Stack -->
+        <section class="tech-stack">
+            <div class="container">
+                <h2>🛠️ Built With Modern Technologies</h2>
+                <div class="tech-grid">
+                    <div class="tech-item">
+                        <span class="tech-badge">⚛️ React 18</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-badge">📘 TypeScript 5</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-badge">⚡ Vite 7</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-badge">🔍 Elasticsearch 8.x</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-badge">🟢 Node.js + Express</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-badge">🐳 Docker</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Installation -->
+        <section class="installation">
+            <div class="container">
+                <h2>🚀 Quick Start</h2>
+                <div class="install-methods">
+                    <div class="install-card">
+                        <h3>🐳 Docker (Recommended)</h3>
+                        <p>Get started in seconds with Docker:</p>
+                        <div class="code-block">
+                            <code>docker run -d -p 3000:3000 -p 5000:5000 \<br>
+  ghcr.io/fuykun/elasticscope:latest</code>
+                        </div>
+                        <p style="margin-top: 15px;">Then open <strong>http://localhost:3000</strong></p>
+                    </div>
+
+                    <div class="install-card">
+                        <h3>📦 From Source</h3>
+                        <p>Clone and run locally:</p>
+                        <div class="code-block">
+                            <code>git clone https://github.com/fuykun/ElasticScope.git<br>
+cd ElasticScope<br>
+npm install<br>
+npm run dev</code>
+                        </div>
+                    </div>
+
+                    <div class="install-card">
+                        <h3>🎯 Docker Compose</h3>
+                        <p>With Elasticsearch included:</p>
+                        <div class="code-block">
+                            <code>curl -O https://raw.githubusercontent.com/fuykun/ElasticScope/main/docker-compose.yml<br>
+docker-compose up -d</code>
+                        </div>
+                        <p style="margin-top: 15px;">Includes Elasticsearch 8.11 + Sample data</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contributing -->
+        <section class="contributing">
+            <div class="container">
+                <h2>🤝 Contributing</h2>
+                <p style="font-size: 1.2rem; margin-bottom: 30px;">We welcome contributions from the community!</p>
+
+                <div class="contrib-icons">
+                    <div class="contrib-icon">
+                        <div class="icon-circle">🐛</div>
+                        <strong>Report Bugs</strong>
+                    </div>
+                    <div class="contrib-icon">
+                        <div class="icon-circle">💡</div>
+                        <strong>Suggest Features</strong>
+                    </div>
+                    <div class="contrib-icon">
+                        <div class="icon-circle">📖</div>
+                        <strong>Improve Docs</strong>
+                    </div>
+                    <div class="contrib-icon">
+                        <div class="icon-circle">🔧</div>
+                        <strong>Submit PRs</strong>
+                    </div>
+                </div>
+
+                <div class="cta-buttons">
+                    <a href="https://github.com/fuykun/ElasticScope/blob/main/CONTRIBUTING.md" class="btn btn-primary">
+                        📋 Contributing Guide
+                    </a>
+                    <a href="https://github.com/fuykun/ElasticScope/issues" class="btn btn-secondary"
+                        style="color: #667eea; background: white; border-color: #667eea;">
+                        🎯 View Issues
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="https://github.com/fuykun/ElasticScope">GitHub</a>
+                <a href="https://github.com/fuykun/ElasticScope/blob/main/README.md">Documentation</a>
+                <a href="https://github.com/fuykun/ElasticScope/releases">Releases</a>
+                <a href="https://github.com/fuykun/ElasticScope/blob/main/LICENSE">License</a>
+                <a href="https://github.com/fuykun/ElasticScope/blob/main/CONTRIBUTING.md">Contributing</a>
+            </div>
+            <p style="margin-top: 20px;">Made with ❤️ for the Elasticsearch community</p>
+            <p style="margin-top: 10px;">Licensed under MIT • © 2026 ElasticScope</p>
+        </div>
+    </footer>
+</body>
+
+</html>
