@@ -16,7 +16,7 @@
         "release:major": "./scripts/release.sh major"
     },
     "dependencies": {
-        "@elastic/elasticsearch": "^8.11.0",
+        "@elastic/elasticsearch": "^9.2.0",
         "better-sqlite3": "^12.6.2",
         "cors": "^2.8.5",
         "express": "^5.2.1",
