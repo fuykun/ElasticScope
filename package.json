@@ -23,7 +23,7 @@
         "i18next": "^25.8.0",
         "i18next-browser-languagedetector": "^8.2.0",
         "lucide-react": "^0.563.0",
-        "react": "^18.3.1",
+        "react": "^19.2.4",
         "react-diff-viewer-continued": "^3.4.0",
         "react-dom": "^18.3.1",
         "react-i18next": "^16.5.3"
@@ -33,7 +33,7 @@
         "@types/cors": "^2.8.17",
         "@types/express": "^5.0.6",
         "@types/node": "^25.0.10",
-        "@types/react": "^18.3.27",
+        "@types/react": "^19.2.9",
         "@types/react-dom": "^18.3.7",
         "@vitejs/plugin-react": "^5.1.2",
         "concurrently": "^9.2.1",
