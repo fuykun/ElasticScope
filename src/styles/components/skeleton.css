@@ -1,0 +1,117 @@
+/* Skeleton Loader Styles */
+.skeleton-index-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+}
+
+.skeleton-index-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-health-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    flex-shrink: 0;
+}
+
+.skeleton-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.skeleton-line {
+    height: 10px;
+    background: var(--border);
+    border-radius: 4px;
+}
+
+.skeleton-title {
+    width: 70%;
+}
+
+.skeleton-subtitle {
+    width: 40%;
+}
+
+.skeleton-badge {
+    width: 32px;
+    height: 18px;
+    background: var(--border);
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+/* Document List Skeleton */
+.skeleton-document-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 12px;
+    padding: 12px;
+}
+
+.skeleton-doc-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-doc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.skeleton-doc-id {
+    width: 120px;
+    height: 12px;
+}
+
+.skeleton-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.skeleton-circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--border);
+}
+
+.skeleton-doc-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.skeleton-full {
+    width: 100%;
+}
+
+.skeleton-medium {
+    width: 60%;
+}
+
+@keyframes skeleton-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.4;
+    }
+}

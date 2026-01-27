@@ -1,0 +1,35 @@
+/* Main styles entry point */
+@import './base.css';
+@import './layout.css';
+@import './components/index-list.css';
+@import './components/index-page.css';
+@import './components/document-viewer.css';
+@import './components/json-viewer.css';
+@import './components/modal.css';
+@import './components/connection.css';
+@import './components/column-selector.css';
+@import './components/dashboard.css';
+@import './components/welcome.css';
+@import './components/skeleton.css';
+@import './components/comparison.css';
+@import './components/rest-modal.css';
+@import './components/copy-modal.css';
+
+/* ==================== SCROLLBAR ==================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
+}

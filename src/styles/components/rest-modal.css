@@ -1,0 +1,546 @@
+/* REST Modal Styles */
+.rest-modal {
+    position: relative;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 90vw;
+    max-width: 1200px;
+    height: 80vh;
+    max-height: 700px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Modal Resize Handle */
+.rest-modal-resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    cursor: nwse-resize;
+    z-index: 10;
+}
+
+.rest-modal-resize-handle::before {
+    content: '';
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--border);
+    border-bottom: 2px solid var(--border);
+    opacity: 0.5;
+    transition: opacity 0.15s ease, border-color 0.15s ease;
+}
+
+.rest-modal-resize-handle:hover::before {
+    opacity: 1;
+    border-color: var(--accent);
+}
+
+.rest-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.rest-modal-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.rest-modal-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.rest-method-select {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-primary);
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    min-width: 90px;
+}
+
+.rest-method-select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.rest-path-input {
+    flex: 1;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-primary);
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.rest-path-input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.rest-modal-content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.rest-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.rest-request-panel {
+    border-right: none;
+}
+
+/* Panel Resizer */
+.rest-panel-resizer {
+    width: 4px;
+    cursor: col-resize;
+    background: transparent;
+    flex-shrink: 0;
+    position: relative;
+    transition: background 0.15s ease;
+}
+
+.rest-panel-resizer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 100%;
+    background: var(--border);
+    transition: background 0.15s ease;
+}
+
+.rest-panel-resizer:hover {
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.rest-panel-resizer:hover::after {
+    background: var(--accent);
+}
+
+.rest-panel-resizer:active {
+    background: rgba(99, 102, 241, 0.2);
+}
+
+.rest-panel-resizer:active::after {
+    background: var(--accent);
+}
+
+.rest-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+.rest-editor {
+    flex: 1;
+    background: var(--bg-primary);
+    border: none;
+    color: var(--text-primary);
+    padding: 12px;
+    font-size: 13px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    line-height: 1.5;
+    resize: none;
+    overflow: auto;
+}
+
+.rest-editor:focus {
+    outline: none;
+}
+
+.rest-response-content {
+    flex: 1;
+    overflow: auto;
+    background: var(--bg-primary);
+}
+
+.rest-response-viewer {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.rest-response-viewer .json-viewer {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.rest-response-viewer .json-content {
+    flex: 1;
+    overflow: auto;
+}
+
+.rest-response-json {
+    margin: 0;
+    padding: 12px;
+    font-size: 13px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    line-height: 1.5;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.rest-response-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rest-status {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.rest-status.success {
+    background: rgba(34, 197, 94, 0.15);
+    color: var(--success);
+}
+
+.rest-status.error {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--danger);
+}
+
+.rest-time {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.rest-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    height: 100%;
+    color: var(--text-muted);
+}
+
+.rest-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    color: var(--danger);
+    font-size: 13px;
+}
+
+.rest-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+/* REST Buttons in toolbar */
+.rest-buttons {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 8px;
+    padding-left: 8px;
+    border-left: 1px solid var(--border);
+}
+
+.btn-rest {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: 4px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-rest:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--accent);
+}
+
+.btn-rest svg {
+    flex-shrink: 0;
+    min-width: 12px;
+    min-height: 12px;
+}
+
+/* REST Header Actions */
+.rest-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* REST Queries Dropdown */
+.rest-queries-dropdown {
+    position: relative;
+}
+
+.rest-queries-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    min-width: 280px;
+    max-height: 300px;
+    overflow-y: auto;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: var(--shadow-lg);
+    z-index: 100;
+}
+
+.rest-queries-loading,
+.rest-queries-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.rest-query-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    border-bottom: 1px solid var(--border);
+}
+
+.rest-query-item:last-child {
+    border-bottom: none;
+}
+
+.rest-query-item:hover {
+    background: var(--bg-hover);
+}
+
+.rest-query-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+}
+
+.rest-query-method {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.rest-query-method.method-get {
+    background: rgba(34, 197, 94, 0.15);
+    color: var(--success);
+}
+
+.rest-query-method.method-post {
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--accent);
+}
+
+.rest-query-method.method-put {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fbbf24;
+}
+
+.rest-query-method.method-delete {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--danger);
+}
+
+.rest-query-name {
+    font-size: 13px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rest-query-delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: var(--text-muted);
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+
+.rest-query-item:hover .rest-query-delete {
+    opacity: 1;
+}
+
+.rest-query-delete:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--danger);
+}
+
+/* Save Query Modal */
+.rest-save-modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    border-radius: 8px;
+}
+
+.rest-save-modal {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 400px;
+    max-width: 90%;
+}
+
+.rest-save-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.rest-save-modal-header h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.rest-save-modal-body {
+    padding: 16px;
+}
+
+.rest-save-modal-body label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.rest-save-modal-body label .required {
+    color: var(--danger);
+}
+
+.rest-save-modal-body input {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 13px;
+}
+
+.rest-save-modal-body input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.rest-save-error {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    color: var(--danger);
+    font-size: 12px;
+}
+
+.rest-save-preview {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+}
+
+.rest-save-path {
+    font-size: 12px;
+    font-family: 'Monaco', 'Menlo', monospace;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rest-save-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+}

@@ -1,0 +1,99 @@
+# Docker Compose for ElasticScope
+# Development and Production configurations
+
+services:
+  # ============================================
+  # ElasticScope Application
+  # ============================================
+  elasticscope:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: elasticscope
+    ports:
+      - "3001:3001"
+    volumes:
+      - elasticscope-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    restart: unless-stopped
+    networks:
+      - elasticscope-network
+
+  # ============================================
+  # ElasticScope Development Mode
+  # ============================================
+  elasticscope-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: elasticscope-dev
+    ports:
+      - "5173:5173"  # Vite dev server
+      - "3001:3001"  # Backend API
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - elasticscope-data:/app/data
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+    profiles:
+      - dev
+    networks:
+      - elasticscope-network
+
+  # ============================================
+  # Optional: Local Elasticsearch for testing
+  # ============================================
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticscope-es
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    profiles:
+      - with-es
+    networks:
+      - elasticscope-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q 'green\\|yellow'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ============================================
+  # Elasticsearch Seed Data Loader
+  # Loads sample data when Elasticsearch starts
+  # ============================================
+  elasticsearch-seed:
+    build:
+      context: .
+      dockerfile: Dockerfile.seed
+    container_name: elasticscope-es-seed
+    environment:
+      - ES_HOST=http://elasticsearch:9200
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    profiles:
+      - with-es
+    networks:
+      - elasticscope-network
+    restart: "no"
+
+volumes:
+  elasticscope-data:
+    driver: local
+  elasticsearch-data:
+    driver: local
+
+networks:
+  elasticscope-network:
+    driver: bridge

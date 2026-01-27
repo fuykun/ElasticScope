@@ -1,0 +1,20 @@
+# Elasticsearch Seed Data Loader
+# Lightweight container to seed Elasticsearch with sample data
+
+FROM alpine:3.19
+
+# Install required tools
+RUN apk add --no-cache \
+    bash \
+    curl \
+    jq
+
+# Copy seed script and data
+COPY scripts/seed-elasticsearch.sh /seed-elasticsearch.sh
+COPY data/seed-data.json /seed-data/seed-data.json
+
+# Make script executable
+RUN chmod +x /seed-elasticsearch.sh
+
+# Run the seed script
+CMD ["/seed-elasticsearch.sh"]
