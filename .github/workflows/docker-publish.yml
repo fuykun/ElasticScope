@@ -63,7 +63,7 @@ jobs:
         run: echo "Image pushed with digest ${{ steps.meta.outputs.digest }}"
 
       - name: Update Docker Hub Description
-        uses: peter-evans/dockerhub-description@v4
+        uses: peter-evans/dockerhub-description@v5
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
