@@ -59,7 +59,10 @@ async function apiRequest<T>(
             throw error;
         }
         // Fallback for old-style errors
-        throw new Error(data.error || 'UNKNOWN_ERROR');
+        const errorMessage = typeof data.error === 'object'
+            ? JSON.stringify(data)
+            : (data.error || 'UNKNOWN_ERROR');
+        throw new Error(errorMessage);
     }
 
     return data;

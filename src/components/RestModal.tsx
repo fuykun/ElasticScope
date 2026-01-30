@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { X, Play, Loader, Clock, AlertCircle, CheckCircle, Save, FolderOpen, Trash2, ChevronDown } from 'lucide-react';
 import { executeRestRequest, getSavedQueries, createSavedQuery, deleteSavedQuery, SavedQuery } from '../api/elasticsearchClient';
 import { JsonViewer } from './JsonViewer';
+import { MethodSelector } from './MethodSelector';
 import { restModalWidthStorage, restModalHeightStorage, restPanelWidthStorage } from '../utils/storage';
 import {
     MIN_REST_MODAL_WIDTH,
@@ -355,16 +356,10 @@ export const RestModal: React.FC<RestModalProps> = ({
                 </div>
 
                 <div className="rest-modal-toolbar">
-                    <select
+                    <MethodSelector
                         value={method}
-                        onChange={(e) => setMethod(e.target.value as any)}
-                        className="rest-method-select"
-                    >
-                        <option value="GET">GET</option>
-                        <option value="POST">POST</option>
-                        <option value="PUT">PUT</option>
-                        <option value="DELETE">DELETE</option>
-                    </select>
+                        onChange={setMethod}
+                    />
                     <input
                         type="text"
                         value={path}

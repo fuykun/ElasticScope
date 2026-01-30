@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, GitCompare, Github, Star } from 'lucide-react';
+import { Search, GitCompare, Github, Star, Terminal } from 'lucide-react';
 import { ConnectionSelector } from './components/ConnectionSelector';
 import { ConnectionFormModal } from './components/ConnectionFormModal';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
@@ -8,6 +8,7 @@ import { Modal } from './components/Modal';
 import { IndexList } from './components/IndexList';
 import { IndexPage } from './components/IndexPage';
 import { Dashboard } from './components/Dashboard';
+import { RestPage } from './components/RestPage';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { ComparisonModal } from './components/ComparisonModal';
 import { getConnectionStatus, SavedConnection } from './api/elasticsearchClient';
@@ -28,15 +29,20 @@ function App() {
     const [editingConnection, setEditingConnection] = useState<SavedConnection | null>(null);
 
     const [selectedIndex, setSelectedIndex] = useState<string | null>(() => {
-        // URL'den index ismini oku
         const params = new URLSearchParams(window.location.search);
         return params.get('index');
+    });
+
+    const [isRestMode, setIsRestMode] = useState(() => {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('page') === 'rest';
     });
 
     useEffect(() => {
         const handlePopState = () => {
             const params = new URLSearchParams(window.location.search);
             setSelectedIndex(params.get('index'));
+            setIsRestMode(params.get('page') === 'rest');
         };
         window.addEventListener('popstate', handlePopState);
         return () => window.removeEventListener('popstate', handlePopState);
@@ -90,13 +96,28 @@ function App() {
 
     const handleSelectIndex = (index: string | null) => {
         setSelectedIndex(index);
+        setIsRestMode(false);
 
         const url = new URL(window.location.href);
         if (index) {
             url.searchParams.set('index', index);
+            url.searchParams.delete('page');
         } else {
             url.searchParams.delete('index');
+            url.searchParams.delete('page');
         }
+        window.history.pushState({}, '', url.toString());
+    };
+
+    const handleOpenRest = () => {
+        setIsRestMode(true);
+        // Maybe keep selected index internally but clear from URL to avoid confusion?
+        // Or keep it. Let's clear index from URL but can keep internal state if needed.
+        // Actually, if we go to REST, we probably want to support "context" of selected index if we were to support it.
+        // But for now, let's just clean URL.
+        const url = new URL(window.location.href);
+        url.searchParams.set('page', 'rest');
+        // url.searchParams.delete('index'); // Optional: keep index param if we want to use it as context
         window.history.pushState({}, '', url.toString());
     };
 
@@ -134,7 +155,7 @@ function App() {
         setConnectionId(null);
         setConnectionName('');
         setConnectionColor('');
-        handleSelectIndex(null);
+        handleSelectIndex(null); // This clears isRestMode too via logic above
     };
 
     return (
@@ -163,6 +184,17 @@ function App() {
                     )}
                 </div>
                 <div className="header-right">
+                    {isConnected && (
+                        <button
+                            className={`btn btn-secondary ${isRestMode ? 'active' : ''}`}
+                            onClick={handleOpenRest}
+                            title="REST Console"
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                        >
+                            <Terminal size={16} />
+                            <span>REST Console</span>
+                        </button>
+                    )}
                     {comparisonDocs.length > 0 && (
                         <button
                             className="btn btn-comparison"
@@ -216,23 +248,33 @@ function App() {
 
             {isConnected ? (
                 <main className="app-main">
-                    <aside
-                        className="sidebar"
-                        style={{ width: sidebarWidth, minWidth: sidebarWidth }}
-                    >
-                        <IndexList
-                            onSelectIndex={handleSelectIndex}
-                            selectedIndex={selectedIndex}
-                            refreshTrigger={refreshTrigger}
-                            onRefreshNeeded={() => setRefreshTrigger((prev) => prev + 1)}
-                        />
-                    </aside>
-                    <div
-                        className="sidebar-resizer"
-                        onMouseDown={handleMouseDown}
-                    />
+                    {!isRestMode && (
+                        <>
+                            <aside
+                                className="sidebar"
+                                style={{ width: sidebarWidth, minWidth: sidebarWidth }}
+                            >
+                                <IndexList
+                                    onSelectIndex={handleSelectIndex}
+                                    selectedIndex={selectedIndex}
+                                    refreshTrigger={refreshTrigger}
+                                    onRefreshNeeded={() => setRefreshTrigger((prev) => prev + 1)}
+                                />
+                            </aside>
+                            <div
+                                className="sidebar-resizer"
+                                onMouseDown={handleMouseDown}
+                            />
+                        </>
+                    )}
                     <section className="content">
-                        {selectedIndex ? (
+                        {isRestMode ? (
+                            <RestPage
+                                key={connectionId}
+                                initialIndex={selectedIndex || undefined}
+                                connectionId={connectionId || 0}
+                            />
+                        ) : selectedIndex ? (
                             <IndexPage
                                 indexName={selectedIndex}
                                 onIndexDeleted={handleIndexDeleted}
