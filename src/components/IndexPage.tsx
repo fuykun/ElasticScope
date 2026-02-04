@@ -642,30 +642,49 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                         </div>
 
                         <div className="index-stats">
-                            <div className="index-stat">
-                                <FileText size={12} />
-                                <span className="index-stat-value">
-                                    {indexInfo?.['docs.count'] ? formatDocCount(indexInfo['docs.count']) : '-'}
-                                </span>
-                            </div>
-                            <div className="index-stat">
-                                <HardDrive size={12} />
-                                <span className="index-stat-value">
-                                    {indexInfo?.['store.size'] || '-'}
-                                </span>
-                            </div>
-                            <div className="index-stat">
-                                <Layers size={12} />
-                                <span className="index-stat-value">
-                                    {indexInfo?.number_of_shards ?? '-'}s/{indexInfo?.number_of_replicas ?? '-'}r
-                                </span>
-                            </div>
-                            <div className="index-stat">
-                                <Calendar size={12} />
-                                <span className="index-stat-value">
-                                    {formatDate(indexInfo?.creation_date)}
-                                </span>
-                            </div>
+                            {!indexInfo ? (
+                                <>
+                                    <div className="index-stat skeleton-stat">
+                                        <span className="skeleton-text" style={{ width: '60px' }} />
+                                    </div>
+                                    <div className="index-stat skeleton-stat">
+                                        <span className="skeleton-text" style={{ width: '50px' }} />
+                                    </div>
+                                    <div className="index-stat skeleton-stat">
+                                        <span className="skeleton-text" style={{ width: '40px' }} />
+                                    </div>
+                                    <div className="index-stat skeleton-stat">
+                                        <span className="skeleton-text" style={{ width: '100px' }} />
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="index-stat">
+                                        <FileText size={12} />
+                                        <span className="index-stat-value">
+                                            {indexInfo?.['docs.count'] ? formatDocCount(indexInfo['docs.count']) : '-'}
+                                        </span>
+                                    </div>
+                                    <div className="index-stat">
+                                        <HardDrive size={12} />
+                                        <span className="index-stat-value">
+                                            {indexInfo?.['store.size'] || '-'}
+                                        </span>
+                                    </div>
+                                    <div className="index-stat">
+                                        <Layers size={12} />
+                                        <span className="index-stat-value">
+                                            {indexInfo?.number_of_shards ?? '-'}s/{indexInfo?.number_of_replicas ?? '-'}r
+                                        </span>
+                                    </div>
+                                    <div className="index-stat">
+                                        <Calendar size={12} />
+                                        <span className="index-stat-value">
+                                            {formatDate(indexInfo?.creation_date)}
+                                        </span>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
 

@@ -34,12 +34,27 @@ function App() {
         return params.get('index');
     });
 
-    const [currentView, setCurrentView] = useState<'dashboard' | 'index' | 'rest'>('dashboard');
+    const [currentView, setCurrentView] = useState<'dashboard' | 'index' | 'rest'>(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('view') === 'rest') return 'rest';
+        if (params.get('index')) return 'index';
+        return 'dashboard';
+    });
 
     useEffect(() => {
         const handlePopState = () => {
             const params = new URLSearchParams(window.location.search);
-            setSelectedIndex(params.get('index'));
+            const view = params.get('view');
+            const index = params.get('index');
+
+            setSelectedIndex(index);
+            if (view === 'rest') {
+                setCurrentView('rest');
+            } else if (index) {
+                setCurrentView('index');
+            } else {
+                setCurrentView('dashboard');
+            }
         };
         window.addEventListener('popstate', handlePopState);
         return () => window.removeEventListener('popstate', handlePopState);
@@ -98,10 +113,12 @@ function App() {
         } else if (currentView === 'index') {
             setCurrentView('dashboard');
         }
+        // Not: currentView === 'rest' ise dokunmuyoruz
 
         const url = new URL(window.location.href);
         if (index) {
             url.searchParams.set('index', index);
+            url.searchParams.delete('view');
         } else {
             url.searchParams.delete('index');
         }
@@ -173,11 +190,14 @@ function App() {
                 <div className="header-right">
                     {isConnected && (
                         <button
-                            className={`btn btn-ghost ${currentView === 'rest' ? 'btn-active' : ''
-                                }`}
+                            className={`btn btn-ghost ${currentView === 'rest' ? 'btn-active' : ''}`}
                             onClick={() => {
                                 setCurrentView('rest');
-                                handleSelectIndex(null);
+                                setSelectedIndex(null);
+                                const url = new URL(window.location.href);
+                                url.searchParams.delete('index');
+                                url.searchParams.set('view', 'rest');
+                                window.history.pushState({}, '', url.toString());
                             }}
                             title="REST Console"
                         >
