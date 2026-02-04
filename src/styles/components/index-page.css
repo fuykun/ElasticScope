@@ -213,6 +213,7 @@
   border-radius: var(--radius-md);
   padding: 0 var(--spacing-md);
   transition: border-color var(--transition-base);
+  min-height: 38px;
 }
 
 .search-container:focus-within {
@@ -242,7 +243,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: 10px 16px;
   background: var(--accent);
   color: white;
   border: none;
@@ -252,6 +253,7 @@
   gap: var(--spacing-xs);
   font-size: var(--font-sm);
   font-weight: 500;
+  height: 38px;
 }
 
 .search-btn:hover {
@@ -536,7 +538,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 10px 12px;
   background: var(--bg-tertiary);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -545,6 +547,7 @@
   cursor: pointer;
   white-space: nowrap;
   transition: all var(--transition-base);
+  height: 38px;
 }
 
 .search-field-trigger:hover {
@@ -818,7 +821,7 @@
 .index-info-tabs {
   display: flex;
   gap: 4px;
-  padding: 0 var(--spacing-md);
+  padding: 0 var(--spacing-sm);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
@@ -827,7 +830,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 16px;
+  padding: 8px 12px;
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
@@ -856,7 +859,7 @@
 .index-info-content {
   flex: 1;
   overflow: auto;
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
 }
 
 .index-info-loading {
@@ -1237,6 +1240,152 @@
 
 .btn-sm {
   padding: 8px 10px;
+}
+
+/* Searchable Select */
+.searchable-select {
+  position: relative;
+}
+
+.searchable-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-width: 150px;
+  text-align: left;
+}
+
+.searchable-select-trigger:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+
+.searchable-select-trigger svg:first-child {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.searchable-select-trigger span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.searchable-select-trigger span.placeholder {
+  color: var(--text-secondary);
+}
+
+.searchable-select-trigger svg:last-child {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.searchable-select-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 100%;
+  max-width: 350px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.searchable-select-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+
+.searchable-select-search svg {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.searchable-select-search input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: var(--font-sm);
+  outline: none;
+}
+
+.searchable-select-search input::placeholder {
+  color: var(--text-secondary);
+}
+
+.searchable-select-options {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.searchable-select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: var(--font-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.searchable-select-option:hover {
+  background: var(--bg-hover);
+}
+
+.searchable-select-option.selected {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--accent);
+}
+
+.searchable-select-option svg {
+  color: var(--accent);
+}
+
+.searchable-select-no-results {
+  padding: 12px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+}
+
+/* Searchable select variants */
+.date-field-searchable .searchable-select-trigger {
+  min-width: 180px;
+}
+
+.add-filter-searchable {
+  flex: 1;
+}
+
+.add-filter-searchable .searchable-select-trigger {
+  width: 100%;
+  background: var(--bg-secondary);
+}
+
+.add-filter-searchable .searchable-select-dropdown {
+  min-width: 250px;
 }
 
 @keyframes spin {

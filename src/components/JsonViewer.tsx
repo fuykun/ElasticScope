@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight, ChevronDown, Search, X, ChevronUp, Check, Pencil, Pin, PinOff, ChevronsUpDown, ChevronsDownUp } from 'lucide-react';
+import { ChevronRight, ChevronDown, Search, X, ChevronUp, Check, Pencil, Pin, PinOff, ChevronsUpDown, ChevronsDownUp, Copy } from 'lucide-react';
 
 // Pin storage helper functions
 const PINNED_FIELDS_KEY = 'es_viewer_pinned_fields';
@@ -28,6 +28,7 @@ interface JsonViewerProps {
     onSave?: (newData: any) => void;
     onCancel?: () => void;
     enablePinning?: boolean;
+    enableCopy?: boolean; // Enable copy button for JSON
 }
 
 interface JsonNodeProps {
@@ -44,6 +45,7 @@ interface JsonNodeProps {
     onTogglePin?: (fieldName: string) => void;
     showPinButton?: boolean;
     expandTrigger?: number; // 0: no action, positive: expand all, negative: collapse all
+    isLastItem?: boolean; // Whether this is the last item in parent array/object
 }
 
 const getValueColor = (value: any): string => {
@@ -118,6 +120,7 @@ const JsonNode: React.FC<JsonNodeProps> = ({
     onTogglePin,
     showPinButton = false,
     expandTrigger = 0,
+    isLastItem = false,
 }) => {
     const { t } = useTranslation();
     const isObject = value !== null && typeof value === 'object';
@@ -184,6 +187,7 @@ const JsonNode: React.FC<JsonNodeProps> = ({
                 <span className={`json-value ${valueMatches ? 'json-match' : ''}`} style={{ color: valueColor }}>
                     {searchQuery ? highlightMatch(valueStr, searchQuery, matchCounter, currentMatchIndex) : valueStr}
                 </span>
+                {!isLastItem && <span className="json-comma">,</span>}
             </div>
         );
     }
@@ -263,7 +267,7 @@ const JsonNode: React.FC<JsonNodeProps> = ({
 
             {isExpanded && (
                 <>
-                    {sortedEntries.map(([k, v]) => (
+                    {sortedEntries.map(([k, v], index) => (
                         <JsonNode
                             key={k}
                             keyName={isArray ? null : k}
@@ -279,6 +283,7 @@ const JsonNode: React.FC<JsonNodeProps> = ({
                             onTogglePin={onTogglePin}
                             showPinButton={showPinButton}
                             expandTrigger={expandTrigger}
+                            isLastItem={index === sortedEntries.length - 1}
                         />
                     ))}
                     <div className="json-line">
@@ -302,6 +307,7 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({
     onSave,
     onCancel,
     enablePinning = false,
+    enableCopy = false,
 }) => {
     const { t } = useTranslation();
     const [internalSearch, setInternalSearch] = useState('');
@@ -310,6 +316,18 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({
 
     // Expand/Collapse all trigger
     const [expandTrigger, setExpandTrigger] = useState(0);
+    const [copied, setCopied] = useState(false);
+
+    const handleCopyJson = useCallback(() => {
+        try {
+            const jsonString = JSON.stringify(data, null, 2);
+            navigator.clipboard.writeText(jsonString);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (error) {
+            console.error('Failed to copy JSON:', error);
+        }
+    }, [data]);
 
     const handleExpandAll = useCallback(() => {
         setExpandTrigger(prev => Math.abs(prev) + 1);
@@ -506,6 +524,15 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({
                         >
                             <ChevronsUpDown size={14} />
                         </button>
+                        {enableCopy && (
+                            <button
+                                className="btn btn-icon-sm"
+                                onClick={handleCopyJson}
+                                title={copied ? t('common.copied') : t('common.copy')}
+                            >
+                                {copied ? <Check size={14} /> : <Copy size={14} />}
+                            </button>
+                        )}
                         {editable && (
                             <button
                                 className="btn btn-icon-sm json-edit-btn"
@@ -534,6 +561,15 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({
                     >
                         <ChevronsUpDown size={14} />
                     </button>
+                    {enableCopy && (
+                        <button
+                            className="btn btn-icon-sm"
+                            onClick={handleCopyJson}
+                            title={copied ? t('common.copied') : t('common.copy')}
+                        >
+                            {copied ? <Check size={14} /> : <Copy size={14} />}
+                        </button>
+                    )}
                     {editable && (
                         <button
                             className="btn btn-icon-sm json-edit-btn"

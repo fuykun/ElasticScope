@@ -340,6 +340,11 @@
   color: var(--text-secondary);
 }
 
+.json-comma {
+  color: var(--text-secondary);
+  margin-left: 0;
+}
+
 .json-preview {
   color: var(--text-secondary);
   font-size: 11px;

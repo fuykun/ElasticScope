@@ -182,6 +182,7 @@
             "last30Days": "Son 30 gün",
             "thisMonth": "Bu ay",
             "customRange": "Özel Aralık",
+            "selectDateField": "Tarih alanı seç",
             "selectField": "Alan seç",
             "selectOperator": "Operatör",
             "enterValue": "Değer gir",
@@ -198,6 +199,8 @@
             "query": "Query DSL"
         },
         "searchPlaceholder": "Dökümanlarda ara...",
+        "searchField": "Arama Alanı",
+        "searchIn": "İçinde ara",
         "searchFields": "Arama Alanları",
         "allFields": "Tüm alanlar",
         "selectedFields": "{{count}} alan seçili",

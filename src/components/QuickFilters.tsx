@@ -7,10 +7,108 @@ import {
     Filter,
     Plus,
     Check,
-    Loader,
+    Search,
 } from 'lucide-react';
-import { getAggregations, AggregationBucket } from '../api/elasticsearchClient';
-import type { QuickFilter, Facet } from '../types';
+import type { QuickFilter } from '../types';
+
+// Searchable Select Component
+interface SearchableSelectProps {
+    value: string;
+    onChange: (value: string) => void;
+    options: string[];
+    placeholder?: string;
+    className?: string;
+    icon?: React.ReactNode;
+}
+
+const SearchableSelect: React.FC<SearchableSelectProps> = ({
+    value,
+    onChange,
+    options,
+    placeholder = 'Select...',
+    className = '',
+    icon,
+}) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [search, setSearch] = useState('');
+    const containerRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    const filteredOptions = options.filter(opt =>
+        opt.toLowerCase().includes(search.toLowerCase())
+    );
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+                setIsOpen(false);
+                setSearch('');
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+        if (isOpen && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [isOpen]);
+
+    const handleSelect = (opt: string) => {
+        onChange(opt);
+        setIsOpen(false);
+        setSearch('');
+    };
+
+    return (
+        <div className={`searchable-select ${className}`} ref={containerRef}>
+            <button
+                type="button"
+                className="searchable-select-trigger"
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                {icon}
+                <span className={value ? '' : 'placeholder'}>
+                    {value || placeholder}
+                </span>
+                <ChevronDown size={12} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+            </button>
+            {isOpen && (
+                <div className="searchable-select-dropdown">
+                    <div className="searchable-select-search">
+                        <Search size={14} />
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Search..."
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    </div>
+                    <div className="searchable-select-options">
+                        {filteredOptions.length === 0 ? (
+                            <div className="searchable-select-no-results">No results</div>
+                        ) : (
+                            filteredOptions.map(opt => (
+                                <button
+                                    key={opt}
+                                    type="button"
+                                    className={`searchable-select-option ${opt === value ? 'selected' : ''}`}
+                                    onClick={() => handleSelect(opt)}
+                                >
+                                    {opt}
+                                    {opt === value && <Check size={12} />}
+                                </button>
+                            ))
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 interface QuickFiltersProps {
     indexName: string;
@@ -38,20 +136,11 @@ export const QuickFilters: React.FC<QuickFiltersProps> = ({
     onQueryChange,
 }) => {
     const { t } = useTranslation();
-    const [facets, setFacets] = useState<Facet[]>([]);
-    const [loadingFacets, setLoadingFacets] = useState(false);
     const [selectedDateField, setSelectedDateField] = useState<string>(dateFields[0] || '');
     const [showAddFilter, setShowAddFilter] = useState(false);
     const [addFilterField, setAddFilterField] = useState('');
     const [addFilterValue, setAddFilterValue] = useState('');
     const addFilterRef = useRef<HTMLDivElement>(null);
-
-    // Load facets on mount and when filters change
-    useEffect(() => {
-        if (keywordFields.length > 0) {
-            loadFacets();
-        }
-    }, [indexName, keywordFields]);
 
     useEffect(() => {
         if (dateFields.length > 0 && !selectedDateField) {
@@ -69,43 +158,6 @@ export const QuickFilters: React.FC<QuickFiltersProps> = ({
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
-
-    const loadFacets = async () => {
-        if (keywordFields.length === 0) return;
-
-        setLoadingFacets(true);
-        try {
-            const currentQuery = buildQueryFromFilters(activeFilters);
-            const result = await getAggregations(
-                indexName,
-                keywordFields.slice(0, 5), // Max 5 facets
-                selectedDateField || undefined,
-                currentQuery || undefined
-            );
-
-            const newFacets: Facet[] = [];
-            if (result.aggregations) {
-                for (const field of keywordFields.slice(0, 5)) {
-                    if (result.aggregations[field]?.buckets) {
-                        newFacets.push({
-                            field,
-                            buckets: result.aggregations[field].buckets.map((b: AggregationBucket) => ({
-                                ...b,
-                                selected: activeFilters.some(
-                                    f => f.type === 'term' && f.field === field && f.value === b.key
-                                ),
-                            })),
-                        });
-                    }
-                }
-            }
-            setFacets(newFacets);
-        } catch (error) {
-            console.error('Facet yüklenemedi:', error);
-        } finally {
-            setLoadingFacets(false);
-        }
-    };
 
     const buildQueryFromFilters = (filters: QuickFilter[]): object | null => {
         if (filters.length === 0) return null;
@@ -171,34 +223,6 @@ export const QuickFilters: React.FC<QuickFiltersProps> = ({
         onQueryChange(buildQueryFromFilters(newFilters));
     };
 
-    const handleFacetClick = (field: string, value: string, label: string) => {
-        const filterId = `${field}:${value}`;
-        const existingIndex = activeFilters.findIndex(f => f.id === filterId);
-
-        // Hide .keyword suffix in display label
-        const displayField = field.endsWith('.keyword') ? field.replace('.keyword', '') : field;
-
-        let newFilters: QuickFilter[];
-        if (existingIndex >= 0) {
-            newFilters = activeFilters.filter((_, i) => i !== existingIndex);
-        } else {
-            newFilters = [
-                ...activeFilters,
-                {
-                    id: filterId,
-                    type: 'term',
-                    field,
-                    label: `${displayField}: ${label}`,
-                    value,
-                    query: { term: { [field]: value } },
-                },
-            ];
-        }
-
-        onFiltersChange(newFilters);
-        onQueryChange(buildQueryFromFilters(newFilters));
-    };
-
     const handleRemoveFilter = (filterId: string) => {
         const newFilters = activeFilters.filter(f => f.id !== filterId);
         onFiltersChange(newFilters);
@@ -242,18 +266,14 @@ export const QuickFilters: React.FC<QuickFiltersProps> = ({
             {dateFields.length > 0 && (
                 <div className="quick-filters-section">
                     <div className="quick-filters-row">
-                        <div className="quick-filters-date-selector">
-                            <Calendar size={14} />
-                            <select
-                                value={selectedDateField}
-                                onChange={(e) => setSelectedDateField(e.target.value)}
-                                className="date-field-select"
-                            >
-                                {dateFields.map(field => (
-                                    <option key={field} value={field}>{field}</option>
-                                ))}
-                            </select>
-                        </div>
+                        <SearchableSelect
+                            value={selectedDateField}
+                            onChange={setSelectedDateField}
+                            options={dateFields}
+                            placeholder={t('indexPage.filters.selectDateField')}
+                            className="date-field-searchable"
+                            icon={<Calendar size={14} />}
+                        />
 
                         <div className="quick-filters-chips">
                             {DATE_QUICK_FILTERS.map(df => (
@@ -267,49 +287,6 @@ export const QuickFilters: React.FC<QuickFiltersProps> = ({
                                 </button>
                             ))}
                         </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Facets */}
-            {facets.length > 0 && (
-                <div className="quick-filters-section">
-                    <div className="quick-filters-facets">
-                        {loadingFacets ? (
-                            <div className="facets-loading">
-                                <Loader size={14} className="spin" />
-                            </div>
-                        ) : (
-                            facets.map(facet => {
-                                // Hide .keyword suffix in display
-                                const displayField = facet.field.endsWith('.keyword')
-                                    ? facet.field.replace('.keyword', '')
-                                    : facet.field;
-                                return (
-                                    <div key={facet.field} className="facet-group">
-                                        <span className="facet-label">{displayField}:</span>
-                                        <div className="facet-values">
-                                            {facet.buckets.slice(0, 5).map(bucket => {
-                                                const isSelected = activeFilters.some(
-                                                    f => f.type === 'term' && f.field === facet.field && f.value === bucket.key
-                                                );
-                                                return (
-                                                    <button
-                                                        key={bucket.key}
-                                                        className={`facet-chip ${isSelected ? 'active' : ''}`}
-                                                        onClick={() => handleFacetClick(facet.field, bucket.key, bucket.key)}
-                                                    >
-                                                        {bucket.key}
-                                                        <span className="facet-count">{bucket.doc_count}</span>
-                                                        {isSelected && <Check size={10} />}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                );
-                            })
-                        )}
                     </div>
                 </div>
             )}
@@ -357,16 +334,13 @@ export const QuickFilters: React.FC<QuickFiltersProps> = ({
                 {showAddFilter && (
                     <div className="add-filter-dropdown">
                         <div className="add-filter-row">
-                            <select
+                            <SearchableSelect
                                 value={addFilterField}
-                                onChange={(e) => setAddFilterField(e.target.value)}
-                                className="add-filter-select"
-                            >
-                                <option value="">{t('indexPage.filters.selectField')}</option>
-                                {keywordFields.map(field => (
-                                    <option key={field} value={field}>{field}</option>
-                                ))}
-                            </select>
+                                onChange={setAddFilterField}
+                                options={keywordFields}
+                                placeholder={t('indexPage.filters.selectField')}
+                                className="add-filter-searchable"
+                            />
                             <input
                                 type="text"
                                 value={addFilterValue}

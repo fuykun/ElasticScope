@@ -182,6 +182,7 @@
             "last30Days": "Last 30 days",
             "thisMonth": "This month",
             "customRange": "Custom Range",
+            "selectDateField": "Select date field",
             "selectField": "Select field",
             "selectOperator": "Operator",
             "enterValue": "Enter value",
@@ -198,6 +199,8 @@
             "query": "Query DSL"
         },
         "searchPlaceholder": "Search in documents...",
+        "searchField": "Search Field",
+        "searchIn": "Search in",
         "searchFields": "Search Fields",
         "allFields": "All fields",
         "selectedFields": "{{count}} field(s) selected",

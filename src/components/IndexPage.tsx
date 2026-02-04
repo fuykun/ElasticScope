@@ -8,12 +8,12 @@ import {
     AlertTriangle,
     Loader,
     Search,
-    Code,
     ChevronDown,
     Settings,
     Check,
     RefreshCw,
     ChevronLeft,
+    Code,
     ChevronRight,
     Layers,
     FileJson,
@@ -100,11 +100,9 @@ export const IndexPage: React.FC<IndexPageProps> = ({
     const [loadingIndexInfo, setLoadingIndexInfo] = useState(false);
 
     // Search
-    const [searchMode, setSearchMode] = useState<'simple' | 'query'>('simple');
     const [simpleQuery, setSimpleQuery] = useState('');
-    const [jsonQuery, setJsonQuery] = useState('{\n  "match_all": {}\n}');
     const [searchError, setSearchError] = useState<string | null>(null);
-    const [searchFields, setSearchFields] = useState<string[]>([]);
+    const [searchField, setSearchField] = useState<string>(''); // Empty means all fields
     const [searchFieldDropdownOpen, setSearchFieldDropdownOpen] = useState(false);
     const [searchFieldSearch, setSearchFieldSearch] = useState('');
     const searchFieldDropdownRef = React.useRef<HTMLDivElement>(null);
@@ -222,6 +220,7 @@ export const IndexPage: React.FC<IndexPageProps> = ({
             setSearchableFields(searchable);
 
             // Extract date and keyword fields for quick filters
+            // Skip nested fields as they require nested queries
             const extractTypedFields = (
                 mappingObj: Record<string, any>,
                 targetType: string,
@@ -236,6 +235,11 @@ export const IndexPage: React.FC<IndexPageProps> = ({
 
                         const fieldPath = path ? `${path}.${key}` : key;
 
+                        // Skip nested fields - they require nested queries and can't be used in simple filters
+                        if (value.type === 'nested') {
+                            continue;
+                        }
+
                         if (value.type === targetType) {
                             result.push(fieldPath);
                         }
@@ -245,7 +249,8 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                             result.push(`${fieldPath}.keyword`);
                         }
 
-                        if (value.properties) {
+                        // Only traverse into object type fields, not nested
+                        if (value.properties && value.type !== 'nested') {
                             traverse(value.properties, fieldPath);
                         }
                     }
@@ -286,12 +291,14 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                 setSelectedColumns(defaultColumns);
             }
 
-            const savedSearchFields = getSearchFieldsForPrefix(prefix);
-            if (savedSearchFields && savedSearchFields.length > 0) {
-                const validFields = savedSearchFields.filter((f) => searchable.includes(f));
-                setSearchFields(validFields);
+            const savedSearchField = getSearchFieldsForPrefix(prefix);
+            if (savedSearchField && savedSearchField.length > 0 && searchable.includes(savedSearchField[0])) {
+                setSearchField(savedSearchField[0]);
+            } else if (searchable.includes('name')) {
+                // Default to 'name' field if it exists
+                setSearchField('name');
             } else {
-                setSearchFields([]);
+                setSearchField('');
             }
         } catch (error) {
             console.error('Field listesi alınamadı:', error);
@@ -340,13 +347,11 @@ export const IndexPage: React.FC<IndexPageProps> = ({
         }
 
         let query;
-        if (searchFields.length > 0) {
-            // Belirli alanlarda ara - multi_match kullan
+        if (searchField) {
+            // Belirli alanda ara - match kullan
             query = {
-                multi_match: {
-                    query: simpleQuery,
-                    fields: searchFields,
-                    type: 'phrase_prefix',
+                match_phrase_prefix: {
+                    [searchField]: simpleQuery,
                 },
             };
         } else {
@@ -360,38 +365,20 @@ export const IndexPage: React.FC<IndexPageProps> = ({
         performSearch(query);
     };
 
-    const toggleSearchField = (field: string) => {
-        setSearchFields((prev) =>
-            prev.includes(field) ? prev.filter((f) => f !== field) : [...prev, field]
-        );
-    };
-
-    const handleApplySearchFields = () => {
-        saveSearchFieldsForPrefix(prefix, searchFields);
+    const handleSelectSearchField = (field: string) => {
+        setSearchField(field);
+        saveSearchFieldsForPrefix(prefix, field ? [field] : []);
         setSearchFieldDropdownOpen(false);
+        setSearchFieldSearch('');
     };
 
     const filteredSearchFields = searchableFields
         .filter((field) => field.toLowerCase().includes(searchFieldSearch.toLowerCase()))
         .sort((a, b) => {
-            const aSelected = searchFields.includes(a);
-            const bSelected = searchFields.includes(b);
-            if (aSelected && !bSelected) return -1;
-            if (!aSelected && bSelected) return 1;
+            if (a === searchField) return -1;
+            if (b === searchField) return 1;
             return a.localeCompare(b);
         });
-
-    const handleJsonSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        setSearchError(null);
-
-        try {
-            const query = JSON.parse(jsonQuery);
-            performSearch(query);
-        } catch (err) {
-            setSearchError(t('common.invalidJson'));
-        }
-    };
 
     const handlePageChange = (newPage: number) => {
         performSearch(currentQuery, newPage);
@@ -773,174 +760,100 @@ export const IndexPage: React.FC<IndexPageProps> = ({
 
                 {/* Bottom row: Search + Column Selector */}
                 <div className="index-toolbar-bottom">
-                    {/* Search Mode Tabs */}
-                    <div
-                        className="search-container"
-                        style={{ maxWidth: searchMode === 'query' ? '100%' : undefined }}
-                    >
-                        <button
-                            className={`btn btn-icon ${searchMode === 'simple' ? 'active' : ''}`}
-                            onClick={() => setSearchMode('simple')}
-                            title={t('indexPage.searchMode.simple')}
-                            style={{
-                                color: searchMode === 'simple' ? 'var(--accent)' : undefined,
-                            }}
+                    {/* Search */}
+                    <div className="search-container">
+                        <form
+                            onSubmit={handleSimpleSearch}
+                            style={{ display: 'flex', flex: 1, alignItems: 'center', gap: '8px' }}
                         >
-                            <Search size={16} />
-                        </button>
-                        <button
-                            className={`btn btn-icon ${searchMode === 'query' ? 'active' : ''}`}
-                            onClick={() => setSearchMode('query')}
-                            title="Query DSL"
-                            style={{
-                                color: searchMode === 'query' ? 'var(--accent)' : undefined,
-                                marginRight: '8px',
-                            }}
-                        >
-                            <Code size={16} />
-                        </button>
-
-                        {searchMode === 'simple' ? (
-                            <form
-                                onSubmit={handleSimpleSearch}
-                                style={{ display: 'flex', flex: 1, alignItems: 'center', gap: '8px' }}
+                            {/* Search Field Selector */}
+                            <div
+                                className="search-field-selector-container"
+                                ref={searchFieldDropdownRef}
                             >
-                                {/* Search Field Selector */}
-                                <div
-                                    className="search-field-selector-container"
-                                    ref={searchFieldDropdownRef}
-                                >
-                                    <div className="search-field-selector">
-                                        <button
-                                            type="button"
-                                            className="search-field-trigger"
-                                            onClick={() => setSearchFieldDropdownOpen(!searchFieldDropdownOpen)}
-                                            title={t('indexPage.searchFields')}
-                                        >
-                                            <Tag size={14} />
-                                            <span>{t('indexPage.searchFields')}</span>
-                                            <span className="search-field-count">
-                                                {searchFields.length || t('indexPage.allFields')}
-                                            </span>
-                                            <ChevronDown
-                                                size={12}
-                                                style={{
-                                                    transform: searchFieldDropdownOpen
-                                                        ? 'rotate(180deg)'
-                                                        : 'rotate(0deg)',
-                                                    transition: 'transform 0.15s ease',
-                                                }}
-                                            />
-                                        </button>
+                                <div className="search-field-selector">
+                                    <button
+                                        type="button"
+                                        className="search-field-trigger"
+                                        onClick={() => setSearchFieldDropdownOpen(!searchFieldDropdownOpen)}
+                                        title={t('indexPage.searchField')}
+                                    >
+                                        <Tag size={14} />
+                                        <span className="search-field-value">
+                                            {searchField || t('indexPage.allFields')}
+                                        </span>
+                                        <ChevronDown
+                                            size={12}
+                                            style={{
+                                                transform: searchFieldDropdownOpen
+                                                    ? 'rotate(180deg)'
+                                                    : 'rotate(0deg)',
+                                                transition: 'transform 0.15s ease',
+                                            }}
+                                        />
+                                    </button>
 
-                                        {searchFieldDropdownOpen && (
-                                            <div className="search-field-dropdown">
-                                                <div className="search-field-header">
-                                                    <span className="search-field-title">
-                                                        {prefix}
-                                                    </span>
-                                                    <div className="search-field-actions">
-                                                        <button
-                                                            type="button"
-                                                            className="search-field-action-btn"
-                                                            onClick={() => setSearchFields([...availableFields])}
-                                                        >
-                                                            {t('indexPage.allFields')}
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            className="search-field-action-btn"
-                                                            onClick={() => setSearchFields([])}
-                                                        >
-                                                            {t('common.clear')}
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                <div className="search-field-search">
-                                                    <input
-                                                        type="text"
-                                                        placeholder={t('common.search') + '...'}
-                                                        value={searchFieldSearch}
-                                                        onChange={(e) => setSearchFieldSearch(e.target.value)}
-                                                    />
-                                                </div>
-
-                                                <div className="search-field-list">
-                                                    {filteredSearchFields.length === 0 ? (
-                                                        <div className="search-field-empty">
-                                                            {t('common.noResults')}
-                                                        </div>
-                                                    ) : (
-                                                        filteredSearchFields.map((field) => (
-                                                            <div
-                                                                key={field}
-                                                                className={`search-field-item ${searchFields.includes(field) ? 'selected' : ''}`}
-                                                                onClick={() => toggleSearchField(field)}
-                                                            >
-                                                                <div className="search-field-checkbox">
-                                                                    {searchFields.includes(field) && (
-                                                                        <Check size={10} />
-                                                                    )}
-                                                                </div>
-                                                                <span className="search-field-label">
-                                                                    {field}
-                                                                </span>
-                                                            </div>
-                                                        ))
-                                                    )}
-                                                </div>
-
-                                                <div className="search-field-footer">
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-secondary btn-sm"
-                                                        onClick={() => setSearchFieldDropdownOpen(false)}
-                                                    >
-                                                        {t('common.cancel')}
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-primary btn-sm"
-                                                        onClick={handleApplySearchFields}
-                                                    >
-                                                        {t('common.apply')}
-                                                    </button>
-                                                </div>
+                                    {searchFieldDropdownOpen && (
+                                        <div className="search-field-dropdown">
+                                            <div className="search-field-search">
+                                                <Search size={14} />
+                                                <input
+                                                    type="text"
+                                                    placeholder={t('common.search') + '...'}
+                                                    value={searchFieldSearch}
+                                                    onChange={(e) => setSearchFieldSearch(e.target.value)}
+                                                    autoFocus
+                                                />
                                             </div>
-                                        )}
-                                    </div>
+
+                                            <div className="search-field-list">
+                                                {/* All Fields option */}
+                                                <div
+                                                    className={`search-field-item ${!searchField ? 'selected' : ''}`}
+                                                    onClick={() => handleSelectSearchField('')}
+                                                >
+                                                    <span className="search-field-label">
+                                                        {t('indexPage.allFields')}
+                                                    </span>
+                                                    {!searchField && <Check size={12} />}
+                                                </div>
+
+                                                {filteredSearchFields.length === 0 ? (
+                                                    <div className="search-field-empty">
+                                                        {t('common.noResults')}
+                                                    </div>
+                                                ) : (
+                                                    filteredSearchFields.map((field) => (
+                                                        <div
+                                                            key={field}
+                                                            className={`search-field-item ${searchField === field ? 'selected' : ''}`}
+                                                            onClick={() => handleSelectSearchField(field)}
+                                                        >
+                                                            <span className="search-field-label">
+                                                                {field}
+                                                            </span>
+                                                            {searchField === field && <Check size={12} />}
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                                <input
-                                    type="text"
-                                    value={simpleQuery}
-                                    onChange={(e) => setSimpleQuery(e.target.value)}
-                                    placeholder={searchFields.length > 0 ? t('indexPage.selectedFields', { count: searchFields.length }) : t('indexPage.searchPlaceholder')}
-                                    style={{ flex: 1 }}
-                                />
-                            </form>
-                        ) : (
-                            <form
-                                onSubmit={handleJsonSearch}
-                                style={{ display: 'flex', flex: 1, alignItems: 'center' }}
-                            >
-                                <input
-                                    type="text"
-                                    value={jsonQuery.replace(/\n/g, ' ')}
-                                    onChange={(e) => setJsonQuery(e.target.value)}
-                                    placeholder='{"match_all": {}}'
-                                />
-                            </form>
-                        )}
+                            </div>
+                            <input
+                                type="text"
+                                value={simpleQuery}
+                                onChange={(e) => setSimpleQuery(e.target.value)}
+                                placeholder={searchField ? `${t('indexPage.searchIn')} ${searchField}...` : t('indexPage.searchPlaceholder')}
+                                style={{ flex: 1 }}
+                            />
+                        </form>
                     </div>
 
                     <button
                         className="search-btn"
-                        onClick={
-                            searchMode === 'simple'
-                                ? handleSimpleSearch
-                                : handleJsonSearch
-                        }
+                        onClick={handleSimpleSearch}
                         disabled={loading}
                     >
                         {loading ? <Loader size={14} className="spin" /> : <Search size={14} />}
@@ -1182,7 +1095,7 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                     onFiltersChange={setActiveFilters}
                     onQueryChange={(filterQuery) => {
                         // Merge with search query if exists
-                        if (!filterQuery && !simpleQuery.trim() && searchMode === 'simple') {
+                        if (!filterQuery && !simpleQuery.trim()) {
                             performSearch(null);
                         } else if (filterQuery) {
                             performSearch(filterQuery);
@@ -1380,10 +1293,10 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                         ) : (
                             <>
                                 {indexInfoTab === 'settings' && settingsData && (
-                                    <JsonViewer data={settingsData} defaultExpanded={true} expandAllByDefault={true} showSearchBar={true} />
+                                    <JsonViewer data={settingsData} defaultExpanded={true} expandAllByDefault={true} showSearchBar={true} enableCopy={true} />
                                 )}
                                 {indexInfoTab === 'mappings' && mappingsData && (
-                                    <JsonViewer data={mappingsData} defaultExpanded={true} expandAllByDefault={true} showSearchBar={true} />
+                                    <JsonViewer data={mappingsData} defaultExpanded={true} expandAllByDefault={true} showSearchBar={true} enableCopy={true} />
                                 )}
                             </>
                         )}
