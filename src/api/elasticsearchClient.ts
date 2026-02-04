@@ -130,6 +130,28 @@ export const getClusterHealth = () =>
         number_of_data_nodes: number;
     }>('/cluster/health');
 
+// Cluster info (Elasticsearch version etc.)
+export interface ClusterInfo {
+    name: string;
+    cluster_name: string;
+    cluster_uuid: string;
+    version: {
+        number: string;
+        build_flavor: string;
+        build_type: string;
+        build_hash: string;
+        build_date: string;
+        build_snapshot: boolean;
+        lucene_version: string;
+        minimum_wire_compatibility_version: string;
+        minimum_index_compatibility_version: string;
+    };
+    tagline: string;
+}
+
+export const getClusterInfo = () =>
+    apiRequest<ClusterInfo>('/cluster/info');
+
 // Cluster istatistikleri
 export const getClusterStats = () =>
     apiRequest<{

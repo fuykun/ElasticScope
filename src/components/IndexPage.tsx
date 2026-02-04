@@ -47,6 +47,7 @@ import { DocumentViewer } from './DocumentViewer';
 import { JsonViewer } from './JsonViewer';
 import { RestModal } from './RestModal';
 import { CopyDocumentModal } from './CopyDocumentModal';
+import { QueryBuilder, extractFieldsFromMappingWithTypes, FieldInfo, QueryGroup, createEmptyGroup } from './QueryBuilder';
 import {
     getIndexPrefix,
     getColumnsForPrefix,
@@ -160,6 +161,12 @@ export const IndexPage: React.FC<IndexPageProps> = ({
     const [showFilters, setShowFilters] = useState(false);
     const [dateFields, setDateFields] = useState<string[]>([]);
     const [keywordFields, setKeywordFields] = useState<string[]>([]);
+
+    // Query Builder
+    const [showQueryBuilder, setShowQueryBuilder] = useState(false);
+    const [queryBuilderFields, setQueryBuilderFields] = useState<FieldInfo[]>([]);
+    const [queryBuilderQuery, setQueryBuilderQuery] = useState<object | null>(null);
+    const [queryBuilderRootGroup, setQueryBuilderRootGroup] = useState<QueryGroup>(createEmptyGroup());
 
     const prefix = getIndexPrefix(indexName);
 
@@ -281,6 +288,10 @@ export const IndexPage: React.FC<IndexPageProps> = ({
 
             setDateFields(dates);
             setKeywordFields(Array.from(keywordMap.values()));
+
+            // Extract fields with types for Query Builder
+            const queryBuilderFieldsList = extractFieldsFromMappingWithTypes(mapping, indexName);
+            setQueryBuilderFields(queryBuilderFieldsList);
 
             const savedColumns = getColumnsForPrefix(prefix);
             if (savedColumns && savedColumns.length > 0) {
@@ -1068,12 +1079,31 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                     {(dateFields.length > 0 || keywordFields.length > 0) && (
                         <button
                             className={`filter-toggle-btn ${showFilters ? 'active' : ''} ${activeFilters.length > 0 ? 'has-filters' : ''}`}
-                            onClick={() => setShowFilters(!showFilters)}
+                            onClick={() => {
+                                setShowFilters(!showFilters);
+                                if (!showFilters) setShowQueryBuilder(false);
+                            }}
+                            title={t('indexPage.filters.quickFilters')}
                         >
                             <Filter size={14} />
                             {activeFilters.length > 0 && (
                                 <span className="filter-count">{activeFilters.length}</span>
                             )}
+                        </button>
+                    )}
+
+                    {/* Query Builder Toggle Button */}
+                    {queryBuilderFields.length > 0 && (
+                        <button
+                            className={`filter-toggle-btn query-builder-toggle ${showQueryBuilder ? 'active' : ''} ${queryBuilderQuery ? 'has-filters' : ''}`}
+                            onClick={() => {
+                                setShowQueryBuilder(!showQueryBuilder);
+                                if (!showQueryBuilder) setShowFilters(false);
+                            }}
+                            title={t('queryBuilder.title')}
+                        >
+                            <Code size={14} />
+                            <span className="toggle-label">{t('queryBuilder.title')}</span>
                         </button>
                     )}
                 </div>
@@ -1102,6 +1132,24 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                         }
                     }}
                 />
+            )}
+
+            {/* Query Builder */}
+            {showQueryBuilder && queryBuilderFields.length > 0 && (
+                <div className="query-builder-container">
+                    <QueryBuilder
+                        fields={queryBuilderFields}
+                        rootGroup={queryBuilderRootGroup}
+                        onRootGroupChange={setQueryBuilderRootGroup}
+                        onQueryChange={(query) => setQueryBuilderQuery(query)}
+                        onSearch={(query) => {
+                            performSearch(query);
+                            // Clear simple search when using query builder
+                            setSimpleQuery('');
+                            setActiveFilters([]);
+                        }}
+                    />
+                </div>
             )}
 
             {/* Documents Section */}

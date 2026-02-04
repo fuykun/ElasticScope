@@ -292,6 +292,7 @@ function App() {
                             <Dashboard
                                 connectionName={connectionName}
                                 connectionColor={connectionColor}
+                                connectionId={connectionId}
                             />
                         )}
                     </section>

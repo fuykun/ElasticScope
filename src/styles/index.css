@@ -14,6 +14,7 @@
 @import './components/comparison.css';
 @import './components/rest-modal.css';
 @import './components/copy-modal.css';
+@import './components/query-builder.css';
 
 /* ==================== SCROLLBAR ==================== */
 ::-webkit-scrollbar {

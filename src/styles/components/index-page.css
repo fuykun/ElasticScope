@@ -6,6 +6,16 @@
   overflow: hidden;
 }
 
+/* When query builder is open, allow scrolling */
+.index-page:has(.query-builder-container) {
+  overflow: auto;
+}
+
+.index-page:has(.query-builder-container) .documents-section {
+  min-height: 400px;
+  flex-shrink: 0;
+}
+
 /* ==================== INDEX TOOLBAR ==================== */
 .index-toolbar {
   display: flex;
@@ -276,6 +286,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-height: 300px;
 }
 
 .documents-header {
@@ -1391,4 +1402,35 @@
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+/* ==================== QUERY BUILDER CONTAINER ==================== */
+.query-builder-container {
+  padding: var(--spacing-md) var(--spacing-lg);
+  padding-bottom: var(--spacing-xl);
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border);
+  overflow: visible;
+  position: relative;
+  z-index: 100;
+  flex-shrink: 0;
+  max-height: 50vh;
+}
+
+/* Query Builder Toggle Button */
+.query-builder-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.query-builder-toggle .toggle-label {
+  font-size: var(--font-xs);
+  font-weight: 500;
+}
+
+.filter-toggle-btn.query-builder-toggle.active {
+  background: var(--accent-alpha);
+  color: var(--accent);
+  border-color: var(--accent);
 }

@@ -16,8 +16,10 @@ import {
 import {
     getClusterHealth,
     getClusterStats,
+    getClusterInfo,
     getNodes,
-    getNodesInfo
+    getNodesInfo,
+    ClusterInfo
 } from '../api/elasticsearchClient';
 import type { ClusterHealth, ClusterStats, NodeInfo } from '../types';
 import { formatBytes, formatUptime, formatDocCount } from '../utils/formatters';
@@ -25,12 +27,14 @@ import { formatBytes, formatUptime, formatDocCount } from '../utils/formatters';
 interface DashboardProps {
     connectionName: string;
     connectionColor?: string;
+    connectionId?: number | null;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ connectionName, connectionColor }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ connectionName, connectionColor, connectionId }) => {
     const { t } = useTranslation();
     const [health, setHealth] = useState<ClusterHealth | null>(null);
     const [stats, setStats] = useState<ClusterStats | null>(null);
+    const [clusterInfo, setClusterInfo] = useState<ClusterInfo | null>(null);
     const [nodes, setNodes] = useState<NodeInfo[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -40,15 +44,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ connectionName, connection
         setError(null);
 
         try {
-            const [healthData, statsData, nodesData, nodesInfoData] = await Promise.all([
+            const [healthData, statsData, infoData, nodesData, nodesInfoData] = await Promise.all([
                 getClusterHealth(),
                 getClusterStats(),
+                getClusterInfo(),
                 getNodes(),
                 getNodesInfo()
             ]);
 
             setHealth(healthData as ClusterHealth);
             setStats(statsData as unknown as ClusterStats);
+            setClusterInfo(infoData);
 
             const nodesList: NodeInfo[] = [];
             const nodesStats = (nodesData as any).nodes || {};
@@ -86,7 +92,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ connectionName, connection
 
     useEffect(() => {
         loadData();
-    }, []);
+    }, [connectionId]);
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -141,12 +147,39 @@ export const Dashboard: React.FC<DashboardProps> = ({ connectionName, connection
                     >
                         {health?.status?.toUpperCase()}
                     </span>
+                    {clusterInfo?.version?.number && (
+                        <span className="cluster-version-badge">
+                            v{clusterInfo.version.number}
+                        </span>
+                    )}
                 </div>
                 <button className="btn btn-secondary btn-sm" onClick={loadData}>
                     <RefreshCw size={14} />
                     {t('common.refresh')}
                 </button>
             </div>
+
+            {/* Version Info */}
+            {clusterInfo && (
+                <div className="dashboard-version-info">
+                    <div className="version-info-item">
+                        <span className="version-info-label">{t('dashboard.version')}</span>
+                        <span className="version-info-value">{clusterInfo.version?.number || '-'}</span>
+                    </div>
+                    <div className="version-info-item">
+                        <span className="version-info-label">{t('dashboard.luceneVersion')}</span>
+                        <span className="version-info-value">{clusterInfo.version?.lucene_version || '-'}</span>
+                    </div>
+                    <div className="version-info-item">
+                        <span className="version-info-label">{t('dashboard.buildType')}</span>
+                        <span className="version-info-value">{clusterInfo.version?.build_flavor || clusterInfo.version?.build_type || '-'}</span>
+                    </div>
+                    <div className="version-info-item">
+                        <span className="version-info-label">{t('dashboard.clusterUuid')}</span>
+                        <span className="version-info-value version-uuid">{clusterInfo.cluster_uuid || '-'}</span>
+                    </div>
+                </div>
+            )}
 
             {/* Overview Cards */}
             <div className="dashboard-cards">

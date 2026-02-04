@@ -48,19 +48,19 @@ const DANGEROUS_PATH_PATTERNS = [
 const isDangerousRequest = (method: string, requestPath: string): boolean => {
     const normalizedPath = requestPath.toLowerCase();
     const normalizedMethod = method.toUpperCase();
-    
+
     // Block dangerous paths
     if (DANGEROUS_PATHS.includes(normalizedPath)) {
         return true;
     }
-    
+
     // Block dangerous patterns
     for (const pattern of DANGEROUS_PATH_PATTERNS) {
         if (pattern.test(normalizedPath)) {
             return true;
         }
     }
-    
+
     // Block DELETE on root or _all
     if (normalizedMethod === 'DELETE') {
         if (normalizedPath === '/' || normalizedPath === '/_all' || normalizedPath.startsWith('/_all/')) {
@@ -71,7 +71,7 @@ const isDangerousRequest = (method: string, requestPath: string): boolean => {
             return true;
         }
     }
-    
+
     return false;
 };
 
@@ -81,32 +81,32 @@ const validateIndexName = (indexName: string): { valid: boolean; error?: string 
     if (!indexName || typeof indexName !== 'string') {
         return { valid: false, error: 'INDEX_NAME_REQUIRED' };
     }
-    
+
     // Max length check
     if (indexName.length > 255) {
         return { valid: false, error: 'INDEX_NAME_TOO_LONG' };
     }
-    
+
     // Cannot start with - _ +
     if (/^[-_+]/.test(indexName)) {
         return { valid: false, error: 'INDEX_NAME_INVALID_START' };
     }
-    
+
     // Cannot contain special characters
     if (/[\\/*?"<>|,#:\s]/.test(indexName)) {
         return { valid: false, error: 'INDEX_NAME_INVALID_CHARS' };
     }
-    
+
     // Cannot be . or ..
     if (indexName === '.' || indexName === '..') {
         return { valid: false, error: 'INDEX_NAME_INVALID' };
     }
-    
+
     // Must be lowercase
     if (indexName !== indexName.toLowerCase()) {
         return { valid: false, error: 'INDEX_NAME_MUST_BE_LOWERCASE' };
     }
-    
+
     return { valid: true };
 };
 
@@ -114,15 +114,15 @@ const validateAliasName = (aliasName: string): { valid: boolean; error?: string 
     if (!aliasName || typeof aliasName !== 'string') {
         return { valid: false, error: 'ALIAS_REQUIRED' };
     }
-    
+
     if (aliasName.length > 255) {
         return { valid: false, error: 'ALIAS_NAME_TOO_LONG' };
     }
-    
+
     if (/[\\/*?"<>|,#:\s]/.test(aliasName)) {
         return { valid: false, error: 'ALIAS_NAME_INVALID_CHARS' };
     }
-    
+
     return { valid: true };
 };
 
@@ -130,22 +130,22 @@ const validateConnectionInput = (input: any): { valid: boolean; error?: string }
     if (!input.name || typeof input.name !== 'string' || input.name.trim().length === 0) {
         return { valid: false, error: 'NAME_REQUIRED' };
     }
-    
+
     if (input.name.length > 100) {
         return { valid: false, error: 'NAME_TOO_LONG' };
     }
-    
+
     if (!input.url || typeof input.url !== 'string') {
         return { valid: false, error: 'URL_REQUIRED' };
     }
-    
+
     // Basic URL validation
     try {
         new URL(input.url);
     } catch {
         return { valid: false, error: 'URL_INVALID' };
     }
-    
+
     return { valid: true };
 };
 
@@ -185,7 +185,7 @@ const getClientForConnection = async (connectionId: number): Promise<Client | nu
     try {
         // Decrypt password before using
         const decryptedPassword = conn.password ? decryptPassword(conn.password) : null;
-        
+
         const client = new Client({
             node: conn.url,
             ...(conn.username && decryptedPassword && {
@@ -238,13 +238,13 @@ app.get('/api/connections/:id', (req, res) => {
 app.post('/api/connections', (req, res) => {
     try {
         const { name, url, username, password, color } = req.body;
-        
+
         // Input validation
         const validation = validateConnectionInput(req.body);
         if (!validation.valid) {
             return res.status(400).json({ errorCode: validation.error });
         }
-        
+
         const connection = createConnection({ name, url, username, password, color });
         res.json({ ...connection, password: connection.password ? '••••••••' : null });
     } catch (error: any) {
@@ -346,6 +346,16 @@ app.get('/api/cluster/health', requireConnection, async (req, res) => {
     try {
         const health = await esClient!.cluster.health();
         res.json(health);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Cluster info (version, etc.)
+app.get('/api/cluster/info', requireConnection, async (req, res) => {
+    try {
+        const info = await esClient!.info();
+        res.json(info);
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
