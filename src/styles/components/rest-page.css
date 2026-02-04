@@ -7,28 +7,6 @@
   overflow: hidden;
 }
 
-.rest-page-with-sidebar {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
-.rest-sidebar {
-  width: 280px;
-  flex-shrink: 0;
-  border-right: 1px solid var(--border);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.rest-main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
 /* Tabs */
 .rest-tabs-bar {
   display: flex;

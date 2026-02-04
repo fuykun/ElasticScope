@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, GitCompare, Github, Star } from 'lucide-react';
+import { Search, GitCompare, Github, Star, Code } from 'lucide-react';
 import { ConnectionSelector } from './components/ConnectionSelector';
 import { ConnectionFormModal } from './components/ConnectionFormModal';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
@@ -8,6 +8,7 @@ import { Modal } from './components/Modal';
 import { IndexList } from './components/IndexList';
 import { IndexPage } from './components/IndexPage';
 import { Dashboard } from './components/Dashboard';
+import { RestPage } from './components/RestPage';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { ComparisonModal } from './components/ComparisonModal';
 import { getConnectionStatus, SavedConnection } from './api/elasticsearchClient';
@@ -32,6 +33,8 @@ function App() {
         const params = new URLSearchParams(window.location.search);
         return params.get('index');
     });
+
+    const [currentView, setCurrentView] = useState<'dashboard' | 'index' | 'rest'>('dashboard');
 
     useEffect(() => {
         const handlePopState = () => {
@@ -90,6 +93,11 @@ function App() {
 
     const handleSelectIndex = (index: string | null) => {
         setSelectedIndex(index);
+        if (index) {
+            setCurrentView('index');
+        } else if (currentView === 'index') {
+            setCurrentView('dashboard');
+        }
 
         const url = new URL(window.location.href);
         if (index) {
@@ -163,6 +171,20 @@ function App() {
                     )}
                 </div>
                 <div className="header-right">
+                    {isConnected && (
+                        <button
+                            className={`btn btn-ghost ${currentView === 'rest' ? 'btn-active' : ''
+                                }`}
+                            onClick={() => {
+                                setCurrentView('rest');
+                                handleSelectIndex(null);
+                            }}
+                            title="REST Console"
+                        >
+                            <Code size={18} />
+                            REST Console
+                        </button>
+                    )}
                     {comparisonDocs.length > 0 && (
                         <button
                             className="btn btn-comparison"
@@ -232,7 +254,12 @@ function App() {
                         onMouseDown={handleMouseDown}
                     />
                     <section className="content">
-                        {selectedIndex ? (
+                        {currentView === 'rest' ? (
+                            <RestPage
+                                initialIndex={selectedIndex || undefined}
+                                connectionId={connectionId || 0}
+                            />
+                        ) : selectedIndex ? (
                             <IndexPage
                                 indexName={selectedIndex}
                                 onIndexDeleted={handleIndexDeleted}
