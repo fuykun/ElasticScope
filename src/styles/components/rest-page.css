@@ -1,0 +1,285 @@
+/* REST Page Styles */
+.rest-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-primary);
+  overflow: hidden;
+}
+
+.rest-page-with-sidebar {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.rest-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.rest-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Tabs */
+.rest-tabs-bar {
+  display: flex;
+  align-items: center;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.rest-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+  min-width: 120px;
+  max-width: 200px;
+  position: relative;
+}
+
+.rest-tab:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.rest-tab.active {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--accent);
+  margin-bottom: -1px;
+  font-weight: 500;
+}
+
+.rest-tab-method {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.rest-tab-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rest-tab-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: all 0.15s ease;
+}
+
+.rest-tab:hover .rest-tab-close,
+.rest-tab.active .rest-tab-close {
+  opacity: 1;
+}
+
+.rest-tab-close:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+}
+
+.rest-new-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.rest-new-tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.rest-tab-edit-input {
+  width: 100%;
+  background: var(--bg-primary);
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  color: var(--text-primary);
+  font-size: 12px;
+  padding: 2px 4px;
+}
+
+/* Page Layout (Reuse similar structure to modal) */
+.rest-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+
+.rest-page-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rest-page-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+
+.rest-page-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Reusing classes from rest-modal.css where appropriate or redefining them for rest-page context */
+.rest-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+  height: 100%;
+}
+
+.rest-request-panel {
+  border-right: none;
+}
+
+.rest-response-panel {
+  background: var(--bg-primary);
+}
+
+/* Ensure these are consistent */
+.rest-method-select {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-primary);
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 90px;
+}
+
+.rest-path-input {
+  flex: 1;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-primary);
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+}
+
+.rest-editor {
+  flex: 1;
+  background: var(--bg-primary);
+  border: none;
+  color: var(--text-primary);
+  padding: 12px;
+  font-size: 13px;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  line-height: 1.5;
+  resize: none;
+  overflow: auto;
+}
+
+.rest-editor:focus {
+  outline: none;
+}
+
+/* Index Pills */
+.rest-index-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 6px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 4px;
+  padding-right: 4px;
+  margin-top: 4px;
+  max-height: 120px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.rest-index-pills::-webkit-scrollbar {
+  width: 6px;
+}
+
+.rest-index-pills::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rest-index-pills::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.rest-index-pills::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+.rest-index-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.rest-index-pill:hover {
+  background: var(--bg-secondary);
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.rest-index-pill-alias {
+  opacity: 0.7;
+  font-size: 10px;
+}

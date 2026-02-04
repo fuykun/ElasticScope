@@ -590,12 +590,55 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                 {/* Top row: Index info + Actions */}
                 <div className="index-toolbar-top">
                     <div className="index-info">
-                        <div className="index-title-section">
-                            <span
-                                className={`index-health-dot ${indexInfo?.health || ''}`}
-                                title={`Health: ${indexInfo?.health || 'unknown'}`}
-                            />
-                            <h2 className="index-title">{indexName}</h2>
+                        <div className="index-title-row">
+                            <div className="index-title-section">
+                                <span
+                                    className={`index-health-dot ${indexInfo?.health || ''}`}
+                                    title={`Health: ${indexInfo?.health || 'unknown'}`}
+                                />
+                                <h2 className="index-title">{indexName}</h2>
+                            </div>
+
+                            {indexInfo?.aliases && indexInfo.aliases.length > 0 && (
+                                <div className="index-aliases-section">
+                                    {indexInfo.aliases.map((alias) => (
+                                        <span key={alias} className="index-alias-tag">
+                                            <Tag size={10} />
+                                            {alias}
+                                            <button
+                                                className="alias-delete-btn"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteAlias(alias);
+                                                }}
+                                                title={t('common.delete')}
+                                            >
+                                                <X size={10} />
+                                            </button>
+                                        </span>
+                                    ))}
+                                    <button
+                                        className="btn-add-alias"
+                                        onClick={() => setShowAliasModal(true)}
+                                        title="Alias Ekle"
+                                    >
+                                        <Plus size={10} />
+                                        Alias Ekle
+                                    </button>
+                                </div>
+                            )}
+                            {(!indexInfo?.aliases || indexInfo.aliases.length === 0) && (
+                                <div className="index-aliases-section">
+                                    <button
+                                        className="btn-add-alias"
+                                        onClick={() => setShowAliasModal(true)}
+                                        title={t('indexPage.addAlias')}
+                                    >
+                                        <Plus size={10} />
+                                        {t('indexPage.addAlias')}
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         <div className="index-stats">
@@ -624,47 +667,6 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                                 </span>
                             </div>
                         </div>
-
-                        {indexInfo?.aliases && indexInfo.aliases.length > 0 && (
-                            <div className="index-aliases-section">
-                                {indexInfo.aliases.map((alias) => (
-                                    <span key={alias} className="index-alias-tag">
-                                        <Tag size={10} />
-                                        {alias}
-                                        <button
-                                            className="alias-delete-btn"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleDeleteAlias(alias);
-                                            }}
-                                            title={t('common.delete')}
-                                        >
-                                            <X size={10} />
-                                        </button>
-                                    </span>
-                                ))}
-                                <button
-                                    className="btn btn-ghost btn-sm"
-                                    onClick={() => setShowAliasModal(true)}
-                                    title="Alias Ekle"
-                                >
-                                    <Plus size={14} />
-                                    Alias Ekle
-                                </button>
-                            </div>
-                        )}
-                        {(!indexInfo?.aliases || indexInfo.aliases.length === 0) && (
-                            <div className="index-aliases-section">
-                                <button
-                                    className="btn btn-ghost btn-sm"
-                                    onClick={() => setShowAliasModal(true)}
-                                    title={t('indexPage.addAlias')}
-                                >
-                                    <Plus size={14} />
-                                    {t('indexPage.addAlias')}
-                                </button>
-                            </div>
-                        )}
                     </div>
 
                     <div className="index-actions">
@@ -1255,11 +1257,8 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                 title=""
             >
                 <div className="delete-modal-content">
-                    <div className="delete-warning-icon">
-                        <AlertTriangle size={24} />
-                    </div>
-                    <h3 className="delete-modal-title">{t('indexPage.deleteIndex')}</h3>
                     <p className="delete-modal-desc">
+                        <AlertTriangle size={16} className="inline-icon" />
                         {t('indexPage.deleteWarning')} <strong>{indexName}</strong>
                     </p>
 

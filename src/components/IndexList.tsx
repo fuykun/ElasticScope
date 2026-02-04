@@ -155,12 +155,13 @@ export const IndexList: React.FC<IndexListProps> = ({
                             onClick={() => onSelectIndex(idx.index)}
                             title={idx.index}
                         >
-                            <span
-                                className="health-dot"
-                                style={{ backgroundColor: getHealthColor(idx.health) }}
-                            />
                             <div className="index-content">
                                 <span className="index-name">{idx.index}</span>
+                                {idx['store.size'] && (
+                                    <span className="index-size" title="Storage Size">
+                                        {idx['store.size']}
+                                    </span>
+                                )}
                                 {idx.aliases?.length > 0 && (
                                     <div className="index-aliases">
                                         <Tag size={10} className="alias-icon" />
@@ -176,6 +177,16 @@ export const IndexList: React.FC<IndexListProps> = ({
                                 )}
                             </div>
                             <div className="index-meta-right">
+                                <span
+                                    className="health-badge"
+                                    title={`Health: ${idx.health}`}
+                                    style={{
+                                        backgroundColor: getHealthColor(idx.health),
+                                        boxShadow: `0 0 8px ${getHealthColor(idx.health)}`
+                                    }}
+                                >
+                                    {idx.health}
+                                </span>
                                 {idx.creation_date && (
                                     <span className="index-date" title={formatDate(idx.creation_date)}>
                                         {formatRelativeDate(idx.creation_date)}
