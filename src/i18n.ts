@@ -10,6 +10,11 @@ const resources = {
     tr: { translation: tr }
 };
 
+// Update HTML lang attribute when language changes
+const updateHtmlLang = (lng: string) => {
+    document.documentElement.lang = lng;
+};
+
 i18n
     .use(LanguageDetector)
     .use(initReactI18next)
@@ -26,5 +31,9 @@ i18n
             lookupLocalStorage: 'elasticscope-language'
         }
     });
+
+// Set initial lang and listen for changes
+updateHtmlLang(i18n.language);
+i18n.on('languageChanged', updateHtmlLang);
 
 export default i18n;

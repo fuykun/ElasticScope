@@ -64,6 +64,84 @@ export const DEFAULT_COUNT_BODY = {
     }
 };
 
+// ==================== PRESET QUERIES ====================
+
+export interface PresetQuery {
+    id: string;
+    labelKey: string;
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+    pathSuffix: string;
+    body?: object;
+    description?: string;
+}
+
+export const PRESET_QUERIES: PresetQuery[] = [
+    {
+        id: 'search',
+        labelKey: 'restPresets.search',
+        method: 'POST',
+        pathSuffix: '_search',
+        body: {
+            query: {
+                match_all: {}
+            },
+            size: 10,
+            from: 0
+        }
+    },
+    {
+        id: 'count',
+        labelKey: 'restPresets.count',
+        method: 'POST',
+        pathSuffix: '_count',
+        body: {
+            query: {
+                match_all: {}
+            }
+        }
+    },
+    {
+        id: 'mappings',
+        labelKey: 'restPresets.mappings',
+        method: 'GET',
+        pathSuffix: '_mapping'
+    },
+    {
+        id: 'settings',
+        labelKey: 'restPresets.settings',
+        method: 'GET',
+        pathSuffix: '_settings'
+    },
+    {
+        id: 'analyze',
+        labelKey: 'restPresets.analyze',
+        method: 'POST',
+        pathSuffix: '_analyze',
+        body: {
+            analyzer: 'standard',
+            text: 'Hello World'
+        }
+    },
+    {
+        id: 'stats',
+        labelKey: 'restPresets.stats',
+        method: 'GET',
+        pathSuffix: '_stats'
+    },
+    {
+        id: 'refresh',
+        labelKey: 'restPresets.refresh',
+        method: 'POST',
+        pathSuffix: '_refresh'
+    },
+    {
+        id: 'flush',
+        labelKey: 'restPresets.flush',
+        method: 'POST',
+        pathSuffix: '_flush'
+    }
+];
+
 // ==================== JSON VIEWER ====================
 
 export const JSON_VIEWER_DEFAULT_EXPANDED_DEPTH = 2;

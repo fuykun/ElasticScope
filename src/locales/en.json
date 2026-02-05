@@ -365,7 +365,20 @@
         "format": "Format",
         "sending": "Sending request...",
         "placeholder": "Press Ctrl+Enter or Send button",
+        "bodyPlaceholder": "JSON request body...",
+        "noBodyForGet": "GET requests do not have a body",
         "saveError": "Save error"
+    },
+    "restPresets": {
+        "title": "Quick Actions",
+        "search": "Search",
+        "count": "Count",
+        "mappings": "Mappings",
+        "settings": "Settings",
+        "analyze": "Analyze",
+        "stats": "Stats",
+        "refresh": "Refresh",
+        "flush": "Flush"
     },
     "jsonViewer": {
         "searchPlaceholder": "Search in JSON...",

@@ -365,7 +365,20 @@
         "format": "Formatla",
         "sending": "İstek gönderiliyor...",
         "placeholder": "Ctrl+Enter veya Gönder butonuna basın",
+        "bodyPlaceholder": "JSON istek gövdesi...",
+        "noBodyForGet": "GET istekleri gövde içermez",
         "saveError": "Kaydetme hatası"
+    },
+    "restPresets": {
+        "title": "Hızlı İşlemler",
+        "search": "Ara",
+        "count": "Say",
+        "mappings": "Mapping",
+        "settings": "Ayarlar",
+        "analyze": "Analiz",
+        "stats": "İstatistik",
+        "refresh": "Yenile",
+        "flush": "Flush"
     },
     "jsonViewer": {
         "searchPlaceholder": "JSON içinde ara...",

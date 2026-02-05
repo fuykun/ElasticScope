@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Play, Loader, Clock, AlertCircle, CheckCircle, Save, FolderOpen,
-    Trash2, ChevronDown, Plus, X, Maximize2, Tag
+    Trash2, ChevronDown, Plus, X, Maximize2, Tag, Search, Hash, FileJson, Settings,
+    BarChart3, RefreshCw, Zap, FlaskConical
 } from 'lucide-react';
 import {
     executeRestRequest, getSavedQueries, createSavedQuery, deleteSavedQuery, SavedQuery,
@@ -11,7 +12,7 @@ import {
 import { JsonViewer } from './JsonViewer';
 import { MethodSelector } from './MethodSelector';
 import { restPanelWidthStorage } from '../utils/storage';
-import { DEFAULT_SEARCH_BODY } from '../constants';
+import { DEFAULT_SEARCH_BODY, PRESET_QUERIES, PresetQuery } from '../constants';
 import '../styles/components/rest-page.css';
 import '../styles/components/rest-modal.css';
 
@@ -58,21 +59,44 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
 
     // Tabs State - Initialize from storage based on connectionId
     const [tabs, setTabs] = useState<RestTab[]>(() => {
+        let loadedTabs: RestTab[] | null = null;
+
         try {
             const stored = localStorage.getItem(`rest_tabs_${connectionId}`);
             if (stored) {
                 const parsed = JSON.parse(stored);
                 if (Array.isArray(parsed) && parsed.length > 0) {
-                    return parsed;
+                    loadedTabs = parsed;
                 }
             }
         } catch { }
 
-        return [{
-            ...DEFAULT_TAB,
-            id: Date.now().toString(),
-            path: initialIndex ? `/${initialIndex}/_search` : '/_search'
-        }];
+        // If no stored tabs, create default
+        if (!loadedTabs) {
+            return [{
+                ...DEFAULT_TAB,
+                id: Date.now().toString(),
+                path: initialIndex ? `/${initialIndex}/_search` : '/_search'
+            }];
+        }
+
+        // If we have initialIndex, update the first tab's path
+        if (initialIndex) {
+            const firstTab = loadedTabs[0];
+            const pathParts = firstTab.path.split('/').filter(Boolean);
+            const lastPart = pathParts[pathParts.length - 1];
+            const isEndpoint = lastPart?.startsWith('_');
+            const suffix = isEndpoint ? lastPart : '_search';
+            const newPath = `/${initialIndex}/${suffix}`;
+
+            if (firstTab.path !== newPath) {
+                loadedTabs = loadedTabs.map((tab, index) =>
+                    index === 0 ? { ...tab, path: newPath } : tab
+                );
+            }
+        }
+
+        return loadedTabs;
     });
 
     const [activeTabId, setActiveTabId] = useState<string>(() => {
@@ -115,6 +139,10 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
     const isResizingPanel = useRef(false);
     const contentRef = useRef<HTMLDivElement>(null);
 
+    // Track previous initialIndex to detect changes
+    const prevInitialIndexRef = useRef<string | null>(null);
+    const isFirstMount = useRef(true);
+
     // -------------------------------------------------------------------------
     // EFFECTS
     // -------------------------------------------------------------------------
@@ -147,6 +175,46 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
             }
         }
     }, [tabs, activeTabId]);
+
+    // Handle initialIndex changes - update path when navigating from IndexPage
+    useEffect(() => {
+        // Only run on first mount or when initialIndex changes
+        if (!initialIndex) {
+            isFirstMount.current = false;
+            prevInitialIndexRef.current = null;
+            return;
+        }
+
+        // Skip if same index (not first mount)
+        if (!isFirstMount.current && initialIndex === prevInitialIndexRef.current) {
+            return;
+        }
+
+        isFirstMount.current = false;
+        prevInitialIndexRef.current = initialIndex;
+
+        // Update the first tab's path (active tab) with the new index
+        setTabs(prevTabs => {
+            if (prevTabs.length === 0) return prevTabs;
+
+            // Always update the first tab (active tab on mount)
+            const firstTab = prevTabs[0];
+
+            // Extract current endpoint suffix (e.g., _search, _count)
+            const pathParts = firstTab.path.split('/').filter(Boolean);
+            const lastPart = pathParts[pathParts.length - 1];
+            const isEndpoint = lastPart?.startsWith('_');
+            const suffix = isEndpoint ? lastPart : '_search';
+
+            const newPath = `/${initialIndex}/${suffix}`;
+            if (firstTab.path === newPath) return prevTabs;
+
+            return prevTabs.map((tab, index) =>
+                index === 0 ? { ...tab, path: newPath } : tab
+            );
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialIndex]);
 
     // Persist State
     useEffect(() => {
@@ -282,6 +350,45 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
         }
 
         updateActiveTab({ path: newPath });
+    };
+
+    // Preset Query Click
+    const handlePresetClick = (preset: PresetQuery) => {
+        const currentPath = activeTab.path.trim();
+        let indexName = '';
+
+        // Extract index name from current path
+        if (currentPath && currentPath !== '/') {
+            const path = currentPath.startsWith('/') ? currentPath : '/' + currentPath;
+            const parts = path.split('/').filter(Boolean);
+            if (parts.length > 0 && !parts[0].startsWith('_')) {
+                indexName = parts[0];
+            }
+        }
+
+        const newPath = indexName ? `/${indexName}/${preset.pathSuffix}` : `/${preset.pathSuffix}`;
+        const newBody = preset.body ? JSON.stringify(preset.body, null, 2) : '';
+
+        updateActiveTab({
+            method: preset.method,
+            path: newPath,
+            body: newBody
+        });
+    };
+
+    // Get icon for preset
+    const getPresetIcon = (presetId: string) => {
+        switch (presetId) {
+            case 'search': return Search;
+            case 'count': return Hash;
+            case 'mappings': return FileJson;
+            case 'settings': return Settings;
+            case 'analyze': return FlaskConical;
+            case 'stats': return BarChart3;
+            case 'refresh': return RefreshCw;
+            case 'flush': return Zap;
+            default: return Search;
+        }
     };
 
     // Execution Logic
@@ -625,9 +732,30 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                 </div>
             </div>
 
+            {/* Preset Queries */}
+            <div className="rest-presets">
+                <span className="rest-presets-label">{t('restPresets.title')}:</span>
+                <div className="rest-presets-list">
+                    {PRESET_QUERIES.map((preset) => {
+                        const Icon = getPresetIcon(preset.id);
+                        return (
+                            <button
+                                key={preset.id}
+                                className="rest-preset-btn"
+                                onClick={() => handlePresetClick(preset)}
+                                title={t(preset.labelKey)}
+                            >
+                                <Icon size={12} />
+                                <span>{t(preset.labelKey)}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
             <div className="rest-page-content" ref={contentRef}>
                 <div
-                    className="rest-panel rest-request-panel"
+                    className={`rest-panel rest-request-panel ${activeTab.method === 'GET' ? 'disabled' : ''}`}
                     style={{ width: `${panelWidthPercent}%` }}
                 >
                     <div className="rest-panel-header">
@@ -636,17 +764,19 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                             className="btn btn-ghost btn-sm"
                             onClick={formatJson}
                             title={t('restModal.formatJson')}
+                            disabled={activeTab.method === 'GET'}
                         >
                             {t('restModal.format')}
                         </button>
                     </div>
                     <textarea
                         className="rest-editor"
-                        value={activeTab.body}
+                        value={activeTab.method === 'GET' ? '' : activeTab.body}
                         onChange={(e) => updateActiveTab({ body: e.target.value })}
                         onKeyDown={handleKeyDown}
-                        placeholder="JSON request body..."
+                        placeholder={activeTab.method === 'GET' ? t('restModal.noBodyForGet') : t('restModal.bodyPlaceholder')}
                         spellCheck={false}
+                        disabled={activeTab.method === 'GET'}
                     />
                 </div>
 
