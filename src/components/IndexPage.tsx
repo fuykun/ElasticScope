@@ -19,7 +19,6 @@ import {
     FileJson,
     Plus,
     X,
-    ArrowUpDown,
     ArrowUp,
     ArrowDown,
     FileText,
@@ -54,6 +53,7 @@ import {
     saveColumnsForPrefix,
     extractFieldsFromMapping,
     extractSearchableFieldsFromMapping,
+    extractSortableFieldsFromMapping,
     getSearchFieldsForPrefix,
     saveSearchFieldsForPrefix,
 } from '../utils/columnStorage';
@@ -111,6 +111,7 @@ export const IndexPage: React.FC<IndexPageProps> = ({
     const [columnDropdownOpen, setColumnDropdownOpen] = useState(false);
     const [availableFields, setAvailableFields] = useState<string[]>([]);
     const [searchableFields, setSearchableFields] = useState<string[]>([]); // Aranabilir alanlar (primitive)
+    const [sortableFields, setSortableFields] = useState<string[]>([]); // Sortable alanlar (text hariç)
     const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
     const [columnSearch, setColumnSearch] = useState('');
     const columnDropdownRef = React.useRef<HTMLDivElement>(null);
@@ -151,9 +152,6 @@ export const IndexPage: React.FC<IndexPageProps> = ({
     // Sort
     const [sortField, setSortField] = useState<string>('');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-    const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
-    const [sortFieldSearch, setSortFieldSearch] = useState('');
-    const sortDropdownRef = React.useRef<HTMLDivElement>(null);
 
     // Date Filter
     const [dateFilter, setDateFilter] = useState<DateFilterValue | null>(null);
@@ -204,12 +202,6 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                 setSearchFieldDropdownOpen(false);
             }
             if (
-                sortDropdownRef.current &&
-                !sortDropdownRef.current.contains(event.target as Node)
-            ) {
-                setSortDropdownOpen(false);
-            }
-            if (
                 indexActionsRef.current &&
                 !indexActionsRef.current.contains(event.target as Node)
             ) {
@@ -238,6 +230,10 @@ export const IndexPage: React.FC<IndexPageProps> = ({
 
             const searchable = extractSearchableFieldsFromMapping(mapping, indexName);
             setSearchableFields(searchable);
+
+            // Sortable fields (excludes text fields which require fielddata)
+            const sortable = extractSortableFieldsFromMapping(mapping, indexName);
+            setSortableFields(sortable);
 
             // Extract date and keyword fields for quick filters
             // Skip nested fields as they require nested queries
@@ -484,29 +480,23 @@ export const IndexPage: React.FC<IndexPageProps> = ({
             return a.localeCompare(b);
         });
 
-    // Sort handlers
-    const filteredSortFields = searchableFields.filter((field) =>
-        field.toLowerCase().includes(sortFieldSearch.toLowerCase())
-    );
-
-    const handleSortFieldSelect = (field: string) => {
+    // Sort handlers - now triggered from column headers in table view
+    const handleColumnSort = (field: string) => {
+        let newOrder: 'asc' | 'desc' = 'desc';
         if (sortField === field) {
-            setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+            newOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+            setSortOrder(newOrder);
         } else {
             setSortField(field);
             setSortOrder('desc');
         }
-    };
-
-    const handleApplySort = () => {
-        setSortDropdownOpen(false);
-        performSearch(currentQuery, 0);
+        // Immediately perform search with new sort
+        setTimeout(() => performSearch(currentQuery, 0), 0);
     };
 
     const handleClearSort = () => {
         setSortField('');
         setSortOrder('desc');
-        setSortDropdownOpen(false);
         performSearch(currentQuery, 0, undefined);
     };
 
@@ -996,103 +986,22 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                         </div>
                     </div>
 
-                    {/* Sort Selector */}
-                    <div
-                        className="column-selector-container"
-                        ref={sortDropdownRef}
-                    >
-                        <div className="column-selector">
+                    {/* Sort indicator - show when sorting is active */}
+                    {sortField && (
+                        <div className="sort-indicator-badge">
+                            <span className="sort-indicator-label">
+                                {sortField.replace('.keyword', '')}
+                                {sortOrder === 'asc' ? <ArrowUp size={10} /> : <ArrowDown size={10} />}
+                            </span>
                             <button
-                                className={`column-selector-trigger ${sortField ? 'active' : ''}`}
-                                onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+                                className="sort-indicator-clear"
+                                onClick={handleClearSort}
+                                title={t('common.clear')}
                             >
-                                <ArrowUpDown size={14} />
-                                <span>{sortField ? `${sortField}` : t('indexPage.sortBy')}</span>
-                                {sortField && (
-                                    <span className="sort-order-badge">
-                                        {sortOrder === 'asc' ? <ArrowUp size={10} /> : <ArrowDown size={10} />}
-                                    </span>
-                                )}
-                                <ChevronDown
-                                    size={12}
-                                    style={{
-                                        transform: sortDropdownOpen
-                                            ? 'rotate(180deg)'
-                                            : 'rotate(0deg)',
-                                        transition: 'transform 0.15s ease',
-                                    }}
-                                />
+                                <X size={10} />
                             </button>
-
-                            {sortDropdownOpen && (
-                                <div className="column-selector-dropdown">
-                                    <div className="column-selector-header">
-                                        <span className="column-selector-title">
-                                            {t('indexPage.sortBy')}
-                                        </span>
-                                        {sortField && (
-                                            <button
-                                                className="column-selector-action-btn"
-                                                onClick={handleClearSort}
-                                            >
-                                                {t('common.clear')}
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    <div className="column-selector-search">
-                                        <input
-                                            type="text"
-                                            placeholder={t('common.search') + '...'}
-                                            value={sortFieldSearch}
-                                            onChange={(e) => setSortFieldSearch(e.target.value)}
-                                        />
-                                    </div>
-
-                                    <div className="column-selector-list">
-                                        {filteredSortFields.length === 0 ? (
-                                            <div className="column-selector-empty">
-                                                {t('common.noResults')}
-                                            </div>
-                                        ) : (
-                                            filteredSortFields.map((field) => (
-                                                <div
-                                                    key={field}
-                                                    className={`column-selector-item ${sortField === field ? 'selected' : ''}`}
-                                                    onClick={() => handleSortFieldSelect(field)}
-                                                >
-                                                    <div className="column-selector-checkbox">
-                                                        {sortField === field && (
-                                                            sortOrder === 'asc' ? <ArrowUp size={10} /> : <ArrowDown size={10} />
-                                                        )}
-                                                    </div>
-                                                    <span className="column-selector-label">
-                                                        {field}
-                                                    </span>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-
-                                    <div className="modal-footer">
-                                        <button
-                                            className="btn btn-secondary btn-sm"
-                                            onClick={() => setSortDropdownOpen(false)}
-                                        >
-                                            {t('common.cancel')}
-                                        </button>
-                                        <button
-                                            className="btn btn-primary btn-sm"
-                                            onClick={handleApplySort}
-                                            disabled={!sortField}
-                                        >
-                                            {t('common.apply')}
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
                         </div>
-                    </div>
+                    )}
 
                     {/* Date Filter Toggle Button */}
                     {dateFields.length > 0 && (
@@ -1259,6 +1168,10 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                             setShowCopyModal(true);
                         }}
                         viewMode={viewMode}
+                        sortField={sortField}
+                        sortOrder={sortOrder}
+                        onSort={handleColumnSort}
+                        sortableFields={sortableFields}
                     />
                 </div>
             </div>
@@ -1577,26 +1490,32 @@ export const IndexPage: React.FC<IndexPageProps> = ({
             >
                 <div className="view-query-modal">
                     <div className="view-query-content">
-                        <pre className="view-query-json">
-                            {currentQuery
-                                ? JSON.stringify(currentQuery, null, 2)
-                                : JSON.stringify({ query: { match_all: {} } }, null, 2)
-                            }
-                        </pre>
+                        <JsonViewer
+                            data={(() => {
+                                const fullQuery: Record<string, any> = {};
+
+                                // Add query part
+                                if (currentQuery) {
+                                    Object.assign(fullQuery, currentQuery);
+                                } else {
+                                    fullQuery.query = { match_all: {} };
+                                }
+
+                                // Add sort if active
+                                if (sortField) {
+                                    fullQuery.sort = [{ [sortField]: { order: sortOrder } }];
+                                }
+
+                                return fullQuery;
+                            })()}
+                            defaultExpanded={true}
+                            expandAllByDefault={true}
+                            showSearchBar={false}
+                            editable={false}
+                            enableCopy={true}
+                        />
                     </div>
                     <div className="view-query-actions">
-                        <button
-                            className="btn btn-secondary"
-                            onClick={() => {
-                                const queryStr = currentQuery
-                                    ? JSON.stringify(currentQuery, null, 2)
-                                    : JSON.stringify({ query: { match_all: {} } }, null, 2);
-                                navigator.clipboard.writeText(queryStr);
-                            }}
-                        >
-                            <FileJson size={14} />
-                            {t('common.copy')}
-                        </button>
                         <button
                             className="btn btn-primary"
                             onClick={() => setShowQueryModal(false)}

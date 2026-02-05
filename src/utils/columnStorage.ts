@@ -88,6 +88,55 @@ export const extractSearchableFieldsFromMapping = (
     return fields.sort();
 };
 
+// Text alanları Elasticsearch'te doğrudan sortable değil (fielddata gerekli)
+// Bu fonksiyon sadece sortable alanları döner
+export const extractSortableFieldsFromMapping = (
+    mapping: Record<string, any>,
+    indexName: string
+): string[] => {
+    const fields: string[] = [];
+
+    // Sortable tipler: keyword, numeric tipler, date, boolean, ip
+    const sortableTypes = [
+        'keyword', 'long', 'integer', 'short', 'byte', 'double', 'float',
+        'half_float', 'scaled_float', 'date', 'date_nanos', 'boolean', 'ip'
+    ];
+
+    const indexMapping = mapping[indexName]?.mappings?.properties;
+    if (indexMapping) {
+        for (const fieldName of Object.keys(indexMapping)) {
+            const fieldDef = indexMapping[fieldName];
+            const fieldType = fieldDef.type;
+
+            // Object veya nested tipleri atla
+            if (fieldType === 'object' || fieldType === 'nested') {
+                continue;
+            }
+
+            // Properties varsa bu bir object'tir, atla
+            if (fieldDef.properties) {
+                continue;
+            }
+
+            // Text alanları için .keyword sub-field var mı kontrol et
+            if (fieldType === 'text') {
+                // text alanının keyword sub-field'ı varsa onu ekle
+                if (fieldDef.fields?.keyword) {
+                    fields.push(`${fieldName}.keyword`);
+                }
+                continue;
+            }
+
+            // Direkt sortable tipler
+            if (sortableTypes.includes(fieldType)) {
+                fields.push(fieldName);
+            }
+        }
+    }
+
+    return fields.sort();
+};
+
 // ==================== SEARCH FIELD STORAGE ====================
 
 export const getAllSearchFieldConfigs = (): SearchFieldConfig => {

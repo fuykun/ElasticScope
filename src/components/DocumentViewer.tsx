@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Copy, Trash2, ChevronDown, ChevronRight, X, Check, Maximize2, GitCompare, Upload, RefreshCw } from 'lucide-react';
+import { Copy, Trash2, ChevronDown, ChevronRight, X, Check, Maximize2, GitCompare, Upload, RefreshCw, ArrowUp, ArrowDown } from 'lucide-react';
 import { SearchHit } from '../types';
 import { deleteDocument, saveDocument } from '../api/elasticsearchClient';
 import { JsonViewer } from './JsonViewer';
@@ -17,6 +17,11 @@ interface DocumentViewerProps {
     isInComparison: (docId: string, indexName: string) => boolean;
     onCopyDocument?: (documents: Array<{ id: string; source?: any }>) => void;
     viewMode?: 'card' | 'table';
+    // Sorting props for table view
+    sortField?: string;
+    sortOrder?: 'asc' | 'desc';
+    onSort?: (field: string) => void;
+    sortableFields?: string[];
 }
 
 const getNestedValue = (obj: Record<string, any>, path: string): any => {
@@ -52,6 +57,10 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
     isInComparison,
     onCopyDocument,
     viewMode = 'card',
+    sortField,
+    sortOrder,
+    onSort,
+    sortableFields = [],
 }) => {
     const { t } = useTranslation();
     const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
@@ -123,7 +132,14 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
     };
 
     if (loading) {
-        return <SkeletonLoader type="document-list" count={6} />;
+        return (
+            <SkeletonLoader
+                type="document-list"
+                count={6}
+                viewMode={viewMode}
+                columnCount={selectedColumns.length || 4}
+            />
+        );
     }
 
     // Fullscreen modal
@@ -142,6 +158,39 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
         ? selectedColumns
         : [...new Set(localDocuments.flatMap(doc => Object.keys(doc._source)))].slice(0, 6);
 
+    // Get sortable field name for a column
+    // If column is directly sortable, return it
+    // If column has .keyword variant, return that
+    const getSortableField = (col: string): string | null => {
+        if (sortableFields.includes(col)) {
+            return col;
+        }
+        // Check if there's a .keyword variant
+        const keywordVariant = `${col}.keyword`;
+        if (sortableFields.includes(keywordVariant)) {
+            return keywordVariant;
+        }
+        return null;
+    };
+
+    // Check if a column is sortable
+    const isSortable = (col: string) => getSortableField(col) !== null;
+
+    // Check if column is currently sorted (handle .keyword variant)
+    const isColumnSorted = (col: string): boolean => {
+        if (!sortField) return false;
+        return sortField === col || sortField === `${col}.keyword`;
+    };
+
+    // Handle column header click for sorting
+    const handleHeaderClick = (col: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        const sortableField = getSortableField(col);
+        if (sortableField && onSort) {
+            onSort(sortableField);
+        }
+    };
+
     return (
         <>
             {viewMode === 'table' ? (
@@ -151,9 +200,31 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
                         <thead>
                             <tr>
                                 <th className="doc-table-id-col">ID</th>
-                                {tableColumns.map((col) => (
-                                    <th key={col}>{col}</th>
-                                ))}
+                                {tableColumns.map((col) => {
+                                    const sortable = isSortable(col);
+                                    const isActive = isColumnSorted(col);
+                                    return (
+                                        <th
+                                            key={col}
+                                            className={`${sortable ? 'sortable' : ''} ${isActive ? 'sort-active' : ''}`}
+                                            onClick={(e) => handleHeaderClick(col, e)}
+                                            title={sortable ? t('documentViewer.clickToSort') : t('documentViewer.notSortable')}
+                                        >
+                                            <span className="th-content">
+                                                <span className="th-label">{col}</span>
+                                                {sortable && (
+                                                    <span className={`sort-indicator ${isActive ? 'active' : ''}`}>
+                                                        {isActive ? (
+                                                            sortOrder === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />
+                                                        ) : (
+                                                            <ArrowDown size={12} className="sort-hint" />
+                                                        )}
+                                                    </span>
+                                                )}
+                                            </span>
+                                        </th>
+                                    );
+                                })}
                                 <th className="doc-table-actions-col">{t('documentViewer.actions')}</th>
                             </tr>
                         </thead>

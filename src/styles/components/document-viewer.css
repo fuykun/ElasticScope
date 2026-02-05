@@ -343,9 +343,57 @@
   white-space: nowrap;
 }
 
+/* Sortable column headers */
+.documents-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.documents-table th.sortable:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.documents-table th.sortable:hover .sort-hint {
+  opacity: 0.5;
+}
+
+.documents-table th.sort-active {
+  color: var(--accent);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.documents-table th .th-content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.documents-table th .th-label {
+  flex: 1;
+}
+
+.documents-table th .sort-indicator {
+  display: flex;
+  align-items: center;
+  color: var(--text-tertiary);
+}
+
+.documents-table th .sort-indicator.active {
+  color: var(--accent);
+}
+
+.documents-table th .sort-indicator .sort-hint {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
 .documents-table th.doc-table-id-col {
   width: 200px;
   min-width: 150px;
+  /* Account for toggle icon space in td rows */
+  padding-left: 32px;
 }
 
 .documents-table th.doc-table-actions-col {

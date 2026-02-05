@@ -61,7 +61,8 @@
         "daysAgo": "{{count}}g",
         "weeksAgo": "{{count}}h",
         "monthsAgo": "{{count}}ay",
-        "yearsAgo": "{{count}}y"
+        "yearsAgo": "{{count}}y",
+        "copy": "Kopyala"
     },
     "header": {
         "home": "Ana Sayfa",
@@ -259,6 +260,8 @@
         "fullscreen": "Tam ekran",
         "copyJson": "JSON Kopyala",
         "saveFailed": "Kaydetme başarısız",
+        "clickToSort": "Sıralamak için tıklayın",
+        "notSortable": "Bu alan sıralanamaz",
         "metadata": {
             "index": "Index",
             "type": "Tip",

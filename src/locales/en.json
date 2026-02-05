@@ -61,7 +61,8 @@
         "daysAgo": "{{count}}d",
         "weeksAgo": "{{count}}w",
         "monthsAgo": "{{count}}mo",
-        "yearsAgo": "{{count}}y"
+        "yearsAgo": "{{count}}y",
+        "copy": "Copy"
     },
     "header": {
         "home": "Home",
@@ -259,6 +260,8 @@
         "fullscreen": "Fullscreen",
         "copyJson": "Copy JSON",
         "saveFailed": "Save failed",
+        "clickToSort": "Click to sort",
+        "notSortable": "This field cannot be sorted",
         "metadata": {
             "index": "Index",
             "type": "Type",
