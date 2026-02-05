@@ -7,7 +7,6 @@ import {
     Search,
     Check,
     X,
-    Play,
     Code,
     Copy,
     RotateCcw,
@@ -72,7 +71,6 @@ export interface QueryGroup {
 interface QueryBuilderProps {
     fields: FieldInfo[];
     onQueryChange: (query: object | null) => void;
-    onSearch: (query: object | null) => void;
     rootGroup: QueryGroup;
     onRootGroupChange: (group: QueryGroup) => void;
 }
@@ -438,7 +436,6 @@ const createEmptyCondition = (): QueryCondition => ({
 export const QueryBuilder: React.FC<QueryBuilderProps> = ({
     fields,
     onQueryChange,
-    onSearch,
     rootGroup,
     onRootGroupChange,
 }) => {
@@ -582,11 +579,6 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
         onRootGroupChange(emptyGroup);
         setGeneratedQuery(null);
         onQueryChange(null);
-    };
-
-    // Execute search
-    const handleSearch = () => {
-        onSearch(generatedQuery);
     };
 
     // Copy query to clipboard
@@ -811,14 +803,6 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
                             </button>
                         </>
                     )}
-                    <button
-                        className="btn btn-primary qb-search-btn"
-                        onClick={handleSearch}
-                        disabled={!generatedQuery}
-                    >
-                        <Play size={14} />
-                        {t('queryBuilder.search')}
-                    </button>
                 </div>
             </div>
 

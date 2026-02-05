@@ -16,6 +16,7 @@ interface DocumentViewerProps {
     onRemoveFromComparison: (docId: string, indexName: string) => void;
     isInComparison: (docId: string, indexName: string) => boolean;
     onCopyDocument?: (documents: Array<{ id: string; source?: any }>) => void;
+    viewMode?: 'card' | 'table';
 }
 
 const getNestedValue = (obj: Record<string, any>, path: string): any => {
@@ -50,6 +51,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
     onRemoveFromComparison,
     isInComparison,
     onCopyDocument,
+    viewMode = 'card',
 }) => {
     const { t } = useTranslation();
     const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
@@ -135,146 +137,286 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
         );
     }
 
+    // Get columns for table view
+    const tableColumns = selectedColumns.length > 0
+        ? selectedColumns
+        : [...new Set(localDocuments.flatMap(doc => Object.keys(doc._source)))].slice(0, 6);
+
     return (
         <>
-            <div className="documents-grid">
-                {localDocuments.map((doc) => (
-                    <div
-                        key={doc._id}
-                        className={`doc-card ${expandedDoc === doc._id ? 'expanded' : ''} ${refreshingDoc === doc._id ? 'doc-refreshing' : ''}`}
-                    >
-                        {/* Card Header */}
-                        <div className="doc-card-header">
-                            <div className="doc-card-title" onClick={() => toggleExpand(doc._id)}>
-                                <span className="doc-toggle">
-                                    {expandedDoc === doc._id ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                                </span>
-                                <span className="doc-id-badge">{doc._id}</span>
-                                {doc._source?.name && (
-                                    <span className="doc-name-badge" title={doc._source.name}>
-                                        {doc._source.name.length > 100 ? doc._source.name.substring(0, 100) + '...' : doc._source.name}
+            {viewMode === 'table' ? (
+                /* Table View */
+                <div className="documents-table-wrapper">
+                    <table className="documents-table">
+                        <thead>
+                            <tr>
+                                <th className="doc-table-id-col">ID</th>
+                                {tableColumns.map((col) => (
+                                    <th key={col}>{col}</th>
+                                ))}
+                                <th className="doc-table-actions-col">{t('documentViewer.actions')}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {localDocuments.map((doc) => (
+                                <React.Fragment key={doc._id}>
+                                    <tr
+                                        className={`doc-table-row ${expandedDoc === doc._id ? 'expanded' : ''} ${refreshingDoc === doc._id ? 'refreshing' : ''}`}
+                                        onClick={() => toggleExpand(doc._id)}
+                                    >
+                                        <td className="doc-table-id">
+                                            <span className="doc-toggle">
+                                                {expandedDoc === doc._id ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                                            </span>
+                                            <span className="doc-id-text">{doc._id}</span>
+                                            {doc._score !== null && doc._score > 0 && (
+                                                <span className="doc-score-badge-sm">{doc._score.toFixed(2)}</span>
+                                            )}
+                                        </td>
+                                        {tableColumns.map((col) => (
+                                            <td key={col} className="doc-table-cell">
+                                                {formatDisplayValue(getNestedValue(doc._source, col), 60)}
+                                            </td>
+                                        ))}
+                                        <td className="doc-table-actions" onClick={(e) => e.stopPropagation()}>
+                                            <button
+                                                className={`btn btn-icon-sm ${refreshingDoc === doc._id ? 'btn-loading' : ''}`}
+                                                onClick={() => handleRefreshDocument(doc._id)}
+                                                title={t('common.refresh')}
+                                                disabled={refreshingDoc === doc._id}
+                                            >
+                                                <RefreshCw size={12} className={refreshingDoc === doc._id ? 'spin' : ''} />
+                                            </button>
+                                            <button
+                                                className={`btn btn-icon-sm ${isInComparison(doc._id, selectedIndex) ? 'btn-primary' : ''}`}
+                                                onClick={() =>
+                                                    isInComparison(doc._id, selectedIndex)
+                                                        ? onRemoveFromComparison(doc._id, selectedIndex)
+                                                        : onAddToComparison({ _id: doc._id, _index: selectedIndex, _source: doc._source })
+                                                }
+                                                title={isInComparison(doc._id, selectedIndex) ? t('documentViewer.removeFromComparison') : t('documentViewer.addToComparison')}
+                                            >
+                                                <GitCompare size={12} />
+                                            </button>
+                                            {onCopyDocument && (
+                                                <button
+                                                    className="btn btn-icon-sm"
+                                                    onClick={() => onCopyDocument([{ id: doc._id, source: doc._source }])}
+                                                    title={t('documentViewer.copyToServer')}
+                                                >
+                                                    <Upload size={12} />
+                                                </button>
+                                            )}
+                                            <button
+                                                className="btn btn-icon-sm"
+                                                onClick={() => setFullscreenDoc(doc._id)}
+                                                title={t('documentViewer.fullscreen')}
+                                            >
+                                                <Maximize2 size={12} />
+                                            </button>
+                                            <button
+                                                className="btn btn-icon-sm"
+                                                onClick={() => copyToClipboard(JSON.stringify(doc._source, null, 2), doc._id)}
+                                                title={t('documentViewer.copyJson')}
+                                            >
+                                                {copiedId === doc._id ? <Check size={12} /> : <Copy size={12} />}
+                                            </button>
+                                            <button
+                                                className="btn btn-icon-sm btn-danger-subtle"
+                                                onClick={() => setDeleteConfirm(doc._id)}
+                                                title={t('common.delete')}
+                                            >
+                                                <Trash2 size={12} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {/* Expanded Row */}
+                                    {expandedDoc === doc._id && (
+                                        <tr className="doc-table-expanded-row">
+                                            <td colSpan={tableColumns.length + 2}>
+                                                <div className="doc-table-expanded-content">
+                                                    {saveError && editingDoc === doc._id && (
+                                                        <div className="error-message" style={{ marginBottom: '8px' }}>
+                                                            {saveError}
+                                                        </div>
+                                                    )}
+                                                    <JsonViewer
+                                                        data={doc._source}
+                                                        defaultExpanded={true}
+                                                        showSearchBar={true}
+                                                        editable={true}
+                                                        onSave={(newData) => handleSave(doc._id, newData)}
+                                                        onCancel={handleCancelEdit}
+                                                        enablePinning={true}
+                                                    />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {/* Delete Confirm */}
+                                    {deleteConfirm === doc._id && (
+                                        <tr className="doc-table-delete-row">
+                                            <td colSpan={tableColumns.length + 2}>
+                                                <div className="delete-dialog-inline">
+                                                    <p>{t('documentViewer.deleteConfirm')}</p>
+                                                    <div className="delete-actions">
+                                                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(doc._id)}>
+                                                            {t('common.delete')}
+                                                        </button>
+                                                        <button className="btn btn-secondary btn-sm" onClick={() => setDeleteConfirm(null)}>
+                                                            {t('common.cancel')}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </React.Fragment>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            ) : (
+                /* Card View (Default) */
+                <div className="documents-grid">
+                    {localDocuments.map((doc) => (
+                        <div
+                            key={doc._id}
+                            className={`doc-card ${expandedDoc === doc._id ? 'expanded' : ''} ${refreshingDoc === doc._id ? 'doc-refreshing' : ''}`}
+                        >
+                            {/* Card Header */}
+                            <div className="doc-card-header">
+                                <div className="doc-card-title" onClick={() => toggleExpand(doc._id)}>
+                                    <span className="doc-toggle">
+                                        {expandedDoc === doc._id ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                                     </span>
-                                )}
-                                {doc._score !== null && doc._score > 0 && (
-                                    <span className="doc-score-badge">
-                                        {doc._score.toFixed(2)}
-                                    </span>
-                                )}
-                            </div>
-                            <div className="doc-card-actions">
-                                <button
-                                    className={`btn btn-icon-sm ${refreshingDoc === doc._id ? 'btn-loading' : ''}`}
-                                    onClick={() => handleRefreshDocument(doc._id)}
-                                    title={t('common.refresh')}
-                                    disabled={refreshingDoc === doc._id}
-                                >
-                                    <RefreshCw size={12} className={refreshingDoc === doc._id ? 'spin' : ''} />
-                                </button>
-                                <button
-                                    className={`btn btn-icon-sm ${isInComparison(doc._id, selectedIndex) ? 'btn-primary' : ''}`}
-                                    onClick={() =>
-                                        isInComparison(doc._id, selectedIndex)
-                                            ? onRemoveFromComparison(doc._id, selectedIndex)
-                                            : onAddToComparison({ _id: doc._id, _index: selectedIndex, _source: doc._source })
-                                    }
-                                    title={isInComparison(doc._id, selectedIndex) ? t('documentViewer.removeFromComparison') : t('documentViewer.addToComparison')}
-                                >
-                                    <GitCompare size={12} />
-                                </button>
-                                {onCopyDocument && (
+                                    <span className="doc-id-badge">{doc._id}</span>
+                                    {doc._source?.name && (
+                                        <span className="doc-name-badge" title={doc._source.name}>
+                                            {doc._source.name.length > 100 ? doc._source.name.substring(0, 100) + '...' : doc._source.name}
+                                        </span>
+                                    )}
+                                    {doc._score !== null && doc._score > 0 && (
+                                        <span className="doc-score-badge">
+                                            {doc._score.toFixed(2)}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="doc-card-actions">
+                                    <button
+                                        className={`btn btn-icon-sm ${refreshingDoc === doc._id ? 'btn-loading' : ''}`}
+                                        onClick={() => handleRefreshDocument(doc._id)}
+                                        title={t('common.refresh')}
+                                        disabled={refreshingDoc === doc._id}
+                                    >
+                                        <RefreshCw size={12} className={refreshingDoc === doc._id ? 'spin' : ''} />
+                                    </button>
+                                    <button
+                                        className={`btn btn-icon-sm ${isInComparison(doc._id, selectedIndex) ? 'btn-primary' : ''}`}
+                                        onClick={() =>
+                                            isInComparison(doc._id, selectedIndex)
+                                                ? onRemoveFromComparison(doc._id, selectedIndex)
+                                                : onAddToComparison({ _id: doc._id, _index: selectedIndex, _source: doc._source })
+                                        }
+                                        title={isInComparison(doc._id, selectedIndex) ? t('documentViewer.removeFromComparison') : t('documentViewer.addToComparison')}
+                                    >
+                                        <GitCompare size={12} />
+                                    </button>
+                                    {onCopyDocument && (
+                                        <button
+                                            className="btn btn-icon-sm"
+                                            onClick={() => onCopyDocument([{ id: doc._id, source: doc._source }])}
+                                            title={t('documentViewer.copyToServer')}
+                                        >
+                                            <Upload size={12} />
+                                        </button>
+                                    )}
                                     <button
                                         className="btn btn-icon-sm"
-                                        onClick={() => onCopyDocument([{ id: doc._id, source: doc._source }])}
-                                        title={t('documentViewer.copyToServer')}
+                                        onClick={() => setFullscreenDoc(doc._id)}
+                                        title={t('documentViewer.fullscreen')}
                                     >
-                                        <Upload size={12} />
+                                        <Maximize2 size={12} />
                                     </button>
-                                )}
-                                <button
-                                    className="btn btn-icon-sm"
-                                    onClick={() => setFullscreenDoc(doc._id)}
-                                    title={t('documentViewer.fullscreen')}
-                                >
-                                    <Maximize2 size={12} />
-                                </button>
-                                <button
-                                    className="btn btn-icon-sm"
-                                    onClick={() => copyToClipboard(JSON.stringify(doc._source, null, 2), doc._id)}
-                                    title={t('documentViewer.copyJson')}
-                                >
-                                    {copiedId === doc._id ? <Check size={12} /> : <Copy size={12} />}
-                                </button>
-                                <button
-                                    className="btn btn-icon-sm btn-danger-subtle"
-                                    onClick={() => setDeleteConfirm(doc._id)}
-                                    title={t('common.delete')}
-                                >
-                                    <Trash2 size={12} />
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Preview Fields - Tablo görünümü */}
-                        {expandedDoc !== doc._id && (
-                            <div className="doc-card-preview">
-                                <table className="preview-table">
-                                    <tbody>
-                                        {(selectedColumns.length > 0 ? selectedColumns : Object.keys(doc._source).slice(0, 4)).map((column) => {
-                                            const value = selectedColumns.length > 0
-                                                ? getNestedValue(doc._source, column)
-                                                : doc._source[column];
-                                            if (value === undefined) return null;
-                                            return (
-                                                <tr key={column}>
-                                                    <td className="preview-key">{column}</td>
-                                                    <td className="preview-value">{formatDisplayValue(value)}</td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-
-                        {/* Expanded JSON Viewer */}
-                        {expandedDoc === doc._id && (
-                            <div className="doc-card-body">
-                                {saveError && editingDoc === doc._id && (
-                                    <div className="error-message" style={{ marginBottom: '8px' }}>
-                                        {saveError}
-                                    </div>
-                                )}
-                                <JsonViewer
-                                    data={doc._source}
-                                    defaultExpanded={true}
-                                    showSearchBar={true}
-                                    editable={true}
-                                    onSave={(newData) => handleSave(doc._id, newData)}
-                                    onCancel={handleCancelEdit}
-                                    enablePinning={true}
-                                />
-                            </div>
-                        )}
-
-                        {/* Delete Confirm */}
-                        {deleteConfirm === doc._id && (
-                            <div className="delete-overlay">
-                                <div className="delete-dialog">
-                                    <p>{t('documentViewer.deleteConfirm')}</p>
-                                    <div className="delete-actions">
-                                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(doc._id)}>
-                                            {t('common.delete')}
-                                        </button>
-                                        <button className="btn btn-secondary btn-sm" onClick={() => setDeleteConfirm(null)}>
-                                            {t('common.cancel')}
-                                        </button>
-                                    </div>
+                                    <button
+                                        className="btn btn-icon-sm"
+                                        onClick={() => copyToClipboard(JSON.stringify(doc._source, null, 2), doc._id)}
+                                        title={t('documentViewer.copyJson')}
+                                    >
+                                        {copiedId === doc._id ? <Check size={12} /> : <Copy size={12} />}
+                                    </button>
+                                    <button
+                                        className="btn btn-icon-sm btn-danger-subtle"
+                                        onClick={() => setDeleteConfirm(doc._id)}
+                                        title={t('common.delete')}
+                                    >
+                                        <Trash2 size={12} />
+                                    </button>
                                 </div>
                             </div>
-                        )}
-                    </div>
-                ))}
-            </div>
+
+                            {/* Preview Fields - Tablo görünümü */}
+                            {expandedDoc !== doc._id && (
+                                <div className="doc-card-preview">
+                                    <table className="preview-table">
+                                        <tbody>
+                                            {(selectedColumns.length > 0 ? selectedColumns : Object.keys(doc._source).slice(0, 4)).map((column) => {
+                                                const value = selectedColumns.length > 0
+                                                    ? getNestedValue(doc._source, column)
+                                                    : doc._source[column];
+                                                if (value === undefined) return null;
+                                                return (
+                                                    <tr key={column}>
+                                                        <td className="preview-key">{column}</td>
+                                                        <td className="preview-value">{formatDisplayValue(value)}</td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+
+                            {/* Expanded JSON Viewer */}
+                            {expandedDoc === doc._id && (
+                                <div className="doc-card-body">
+                                    {saveError && editingDoc === doc._id && (
+                                        <div className="error-message" style={{ marginBottom: '8px' }}>
+                                            {saveError}
+                                        </div>
+                                    )}
+                                    <JsonViewer
+                                        data={doc._source}
+                                        defaultExpanded={true}
+                                        showSearchBar={true}
+                                        editable={true}
+                                        onSave={(newData) => handleSave(doc._id, newData)}
+                                        onCancel={handleCancelEdit}
+                                        enablePinning={true}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Delete Confirm */}
+                            {deleteConfirm === doc._id && (
+                                <div className="delete-overlay">
+                                    <div className="delete-dialog">
+                                        <p>{t('documentViewer.deleteConfirm')}</p>
+                                        <div className="delete-actions">
+                                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(doc._id)}>
+                                                {t('common.delete')}
+                                            </button>
+                                            <button className="btn btn-secondary btn-sm" onClick={() => setDeleteConfirm(null)}>
+                                                {t('common.cancel')}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
 
             {/* Fullscreen Modal */}
             {fullscreenDocument && (

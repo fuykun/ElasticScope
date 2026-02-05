@@ -20,7 +20,7 @@
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .modal-sm {
@@ -81,6 +81,10 @@
   flex: 1;
   overflow-y: auto;
   padding: var(--spacing-lg);
+}
+
+.modal-body:has(.copy-modal) {
+  overflow: visible;
 }
 
 .json-modal-content {

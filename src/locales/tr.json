@@ -154,6 +154,9 @@
         "deleteIndex": "Index'i Sil",
         "openIndex": "Index'i Aç",
         "closeIndex": "Index'i Kapat",
+        "indexActions": "Index İşlemleri",
+        "settingsMappings": "Ayarlar & Mappings",
+        "refreshIndex": "Index'i Yenile",
         "deleteConfirm": "Silmek için index adını yazın:",
         "deleteWarning": "Bu işlem geri alınamaz!",
         "deleteAliasWarning": "Bu index'in silinecek aliasları var:",
@@ -174,11 +177,13 @@
         "descending": "Azalan",
         "filters": {
             "title": "Filtreler",
+            "dateFilter": "Tarih Filtresi",
             "quickFilters": "Hızlı Filtreler",
             "activeFilters": "Aktif Filtreler",
             "clearAll": "Tümünü Temizle",
             "addFilter": "Filtre Ekle",
             "noFilters": "Filtre uygulanmadı",
+            "noDateFields": "Tarih alanı bulunamadı",
             "facets": "Kategoriler",
             "today": "Bugün",
             "yesterday": "Dün",
@@ -186,6 +191,9 @@
             "last30Days": "Son 30 gün",
             "thisMonth": "Bu ay",
             "customRange": "Özel Aralık",
+            "selectDateRange": "Tarih Aralığı Seç",
+            "from": "Başlangıç",
+            "to": "Bitiş",
             "selectDateField": "Tarih alanı seç",
             "selectField": "Alan seç",
             "selectOperator": "Operatör",
@@ -203,6 +211,7 @@
             "query": "Query DSL"
         },
         "searchPlaceholder": "Dökümanlarda ara...",
+        "queryBuilderActive": "Query Builder aktif - aramak için Search'e tıklayın",
         "searchField": "Arama Alanı",
         "searchIn": "İçinde ara",
         "searchFields": "Arama Alanları",
@@ -226,7 +235,13 @@
         "copyDocument": "Dökümanı Kopyala",
         "addDocument": "Döküman Ekle",
         "documentId": "Döküman ID (opsiyonel)",
-        "documentBody": "Döküman İçeriği"
+        "documentBody": "Döküman İçeriği",
+        "viewQuery": "Sorguyu Görüntüle",
+        "viewQueryTitle": "Çalıştırılan Sorgu",
+        "viewMode": {
+            "card": "Kart Görünümü",
+            "table": "Tablo Görünümü"
+        }
     },
     "documentViewer": {
         "title": "Döküman Detayları",
@@ -237,6 +252,7 @@
         "addToComparison": "Karşılaştırmaya Ekle",
         "removeFromComparison": "Karşılaştırmadan Çıkar",
         "delete": "Sil",
+        "actions": "İşlemler",
         "deleteConfirm": "Bu dökümanı silmek istediğinize emin misiniz?",
         "noDocuments": "Döküman bulunamadı",
         "copyToServer": "Başka sunucuya kopyala",
@@ -270,10 +286,19 @@
     "copyModal": {
         "title": "Dökümanı Kopyala",
         "titleMultiple": "Dökümanları Kopyala",
+        "sourceInfo": "Kaynak",
+        "sourceIndex": "Index",
+        "sourceDocuments": "ID",
+        "documentsCount": "{{count}} döküman",
         "targetConnection": "Hedef Bağlantı",
         "targetIndex": "Hedef Index",
-        "selectConnection": "Bir bağlantı seçin",
-        "selectIndex": "Bir index seçin",
+        "selectConnection": "Bağlantı seçin...",
+        "selectIndex": "Index seçin...",
+        "existingIndex": "Mevcut",
+        "newIndex": "Yeni Index",
+        "loadingIndices": "Index'ler yükleniyor...",
+        "newIndexPlaceholder": "Yeni index adı girin...",
+        "copyMappingToo": "Mapping'i kopyala",
         "documentCount": "{{count}} döküman kopyalanacak",
         "copying": "Kopyalanıyor...",
         "copySuccess": "{{count}} döküman başarıyla kopyalandı",
@@ -286,7 +311,8 @@
         "mappingsMismatch": "Mappingler eşleşmiyor! Yine de kopyalayabilirsiniz ancak beklendiği gibi çalışmayabilir.",
         "viewDifferences": "Farkları Gör",
         "checking": "Kontrol ediliyor...",
-        "copy": "Kopyala"
+        "copy": "Kopyala",
+        "noResults": "Index bulunamadı"
     },
     "createIndex": {
         "title": "Yeni Index Oluştur",

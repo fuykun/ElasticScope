@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Copy, Server, Database, AlertTriangle, CheckCircle, Loader2, X, Search, GitCompare } from 'lucide-react';
+import { Copy, Server, Database, AlertTriangle, CheckCircle, Loader2, X, Search, GitCompare, ChevronDown, Check } from 'lucide-react';
 import { Modal } from './Modal';
 import { MappingComparisonModal } from './MappingComparisonModal';
 import {
@@ -22,6 +22,128 @@ interface CopyDocumentModalProps {
     currentConnectionId?: number;
 }
 
+// Searchable Select Component
+interface SearchableSelectProps {
+    value: string | number | null;
+    onChange: (value: string | number | null) => void;
+    options: Array<{ id: string | number; label: string; sublabel?: string }>;
+    placeholder: string;
+    icon?: React.ReactNode;
+    loading?: boolean;
+    loadingText?: string;
+}
+
+const SearchableSelect = ({
+    value,
+    onChange,
+    options,
+    placeholder,
+    icon,
+    loading,
+    loadingText
+}: SearchableSelectProps) => {
+    const { t } = useTranslation();
+    const [isOpen, setIsOpen] = useState(false);
+    const [search, setSearch] = useState('');
+    const containerRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    const filteredOptions = options.filter(opt =>
+        opt.label.toLowerCase().includes(search.toLowerCase()) ||
+        (opt.sublabel && opt.sublabel.toLowerCase().includes(search.toLowerCase()))
+    );
+
+    const selectedOption = options.find(opt => opt.id === value);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+                setIsOpen(false);
+                setSearch('');
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+        if (isOpen && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [isOpen]);
+
+    if (loading) {
+        return (
+            <div className="copy-select-loading">
+                <Loader2 size={14} className="spin" />
+                <span>{loadingText}</span>
+            </div>
+        );
+    }
+
+    return (
+        <div className="copy-searchable-select" ref={containerRef}>
+            <button
+                type="button"
+                className={`copy-select-trigger ${isOpen ? 'open' : ''}`}
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                {icon}
+                <span className={selectedOption ? '' : 'placeholder'}>
+                    {selectedOption ? selectedOption.label : placeholder}
+                </span>
+                <ChevronDown size={14} />
+            </button>
+            {isOpen && (
+                <div className="copy-select-dropdown">
+                    <div className="copy-select-search">
+                        <Search size={14} />
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder={t('common.search')}
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                        {search && (
+                            <button onClick={() => setSearch('')} className="copy-select-clear">
+                                <X size={12} />
+                            </button>
+                        )}
+                    </div>
+                    <div className="copy-select-options">
+                        {filteredOptions.length === 0 ? (
+                            <div className="copy-select-no-results">{t('common.noResults')}</div>
+                        ) : (
+                            filteredOptions.map(opt => (
+                                <button
+                                    key={opt.id}
+                                    type="button"
+                                    className={`copy-select-option ${opt.id === value ? 'selected' : ''}`}
+                                    onClick={() => {
+                                        onChange(opt.id);
+                                        setIsOpen(false);
+                                        setSearch('');
+                                    }}
+                                >
+                                    <div className="copy-select-option-content">
+                                        <span className="copy-select-option-label">{opt.label}</span>
+                                        {opt.sublabel && (
+                                            <span className="copy-select-option-sublabel">{opt.sublabel}</span>
+                                        )}
+                                    </div>
+                                    {opt.id === value && <Check size={14} />}
+                                </button>
+                            ))
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 export const CopyDocumentModal = ({
     isOpen,
     onClose,
@@ -41,7 +163,6 @@ export const CopyDocumentModal = ({
     const [loadingIndices, setLoadingIndices] = useState(false);
     const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [indexSearch, setIndexSearch] = useState('');
 
     const [checkingMapping, setCheckingMapping] = useState(false);
     const [mappingStatus, setMappingStatus] = useState<'idle' | 'checking' | 'match' | 'mismatch'>('idle');
@@ -193,163 +314,110 @@ export const CopyDocumentModal = ({
         }
     };
 
+    const modalTitle = documents.length === 1 ? t('copyModal.title') : t('copyModal.titleMultiple');
+
+    // Connection options for searchable select
+    const connectionOptions = connections
+        .filter(conn => conn.id !== currentConnectionId)
+        .map(conn => ({
+            id: conn.id,
+            label: conn.name,
+            sublabel: conn.url
+        }));
+
+    // Index options for searchable select
+    const indexOptions = targetIndices.map(idx => ({
+        id: idx.index,
+        label: idx.index,
+        sublabel: `${idx.docsCount} docs · ${idx.storeSize}`
+    }));
+
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Dokuman Kopyala" size="md">
-            <div className="copy-document-modal">
-                {/* Kaynak Bilgisi */}
-                <div className="copy-source-info">
-                    <div className="copy-info-header">
-                        <Database size={14} />
-                        <span>Kaynak Bilgileri</span>
+        <Modal isOpen={isOpen} onClose={onClose} title={modalTitle} size="md">
+            <div className="copy-modal">
+                {/* Source Info - Compact */}
+                <div className="copy-source">
+                    <div className="copy-source-item">
+                        <span className="copy-source-label">{t('copyModal.sourceIndex')}</span>
+                        <span className="copy-source-value">{sourceIndex}</span>
                     </div>
-                    <div className="copy-info-row">
-                        <span className="copy-info-label">Index:</span>
-                        <span className="copy-info-value">{sourceIndex}</span>
-                    </div>
-                    <div className="copy-info-row">
-                        <span className="copy-info-label">Dokuman:</span>
-                        <span className="copy-info-value">
-                            {documents.length === 1 ? documents[0].id : `${documents.length} dokuman`}
+                    <div className="copy-source-divider" />
+                    <div className="copy-source-item">
+                        <span className="copy-source-label">{t('copyModal.sourceDocuments')}</span>
+                        <span className="copy-source-value">
+                            {documents.length === 1 ? documents[0].id : t('copyModal.documentsCount', { count: documents.length })}
                         </span>
                     </div>
                 </div>
 
-                {/* Hedef Sunucu */}
-                <div className="copy-section">
-                    <label className="copy-label">
-                        <Server size={14} />
-                        Hedef Sunucu
-                    </label>
-                    <select
-                        value={targetConnectionId || ''}
-                        onChange={(e) => setTargetConnectionId(e.target.value ? parseInt(e.target.value) : null)}
-                        className="copy-select"
-                    >
-                        <option value="">Sunucu seciniz...</option>
-                        {connections
-                            .filter(conn => conn.id !== currentConnectionId)
-                            .map(conn => (
-                                <option key={conn.id} value={conn.id}>
-                                    {conn.name} ({conn.url})
-                                </option>
-                            ))}
-                    </select>
+                {/* Target Connection */}
+                <div className="copy-field">
+                    <label className="copy-field-label">{t('copyModal.targetConnection')}</label>
+                    <SearchableSelect
+                        value={targetConnectionId}
+                        onChange={(val) => setTargetConnectionId(val as number | null)}
+                        options={connectionOptions}
+                        placeholder={t('copyModal.selectConnection')}
+                        icon={<Server size={14} />}
+                    />
                 </div>
 
-                {/* Hedef Index */}
+                {/* Target Index */}
                 {targetConnectionId && (
-                    <div className="copy-section">
-                        <label className="copy-label">
-                            <Database size={14} />
-                            Hedef Index
-                        </label>
+                    <div className="copy-field">
+                        <label className="copy-field-label">{t('copyModal.targetIndex')}</label>
 
-                        <div className="copy-index-options">
-                            <label className="copy-radio-label">
-                                <input
-                                    type="radio"
-                                    checked={!createNewIndex}
-                                    onChange={() => setCreateNewIndex(false)}
-                                />
-                                Mevcut index
-                            </label>
-                            <label className="copy-radio-label">
-                                <input
-                                    type="radio"
-                                    checked={createNewIndex}
-                                    onChange={() => setCreateNewIndex(true)}
-                                />
-                                Yeni index olustur
-                            </label>
+                        {/* Toggle: Existing / New */}
+                        <div className="copy-toggle">
+                            <button
+                                type="button"
+                                className={`copy-toggle-btn ${!createNewIndex ? 'active' : ''}`}
+                                onClick={() => setCreateNewIndex(false)}
+                            >
+                                {t('copyModal.existingIndex')}
+                            </button>
+                            <button
+                                type="button"
+                                className={`copy-toggle-btn ${createNewIndex ? 'active' : ''}`}
+                                onClick={() => setCreateNewIndex(true)}
+                            >
+                                {t('copyModal.newIndex')}
+                            </button>
                         </div>
 
                         {!createNewIndex ? (
-                            loadingIndices ? (
-                                <div className="copy-loading">
-                                    <Loader2 size={16} className="spin" />
-                                    <span>Index listesi yukleniyor...</span>
-                                </div>
-                            ) : (
-                                <div className="copy-index-selector">
-                                    <div className="copy-search-wrapper">
-                                        <Search size={14} />
-                                        <input
-                                            type="text"
-                                            value={indexSearch}
-                                            onChange={(e) => setIndexSearch(e.target.value)}
-                                            placeholder="Index ara..."
-                                            className="copy-search-input"
-                                        />
-                                        {indexSearch && (
-                                            <button
-                                                className="copy-search-clear"
-                                                onClick={() => setIndexSearch('')}
-                                            >
-                                                <X size={12} />
-                                            </button>
-                                        )}
-                                    </div>
-                                    <div className="copy-index-list">
-                                        {targetIndices
-                                            .filter(idx =>
-                                                idx.index.toLowerCase().includes(indexSearch.toLowerCase()) ||
-                                                idx.aliases.some(a => a.toLowerCase().includes(indexSearch.toLowerCase()))
-                                            )
-                                            .map(idx => (
-                                                <div
-                                                    key={idx.index}
-                                                    className={`copy-index-item ${targetIndex === idx.index ? 'selected' : ''}`}
-                                                    onClick={() => setTargetIndex(idx.index)}
-                                                >
-                                                    <div className="copy-index-main">
-                                                        <span className="copy-index-name">{idx.index}</span>
-                                                        <span className="copy-index-stats">
-                                                            {idx.docsCount} doc, {idx.storeSize}
-                                                        </span>
-                                                    </div>
-                                                    {idx.aliases.length > 0 && (
-                                                        <div className="copy-index-aliases">
-                                                            {idx.aliases.map(alias => (
-                                                                <span key={alias} className="copy-alias-tag">{alias}</span>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ))}
-                                        {targetIndices.filter(idx =>
-                                            idx.index.toLowerCase().includes(indexSearch.toLowerCase()) ||
-                                            idx.aliases.some(a => a.toLowerCase().includes(indexSearch.toLowerCase()))
-                                        ).length === 0 && (
-                                                <div className="copy-no-results">
-                                                    Sonuc bulunamadi
-                                                </div>
-                                            )}
-                                    </div>
-                                </div>
-                            )
+                            <SearchableSelect
+                                value={targetIndex}
+                                onChange={(val) => setTargetIndex(val as string)}
+                                options={indexOptions}
+                                placeholder={t('copyModal.selectIndex')}
+                                icon={<Database size={14} />}
+                                loading={loadingIndices}
+                                loadingText={t('copyModal.loadingIndices')}
+                            />
                         ) : (
                             <div className="copy-new-index">
                                 <input
                                     type="text"
                                     value={newIndexName}
                                     onChange={(e) => setNewIndexName(e.target.value)}
-                                    placeholder="Yeni index adi..."
+                                    placeholder={t('copyModal.newIndexPlaceholder')}
                                     className="copy-input"
                                 />
-                                <label className="copy-checkbox-label">
+                                <label className="copy-checkbox">
                                     <input
                                         type="checkbox"
                                         checked={copyMapping}
                                         onChange={(e) => setCopyMapping(e.target.checked)}
                                     />
-                                    Mapping'i de kopyala
+                                    <span>{t('copyModal.copyMappingToo')}</span>
                                 </label>
                             </div>
                         )}
                     </div>
                 )}
 
-                {/* Mapping Comparison Status */}
+                {/* Mapping Status */}
                 {!createNewIndex && targetIndex && (
                     <div className={`copy-mapping-status ${mappingStatus}`}>
                         {mappingStatus === 'checking' && (
@@ -369,7 +437,7 @@ export const CopyDocumentModal = ({
                                 <AlertTriangle size={14} />
                                 <span>{t('copyModal.mappingsMismatch')}</span>
                                 <button
-                                    className="btn btn-sm btn-outline"
+                                    className="copy-diff-btn"
                                     onClick={() => setShowMappingDiff(true)}
                                 >
                                     <GitCompare size={12} />
@@ -380,7 +448,7 @@ export const CopyDocumentModal = ({
                     </div>
                 )}
 
-                {/* Hata Mesajı */}
+                {/* Error */}
                 {error && (
                     <div className="copy-error">
                         <AlertTriangle size={14} />
@@ -388,7 +456,7 @@ export const CopyDocumentModal = ({
                     </div>
                 )}
 
-                {/* Başarı Mesajı */}
+                {/* Success */}
                 {result && (
                     <div className={`copy-result ${result.success ? 'success' : 'error'}`}>
                         {result.success ? <CheckCircle size={14} /> : <AlertTriangle size={14} />}
@@ -396,10 +464,9 @@ export const CopyDocumentModal = ({
                     </div>
                 )}
 
-                {/* Buttons */}
+                {/* Actions */}
                 <div className="copy-actions">
                     <button className="btn btn-secondary" onClick={onClose}>
-                        <X size={14} />
                         {t('common.close')}
                     </button>
                     <button
@@ -426,7 +493,7 @@ export const CopyDocumentModal = ({
                     </button>
                 </div>
 
-                {/* Mapping Karşılaştırma Modal */}
+                {/* Mapping Comparison Modal */}
                 {showMappingDiff && sourceMapping && targetMappingData && (
                     <MappingComparisonModal
                         isOpen={showMappingDiff}

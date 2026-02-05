@@ -17,6 +17,7 @@
 @import './components/query-builder.css';
 @import './components/operations.css';
 @import './components/cluster-monitor.css';
+@import './components/date-filter.css';
 
 /* ==================== SCROLLBAR ==================== */
 ::-webkit-scrollbar {

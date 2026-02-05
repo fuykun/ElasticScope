@@ -125,6 +125,15 @@
   background: var(--bg-tertiary);
 }
 
+.column-selector-item.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.column-selector-item.disabled:hover {
+  background: transparent;
+}
+
 .column-selector-checkbox {
   display: flex;
   align-items: center;

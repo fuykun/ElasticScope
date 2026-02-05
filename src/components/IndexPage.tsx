@@ -19,15 +19,16 @@ import {
     FileJson,
     Plus,
     X,
-    Play,
-    Hash,
     ArrowUpDown,
     ArrowUp,
     ArrowDown,
     FileText,
-    Filter,
     Lock,
     Unlock,
+    Eye,
+    MoreVertical,
+    LayoutGrid,
+    Table,
 } from 'lucide-react';
 import {
     getIndices,
@@ -45,7 +46,6 @@ import {
 import { Modal } from './Modal';
 import { DocumentViewer } from './DocumentViewer';
 import { JsonViewer } from './JsonViewer';
-import { RestModal } from './RestModal';
 import { CopyDocumentModal } from './CopyDocumentModal';
 import { QueryBuilder, extractFieldsFromMappingWithTypes, FieldInfo, QueryGroup, createEmptyGroup } from './QueryBuilder';
 import {
@@ -58,11 +58,10 @@ import {
     saveSearchFieldsForPrefix,
 } from '../utils/columnStorage';
 import { SearchHit } from '../types';
-import type { QuickFilter } from '../types';
 import { PAGE_SIZE_OPTIONS } from '../constants';
 import { pageSizeStorage } from '../utils/storage';
 import { formatDate, formatDocCount } from '../utils/formatters';
-import { QuickFilters } from './QuickFilters';
+import { DateFilter, DateFilterValue } from './DateFilter';
 import { translateError } from '../utils/errorHandler';
 
 interface IndexPageProps {
@@ -116,6 +115,10 @@ export const IndexPage: React.FC<IndexPageProps> = ({
     const [columnSearch, setColumnSearch] = useState('');
     const columnDropdownRef = React.useRef<HTMLDivElement>(null);
 
+    // Index actions dropdown
+    const [indexActionsOpen, setIndexActionsOpen] = useState(false);
+    const indexActionsRef = React.useRef<HTMLDivElement>(null);
+
     // Documents
     const [documents, setDocuments] = useState<SearchHit[]>([]);
     const [total, setTotal] = useState(0);
@@ -133,10 +136,6 @@ export const IndexPage: React.FC<IndexPageProps> = ({
 
     // Open/Close index
     const [openCloseLoading, setOpenCloseLoading] = useState(false);
-
-    // REST Modal
-    const [showRestModal, setShowRestModal] = useState(false);
-    const [restEndpoint, setRestEndpoint] = useState<'search' | 'count' | 'general'>('search');
 
     // Copy Document Modal
     const [showCopyModal, setShowCopyModal] = useState(false);
@@ -156,17 +155,25 @@ export const IndexPage: React.FC<IndexPageProps> = ({
     const [sortFieldSearch, setSortFieldSearch] = useState('');
     const sortDropdownRef = React.useRef<HTMLDivElement>(null);
 
-    // Quick Filters
-    const [activeFilters, setActiveFilters] = useState<QuickFilter[]>([]);
-    const [showFilters, setShowFilters] = useState(false);
+    // Date Filter
+    const [dateFilter, setDateFilter] = useState<DateFilterValue | null>(null);
+    const [showDateFilter, setShowDateFilter] = useState(false);
     const [dateFields, setDateFields] = useState<string[]>([]);
-    const [keywordFields, setKeywordFields] = useState<string[]>([]);
+
+    // View Mode (card = horizontal, table = vertical)
+    const [viewMode, setViewMode] = useState<'card' | 'table'>(() => {
+        const saved = localStorage.getItem('elasticscope_viewMode');
+        return (saved === 'card') ? 'card' : 'table';
+    });
 
     // Query Builder
     const [showQueryBuilder, setShowQueryBuilder] = useState(false);
     const [queryBuilderFields, setQueryBuilderFields] = useState<FieldInfo[]>([]);
     const [queryBuilderQuery, setQueryBuilderQuery] = useState<object | null>(null);
     const [queryBuilderRootGroup, setQueryBuilderRootGroup] = useState<QueryGroup>(createEmptyGroup());
+
+    // View Query Modal
+    const [showQueryModal, setShowQueryModal] = useState(false);
 
     const prefix = getIndexPrefix(indexName);
 
@@ -201,6 +208,12 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                 !sortDropdownRef.current.contains(event.target as Node)
             ) {
                 setSortDropdownOpen(false);
+            }
+            if (
+                indexActionsRef.current &&
+                !indexActionsRef.current.contains(event.target as Node)
+            ) {
+                setIndexActionsOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -268,26 +281,8 @@ export const IndexPage: React.FC<IndexPageProps> = ({
             };
 
             const dates = extractTypedFields(mapping, 'date');
-            const keywords = extractTypedFields(mapping, 'keyword');
-
-            // For facets, prefer shorter field names (without .keyword suffix) for display
-            // but store mapping of display name -> actual field name
-            const keywordFieldsWithInfo = keywords.map(field => {
-                const displayName = field.endsWith('.keyword') ? field.replace('.keyword', '') : field;
-                return { field, displayName };
-            });
-
-            // Dedupe: if both 'brand' and 'brand.keyword' exist, prefer 'brand.keyword'
-            const keywordMap = new Map<string, string>();
-            for (const { field, displayName } of keywordFieldsWithInfo) {
-                // .keyword version takes priority
-                if (field.endsWith('.keyword') || !keywordMap.has(displayName)) {
-                    keywordMap.set(displayName, field);
-                }
-            }
 
             setDateFields(dates);
-            setKeywordFields(Array.from(keywordMap.values()));
 
             // Extract fields with types for Query Builder
             const queryBuilderFieldsList = extractFieldsFromMappingWithTypes(mapping, indexName);
@@ -348,10 +343,19 @@ export const IndexPage: React.FC<IndexPageProps> = ({
         [indexName, pageSize, sortField, sortOrder]
     );
 
-    const handleSimpleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSimpleSearch = (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
         setSearchError(null);
 
+        // If Query Builder is active and has a query, use it
+        if (showQueryBuilder && queryBuilderQuery) {
+            performSearch(queryBuilderQuery);
+            setSimpleQuery(''); // Clear simple search
+            setDateFilter(null); // Clear date filter
+            return;
+        }
+
+        // Otherwise use simple search
         if (!simpleQuery.trim()) {
             performSearch(null);
             return;
@@ -450,10 +454,19 @@ export const IndexPage: React.FC<IndexPageProps> = ({
     };
 
     // Column selector handlers
+    const MAX_COLUMNS = 10;
+
     const toggleColumn = (field: string) => {
-        setSelectedColumns((prev) =>
-            prev.includes(field) ? prev.filter((c) => c !== field) : [...prev, field]
-        );
+        setSelectedColumns((prev) => {
+            if (prev.includes(field)) {
+                return prev.filter((c) => c !== field);
+            }
+            // Limit to MAX_COLUMNS
+            if (prev.length >= MAX_COLUMNS) {
+                return prev;
+            }
+            return [...prev, field];
+        });
     };
 
     const handleApplyColumns = () => {
@@ -495,6 +508,12 @@ export const IndexPage: React.FC<IndexPageProps> = ({
         setSortOrder('desc');
         setSortDropdownOpen(false);
         performSearch(currentQuery, 0, undefined);
+    };
+
+    // View mode handler
+    const handleViewModeChange = (mode: 'card' | 'table') => {
+        setViewMode(mode);
+        localStorage.setItem('elasticscope_viewMode', mode);
     };
 
     // Alias handlers
@@ -695,77 +714,73 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                             <Plus size={14} />
                             {t('indexPage.addDocument')}
                         </button>
-                        <div className="rest-buttons">
+
+                        {/* Index Actions Dropdown */}
+                        <div className="index-actions-dropdown" ref={indexActionsRef}>
                             <button
-                                className="btn-rest"
-                                onClick={() => {
-                                    setRestEndpoint('search');
-                                    setShowRestModal(true);
-                                }}
-                                title="REST Search"
+                                className={`btn btn-ghost ${indexActionsOpen ? 'active' : ''}`}
+                                onClick={() => setIndexActionsOpen(!indexActionsOpen)}
+                                title={t('indexPage.indexActions')}
                             >
-                                <Play size={12} />
-                                _search
+                                <MoreVertical size={16} />
                             </button>
-                            <button
-                                className="btn-rest"
-                                onClick={() => {
-                                    setRestEndpoint('count');
-                                    setShowRestModal(true);
-                                }}
-                                title="REST Count"
-                            >
-                                <Hash size={12} />
-                                _count
-                            </button>
-                            <button
-                                className="btn-rest"
-                                onClick={() => {
-                                    setRestEndpoint('general');
-                                    setShowRestModal(true);
-                                }}
-                                title="REST API"
-                            >
-                                <Code size={12} />
-                                REST
-                            </button>
-                        </div>
-                        <button
-                            className="btn btn-ghost"
-                            onClick={() => handleShowIndexInfo('settings')}
-                            title="Settings & Mappings"
-                        >
-                            <Settings size={16} />
-                        </button>
-                        <button
-                            className="btn btn-ghost"
-                            onClick={handleRefresh}
-                            title={t('common.refresh')}
-                        >
-                            <RefreshCw size={16} className={loading ? 'spin' : ''} />
-                        </button>
-                        <button
-                            className={`btn btn-ghost ${indexInfo?.status === 'close' ? 'btn-warning-subtle' : ''}`}
-                            onClick={handleOpenCloseIndex}
-                            title={indexInfo?.status === 'close' ? t('indexPage.openIndex') : t('indexPage.closeIndex')}
-                            disabled={openCloseLoading}
-                        >
-                            {openCloseLoading ? (
-                                <Loader size={16} className="spin" />
-                            ) : indexInfo?.status === 'close' ? (
-                                <Unlock size={16} />
-                            ) : (
-                                <Lock size={16} />
+                            {indexActionsOpen && (
+                                <div className="index-actions-menu">
+                                    <button
+                                        className="index-action-item"
+                                        onClick={() => {
+                                            handleShowIndexInfo('settings');
+                                            setIndexActionsOpen(false);
+                                        }}
+                                    >
+                                        <Settings size={14} />
+                                        <span>{t('indexPage.settingsMappings')}</span>
+                                    </button>
+                                    <button
+                                        className="index-action-item"
+                                        onClick={() => {
+                                            handleRefresh();
+                                            setIndexActionsOpen(false);
+                                        }}
+                                    >
+                                        <RefreshCw size={14} className={loading ? 'spin' : ''} />
+                                        <span>{t('indexPage.refreshIndex')}</span>
+                                    </button>
+                                    <button
+                                        className={`index-action-item ${indexInfo?.status === 'close' ? 'warning' : ''}`}
+                                        onClick={() => {
+                                            handleOpenCloseIndex();
+                                            setIndexActionsOpen(false);
+                                        }}
+                                        disabled={openCloseLoading}
+                                    >
+                                        {openCloseLoading ? (
+                                            <Loader size={14} className="spin" />
+                                        ) : indexInfo?.status === 'close' ? (
+                                            <Unlock size={14} />
+                                        ) : (
+                                            <Lock size={14} />
+                                        )}
+                                        <span>
+                                            {indexInfo?.status === 'close'
+                                                ? t('indexPage.openIndex')
+                                                : t('indexPage.closeIndex')}
+                                        </span>
+                                    </button>
+                                    <div className="index-action-divider" />
+                                    <button
+                                        className="index-action-item danger"
+                                        onClick={() => {
+                                            setShowDeleteModal(true);
+                                            setIndexActionsOpen(false);
+                                        }}
+                                    >
+                                        <Trash2 size={14} />
+                                        <span>{t('indexPage.deleteIndex')}</span>
+                                    </button>
+                                </div>
                             )}
-                        </button>
-                        <button
-                            className="btn btn-danger btn-sm"
-                            onClick={() => setShowDeleteModal(true)}
-                            title={t('indexPage.deleteIndex')}
-                        >
-                            <Trash2 size={14} />
-                            {t('common.delete')}
-                        </button>
+                        </div>
                     </div>
                 </div>
 
@@ -775,96 +790,101 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                     <div className="search-container">
                         <form
                             onSubmit={handleSimpleSearch}
-                            style={{ display: 'flex', flex: 1, alignItems: 'center', gap: '8px' }}
+                            style={{ display: 'flex', flex: 1, alignItems: 'center' }}
                         >
-                            {/* Search Field Selector */}
+                            {/* Search Field Selector - Inside Input */}
                             <div
                                 className="search-field-selector-container"
                                 ref={searchFieldDropdownRef}
                             >
-                                <div className="search-field-selector">
-                                    <button
-                                        type="button"
-                                        className="search-field-trigger"
-                                        onClick={() => setSearchFieldDropdownOpen(!searchFieldDropdownOpen)}
-                                        title={t('indexPage.searchField')}
-                                    >
-                                        <Tag size={14} />
-                                        <span className="search-field-value">
-                                            {searchField || t('indexPage.allFields')}
-                                        </span>
-                                        <ChevronDown
-                                            size={12}
-                                            style={{
-                                                transform: searchFieldDropdownOpen
-                                                    ? 'rotate(180deg)'
-                                                    : 'rotate(0deg)',
-                                                transition: 'transform 0.15s ease',
-                                            }}
-                                        />
-                                    </button>
+                                <button
+                                    type="button"
+                                    className="search-field-trigger-inline"
+                                    onClick={() => setSearchFieldDropdownOpen(!searchFieldDropdownOpen)}
+                                    title={t('indexPage.searchField')}
+                                >
+                                    <Tag size={14} />
+                                    <span className="search-field-value">
+                                        {searchField || t('indexPage.allFields')}
+                                    </span>
+                                    <ChevronDown
+                                        size={12}
+                                        style={{
+                                            transform: searchFieldDropdownOpen
+                                                ? 'rotate(180deg)'
+                                                : 'rotate(0deg)',
+                                            transition: 'transform 0.15s ease',
+                                        }}
+                                    />
+                                </button>
 
-                                    {searchFieldDropdownOpen && (
-                                        <div className="search-field-dropdown">
-                                            <div className="search-field-search">
-                                                <Search size={14} />
-                                                <input
-                                                    type="text"
-                                                    placeholder={t('common.search') + '...'}
-                                                    value={searchFieldSearch}
-                                                    onChange={(e) => setSearchFieldSearch(e.target.value)}
-                                                    autoFocus
-                                                />
-                                            </div>
-
-                                            <div className="search-field-list">
-                                                {/* All Fields option */}
-                                                <div
-                                                    className={`search-field-item ${!searchField ? 'selected' : ''}`}
-                                                    onClick={() => handleSelectSearchField('')}
-                                                >
-                                                    <span className="search-field-label">
-                                                        {t('indexPage.allFields')}
-                                                    </span>
-                                                    {!searchField && <Check size={12} />}
-                                                </div>
-
-                                                {filteredSearchFields.length === 0 ? (
-                                                    <div className="search-field-empty">
-                                                        {t('common.noResults')}
-                                                    </div>
-                                                ) : (
-                                                    filteredSearchFields.map((field) => (
-                                                        <div
-                                                            key={field}
-                                                            className={`search-field-item ${searchField === field ? 'selected' : ''}`}
-                                                            onClick={() => handleSelectSearchField(field)}
-                                                        >
-                                                            <span className="search-field-label">
-                                                                {field}
-                                                            </span>
-                                                            {searchField === field && <Check size={12} />}
-                                                        </div>
-                                                    ))
-                                                )}
-                                            </div>
+                                {searchFieldDropdownOpen && (
+                                    <div className="search-field-dropdown">
+                                        <div className="search-field-search">
+                                            <Search size={14} />
+                                            <input
+                                                type="text"
+                                                placeholder={t('common.search') + '...'}
+                                                value={searchFieldSearch}
+                                                onChange={(e) => setSearchFieldSearch(e.target.value)}
+                                                autoFocus
+                                            />
                                         </div>
-                                    )}
-                                </div>
+
+                                        <div className="search-field-list">
+                                            {/* All Fields option */}
+                                            <div
+                                                className={`search-field-item ${!searchField ? 'selected' : ''}`}
+                                                onClick={() => handleSelectSearchField('')}
+                                            >
+                                                <span className="search-field-label">
+                                                    {t('indexPage.allFields')}
+                                                </span>
+                                                {!searchField && <Check size={12} />}
+                                            </div>
+
+                                            {filteredSearchFields.length === 0 ? (
+                                                <div className="search-field-empty">
+                                                    {t('common.noResults')}
+                                                </div>
+                                            ) : (
+                                                filteredSearchFields.map((field) => (
+                                                    <div
+                                                        key={field}
+                                                        className={`search-field-item ${searchField === field ? 'selected' : ''}`}
+                                                        onClick={() => handleSelectSearchField(field)}
+                                                    >
+                                                        <span className="search-field-label">
+                                                            {field}
+                                                        </span>
+                                                        {searchField === field && <Check size={12} />}
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <input
                                 type="text"
                                 value={simpleQuery}
                                 onChange={(e) => setSimpleQuery(e.target.value)}
-                                placeholder={searchField ? `${t('indexPage.searchIn')} ${searchField}...` : t('indexPage.searchPlaceholder')}
+                                placeholder={
+                                    showQueryBuilder && queryBuilderQuery
+                                        ? t('indexPage.queryBuilderActive')
+                                        : searchField
+                                            ? `${t('indexPage.searchIn')} ${searchField}...`
+                                            : t('indexPage.searchPlaceholder')
+                                }
                                 style={{ flex: 1 }}
+                                disabled={showQueryBuilder && !!queryBuilderQuery}
                             />
                         </form>
                     </div>
 
                     <button
-                        className="search-btn"
-                        onClick={handleSimpleSearch}
+                        className={`search-btn ${showQueryBuilder && queryBuilderQuery ? 'query-builder-active' : ''}`}
+                        onClick={() => handleSimpleSearch()}
                         disabled={loading}
                     >
                         {loading ? <Loader size={14} className="spin" /> : <Search size={14} />}
@@ -901,13 +921,13 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                                 <div className="column-selector-dropdown">
                                     <div className="column-selector-header">
                                         <span className="column-selector-title">
-                                            {prefix}
+                                            {selectedColumns.length}/{MAX_COLUMNS}
                                         </span>
                                         <div className="column-selector-actions">
                                             <button
                                                 className="column-selector-action-btn"
                                                 onClick={() =>
-                                                    setSelectedColumns([...availableFields])
+                                                    setSelectedColumns(availableFields.slice(0, MAX_COLUMNS))
                                                 }
                                             >
                                                 {t('indexPage.allFields')}
@@ -936,25 +956,24 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                                                 {t('common.noResults')}
                                             </div>
                                         ) : (
-                                            filteredFields.map((field) => (
-                                                <div
-                                                    key={field}
-                                                    className={`column-selector-item ${selectedColumns.includes(field)
-                                                        ? 'selected'
-                                                        : ''
-                                                        }`}
-                                                    onClick={() => toggleColumn(field)}
-                                                >
-                                                    <div className="column-selector-checkbox">
-                                                        {selectedColumns.includes(field) && (
-                                                            <Check size={10} />
-                                                        )}
+                                            filteredFields.map((field) => {
+                                                const isSelected = selectedColumns.includes(field);
+                                                const isDisabled = !isSelected && selectedColumns.length >= MAX_COLUMNS;
+                                                return (
+                                                    <div
+                                                        key={field}
+                                                        className={`column-selector-item ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
+                                                        onClick={() => !isDisabled && toggleColumn(field)}
+                                                    >
+                                                        <div className="column-selector-checkbox">
+                                                            {isSelected && <Check size={10} />}
+                                                        </div>
+                                                        <span className="column-selector-label">
+                                                            {field}
+                                                        </span>
                                                     </div>
-                                                    <span className="column-selector-label">
-                                                        {field}
-                                                    </span>
-                                                </div>
-                                            ))
+                                                );
+                                            })
                                         )}
                                     </div>
 
@@ -1075,19 +1094,19 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                         </div>
                     </div>
 
-                    {/* Filter Toggle Button */}
-                    {(dateFields.length > 0 || keywordFields.length > 0) && (
+                    {/* Date Filter Toggle Button */}
+                    {dateFields.length > 0 && (
                         <button
-                            className={`filter-toggle-btn ${showFilters ? 'active' : ''} ${activeFilters.length > 0 ? 'has-filters' : ''}`}
+                            className={`filter-toggle-btn ${showDateFilter ? 'active' : ''} ${dateFilter ? 'has-filters' : ''}`}
                             onClick={() => {
-                                setShowFilters(!showFilters);
-                                if (!showFilters) setShowQueryBuilder(false);
+                                setShowDateFilter(!showDateFilter);
+                                if (!showDateFilter) setShowQueryBuilder(false);
                             }}
-                            title={t('indexPage.filters.quickFilters')}
+                            title={t('indexPage.filters.dateFilter')}
                         >
-                            <Filter size={14} />
-                            {activeFilters.length > 0 && (
-                                <span className="filter-count">{activeFilters.length}</span>
+                            <Calendar size={14} />
+                            {dateFilter && (
+                                <span className="filter-count">1</span>
                             )}
                         </button>
                     )}
@@ -1098,7 +1117,7 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                             className={`filter-toggle-btn query-builder-toggle ${showQueryBuilder ? 'active' : ''} ${queryBuilderQuery ? 'has-filters' : ''}`}
                             onClick={() => {
                                 setShowQueryBuilder(!showQueryBuilder);
-                                if (!showQueryBuilder) setShowFilters(false);
+                                if (!showQueryBuilder) setShowDateFilter(false);
                             }}
                             title={t('queryBuilder.title')}
                         >
@@ -1115,14 +1134,12 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                 )}
             </div>
 
-            {/* Quick Filters */}
-            {showFilters && (dateFields.length > 0 || keywordFields.length > 0) && (
-                <QuickFilters
-                    indexName={indexName}
+            {/* Date Filter */}
+            {showDateFilter && dateFields.length > 0 && (
+                <DateFilter
                     dateFields={dateFields}
-                    keywordFields={keywordFields}
-                    activeFilters={activeFilters}
-                    onFiltersChange={setActiveFilters}
+                    activeFilter={dateFilter}
+                    onFilterChange={setDateFilter}
                     onQueryChange={(filterQuery) => {
                         // Merge with search query if exists
                         if (!filterQuery && !simpleQuery.trim()) {
@@ -1142,12 +1159,6 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                         rootGroup={queryBuilderRootGroup}
                         onRootGroupChange={setQueryBuilderRootGroup}
                         onQueryChange={(query) => setQueryBuilderQuery(query)}
-                        onSearch={(query) => {
-                            performSearch(query);
-                            // Clear simple search when using query builder
-                            setSimpleQuery('');
-                            setActiveFilters([]);
-                        }}
                     />
                 </div>
             )}
@@ -1162,9 +1173,34 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                                 ({took}{t('indexPage.pagination.ms')})
                             </span>
                         )}
+                        <button
+                            className="btn btn-icon btn-sm view-query-btn"
+                            onClick={() => setShowQueryModal(true)}
+                            title={t('indexPage.viewQuery')}
+                        >
+                            <Eye size={14} />
+                        </button>
                     </div>
 
                     <div className="documents-header-actions">
+                        {/* View Mode Toggle */}
+                        <div className="view-mode-toggle">
+                            <button
+                                className={`btn btn-icon btn-sm ${viewMode === 'card' ? 'active' : ''}`}
+                                onClick={() => handleViewModeChange('card')}
+                                title={t('indexPage.viewMode.card')}
+                            >
+                                <LayoutGrid size={14} />
+                            </button>
+                            <button
+                                className={`btn btn-icon btn-sm ${viewMode === 'table' ? 'active' : ''}`}
+                                onClick={() => handleViewModeChange('table')}
+                                title={t('indexPage.viewMode.table')}
+                            >
+                                <Table size={14} />
+                            </button>
+                        </div>
+
                         {/* Page Size Selector */}
                         <div className="page-size-selector">
                             <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginRight: '8px' }}>
@@ -1222,6 +1258,7 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                             setCopyDocuments(docs);
                             setShowCopyModal(true);
                         }}
+                        viewMode={viewMode}
                     />
                 </div>
             </div>
@@ -1438,13 +1475,6 @@ export const IndexPage: React.FC<IndexPageProps> = ({
             </Modal>
 
             {/* REST Modal */}
-            <RestModal
-                isOpen={showRestModal}
-                onClose={() => setShowRestModal(false)}
-                indexName={indexName}
-                initialEndpoint={restEndpoint}
-            />
-
             {/* Copy Document Modal */}
             <CopyDocumentModal
                 isOpen={showCopyModal}
@@ -1533,6 +1563,45 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                                     {t('common.add')}
                                 </>
                             )}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* View Query Modal */}
+            <Modal
+                isOpen={showQueryModal}
+                onClose={() => setShowQueryModal(false)}
+                title={t('indexPage.viewQueryTitle')}
+                size="lg"
+            >
+                <div className="view-query-modal">
+                    <div className="view-query-content">
+                        <pre className="view-query-json">
+                            {currentQuery
+                                ? JSON.stringify(currentQuery, null, 2)
+                                : JSON.stringify({ query: { match_all: {} } }, null, 2)
+                            }
+                        </pre>
+                    </div>
+                    <div className="view-query-actions">
+                        <button
+                            className="btn btn-secondary"
+                            onClick={() => {
+                                const queryStr = currentQuery
+                                    ? JSON.stringify(currentQuery, null, 2)
+                                    : JSON.stringify({ query: { match_all: {} } }, null, 2);
+                                navigator.clipboard.writeText(queryStr);
+                            }}
+                        >
+                            <FileJson size={14} />
+                            {t('common.copy')}
+                        </button>
+                        <button
+                            className="btn btn-primary"
+                            onClick={() => setShowQueryModal(false)}
+                        >
+                            {t('common.close')}
                         </button>
                     </div>
                 </div>
