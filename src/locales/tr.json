@@ -355,6 +355,8 @@
     },
     "queryBuilder": {
         "title": "Sorgu Oluşturucu",
+        "collapse": "Daralt",
+        "expand": "Genişlet",
         "selectField": "Alan seç",
         "selectOperator": "Operatör seç",
         "enterValue": "Değer gir",

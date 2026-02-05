@@ -355,6 +355,8 @@
     },
     "queryBuilder": {
         "title": "Query Builder",
+        "collapse": "Collapse",
+        "expand": "Expand",
         "selectField": "Select field",
         "selectOperator": "Select operator",
         "enterValue": "Enter value",

@@ -120,13 +120,40 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState('');
+    const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
     const containerRef = useRef<HTMLDivElement>(null);
+    const triggerRef = useRef<HTMLButtonElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
     const filteredOptions = options.filter(opt =>
         opt.label.toLowerCase().includes(search.toLowerCase()) ||
         opt.value.toLowerCase().includes(search.toLowerCase())
     );
+
+    // Calculate dropdown position
+    const updateDropdownPosition = useCallback(() => {
+        if (triggerRef.current && isOpen) {
+            const rect = triggerRef.current.getBoundingClientRect();
+            const viewportHeight = window.innerHeight;
+            const spaceBelow = viewportHeight - rect.bottom;
+            const spaceAbove = rect.top;
+            const dropdownHeight = Math.min(300, filteredOptions.length * 40 + 50);
+            
+            // Determine if dropdown should open upward or downward
+            const openUpward = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
+            
+            setDropdownStyle({
+                position: 'fixed',
+                left: rect.left,
+                width: rect.width,
+                maxHeight: 300,
+                ...(openUpward 
+                    ? { bottom: viewportHeight - rect.top + 4 }
+                    : { top: rect.bottom + 4 }
+                ),
+            });
+        }
+    }, [isOpen, filteredOptions.length]);
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -140,10 +167,23 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     }, []);
 
     useEffect(() => {
-        if (isOpen && inputRef.current) {
-            inputRef.current.focus();
+        if (isOpen) {
+            updateDropdownPosition();
+            if (inputRef.current) {
+                inputRef.current.focus();
+            }
+            
+            // Update position on scroll/resize
+            const handleScroll = () => updateDropdownPosition();
+            window.addEventListener('scroll', handleScroll, true);
+            window.addEventListener('resize', handleScroll);
+            
+            return () => {
+                window.removeEventListener('scroll', handleScroll, true);
+                window.removeEventListener('resize', handleScroll);
+            };
         }
-    }, [isOpen]);
+    }, [isOpen, updateDropdownPosition]);
 
     const handleSelect = (val: string) => {
         onChange(val);
@@ -156,6 +196,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     return (
         <div className={`qb-searchable-select ${className} ${disabled ? 'disabled' : ''}`} ref={containerRef}>
             <button
+                ref={triggerRef}
                 type="button"
                 className="qb-searchable-select-trigger"
                 onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -167,7 +208,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
                 <ChevronDown size={12} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
             </button>
             {isOpen && (
-                <div className="qb-searchable-select-dropdown">
+                <div className="qb-searchable-select-dropdown" style={dropdownStyle}>
                     <div className="qb-searchable-select-search">
                         <Search size={14} />
                         <input
@@ -718,68 +759,95 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
         );
     };
 
+    // Count total conditions for badge
+    const countConditions = (group: QueryGroup): number => {
+        let count = group.conditions.length;
+        for (const nestedGroup of group.groups) {
+            count += countConditions(nestedGroup);
+        }
+        return count;
+    };
+
+    const totalConditions = countConditions(rootGroup);
+    const [isCollapsed, setIsCollapsed] = useState(false);
+
     return (
-        <div className="query-builder">
+        <div className={`query-builder ${isCollapsed ? 'collapsed' : ''}`}>
             <div className="qb-header">
-                <h3 className="qb-title">
-                    <Filter size={16} />
-                    {t('queryBuilder.title')}
-                </h3>
-                <div className="qb-header-actions">
+                <div className="qb-header-left">
                     <button
-                        className={`qb-preview-btn ${showJsonPreview ? 'active' : ''}`}
-                        onClick={() => setShowJsonPreview(!showJsonPreview)}
-                        title={t('queryBuilder.togglePreview')}
+                        className="qb-collapse-btn"
+                        onClick={() => setIsCollapsed(!isCollapsed)}
+                        title={isCollapsed ? t('queryBuilder.expand') : t('queryBuilder.collapse')}
                     >
-                        <Code size={14} />
-                        {t('queryBuilder.preview')}
+                        <ChevronDown size={16} className={`collapse-icon ${isCollapsed ? 'collapsed' : ''}`} />
                     </button>
+                    <h3 className="qb-title">
+                        <Filter size={16} />
+                        {t('queryBuilder.title')}
+                        {totalConditions > 0 && (
+                            <span className="qb-condition-count">{totalConditions}</span>
+                        )}
+                    </h3>
+                </div>
+                <div className="qb-header-actions">
+                    {!isCollapsed && (
+                        <>
+                            <button
+                                className={`qb-preview-btn ${showJsonPreview ? 'active' : ''}`}
+                                onClick={() => setShowJsonPreview(!showJsonPreview)}
+                                title={t('queryBuilder.togglePreview')}
+                            >
+                                <Code size={14} />
+                                {t('queryBuilder.preview')}
+                            </button>
+                            <button
+                                className="qb-reset-btn"
+                                onClick={handleReset}
+                                title={t('queryBuilder.reset')}
+                            >
+                                <RotateCcw size={14} />
+                                {t('queryBuilder.reset')}
+                            </button>
+                        </>
+                    )}
                     <button
-                        className="qb-reset-btn"
-                        onClick={handleReset}
-                        title={t('queryBuilder.reset')}
+                        className="btn btn-primary qb-search-btn"
+                        onClick={handleSearch}
+                        disabled={!generatedQuery}
                     >
-                        <RotateCcw size={14} />
-                        {t('queryBuilder.reset')}
+                        <Play size={14} />
+                        {t('queryBuilder.search')}
                     </button>
                 </div>
             </div>
 
-            <div className="qb-body">
-                {renderGroup(rootGroup, true)}
+            {!isCollapsed && (
+                <div className="qb-body">
+                    {renderGroup(rootGroup, true)}
 
-                {showJsonPreview && (
-                    <div className="qb-json-preview">
-                        <div className="qb-preview-header">
-                            <span>{t('queryBuilder.generatedQuery')}</span>
-                            <button
-                                className="qb-copy-btn"
-                                onClick={handleCopyQuery}
-                                disabled={!generatedQuery}
-                                title={t('queryBuilder.copyQuery')}
-                            >
-                                <Copy size={12} />
-                            </button>
+                    {showJsonPreview && (
+                        <div className="qb-json-preview">
+                            <div className="qb-preview-header">
+                                <span>{t('queryBuilder.generatedQuery')}</span>
+                                <button
+                                    className="qb-copy-btn"
+                                    onClick={handleCopyQuery}
+                                    disabled={!generatedQuery}
+                                    title={t('queryBuilder.copyQuery')}
+                                >
+                                    <Copy size={12} />
+                                </button>
+                            </div>
+                            <pre className="qb-preview-code">
+                                {generatedQuery
+                                    ? JSON.stringify(generatedQuery, null, 2)
+                                    : t('queryBuilder.noQuery')}
+                            </pre>
                         </div>
-                        <pre className="qb-preview-code">
-                            {generatedQuery
-                                ? JSON.stringify(generatedQuery, null, 2)
-                                : t('queryBuilder.noQuery')}
-                        </pre>
-                    </div>
-                )}
-            </div>
-
-            <div className="qb-footer">
-                <button
-                    className="btn btn-primary qb-search-btn"
-                    onClick={handleSearch}
-                    disabled={!generatedQuery}
-                >
-                    <Play size={14} />
-                    {t('queryBuilder.search')}
-                </button>
-            </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 };

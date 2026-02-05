@@ -6,16 +6,6 @@
   overflow: hidden;
 }
 
-/* When query builder is open, allow scrolling */
-.index-page:has(.query-builder-container) {
-  overflow: auto;
-}
-
-.index-page:has(.query-builder-container) .documents-section {
-  min-height: 400px;
-  flex-shrink: 0;
-}
-
 /* ==================== INDEX TOOLBAR ==================== */
 .index-toolbar {
   display: flex;
@@ -1410,11 +1400,31 @@
   padding-bottom: var(--spacing-xl);
   background: var(--bg-primary);
   border-bottom: 1px solid var(--border);
-  overflow: visible;
   position: relative;
   z-index: 100;
   flex-shrink: 0;
   max-height: 50vh;
+  overflow-y: auto;
+  overflow-x: visible;
+}
+
+/* Custom scrollbar for query builder container */
+.query-builder-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.query-builder-container::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+  border-radius: 3px;
+}
+
+.query-builder-container::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
+}
+
+.query-builder-container::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
 /* Query Builder Toggle Button */
