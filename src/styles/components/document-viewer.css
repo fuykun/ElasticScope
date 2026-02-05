@@ -50,6 +50,15 @@
   border-bottom: 1px solid var(--border);
 }
 
+/* Sticky header when document is expanded */
+.doc-card.expanded .doc-card-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg-tertiary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
 .doc-card-title {
   display: flex;
   align-items: center;
@@ -209,6 +218,27 @@
   padding: var(--spacing-md);
   background: var(--bg-primary);
   border-top: 1px solid var(--border);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* Custom scrollbar for expanded document */
+.doc-card-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.doc-card-body::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+.doc-card-body::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 4px;
+}
+
+.doc-card-body::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
 /* Delete Overlay */

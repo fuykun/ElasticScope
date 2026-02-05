@@ -138,16 +138,16 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
             const spaceBelow = viewportHeight - rect.bottom;
             const spaceAbove = rect.top;
             const dropdownHeight = Math.min(300, filteredOptions.length * 40 + 50);
-            
+
             // Determine if dropdown should open upward or downward
             const openUpward = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
-            
+
             setDropdownStyle({
                 position: 'fixed',
                 left: rect.left,
                 width: rect.width,
                 maxHeight: 300,
-                ...(openUpward 
+                ...(openUpward
                     ? { bottom: viewportHeight - rect.top + 4 }
                     : { top: rect.bottom + 4 }
                 ),
@@ -172,12 +172,12 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
             if (inputRef.current) {
                 inputRef.current.focus();
             }
-            
+
             // Update position on scroll/resize
             const handleScroll = () => updateDropdownPosition();
             window.addEventListener('scroll', handleScroll, true);
             window.addEventListener('resize', handleScroll);
-            
+
             return () => {
                 window.removeEventListener('scroll', handleScroll, true);
                 window.removeEventListener('resize', handleScroll);
