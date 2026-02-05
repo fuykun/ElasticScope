@@ -390,6 +390,155 @@ app.get('/api/nodes/info', requireConnection, async (req, res) => {
     }
 });
 
+// Node stats with all metrics for cluster monitoring
+app.get('/api/nodes/stats/all', requireConnection, async (req, res) => {
+    try {
+        const stats = await esClient!.nodes.stats({
+            metric: ['jvm', 'os', 'fs', 'indices', 'thread_pool', 'transport', 'http', 'breaker', 'process']
+        });
+        res.json(stats);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Circuit breakers
+app.get('/api/nodes/breakers', requireConnection, async (req, res) => {
+    try {
+        const stats = await esClient!.nodes.stats({
+            metric: ['breaker']
+        });
+        res.json(stats);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Cat APIs for summary views
+app.get('/api/cat/nodes', requireConnection, async (req, res) => {
+    try {
+        const nodes = await esClient!.cat.nodes({
+            format: 'json',
+            h: 'name,ip,node.role,master,heap.percent,ram.percent,cpu,load_1m,load_5m,load_15m,disk.used_percent,disk.total,disk.used'
+        });
+        res.json(nodes);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/cat/shards', requireConnection, async (req, res) => {
+    try {
+        const shards = await esClient!.cat.shards({
+            format: 'json',
+            h: 'index,shard,prirep,state,docs,store,node'
+        });
+        res.json(shards);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/cat/segments', requireConnection, async (req, res) => {
+    try {
+        const segments = await esClient!.cat.segments({
+            format: 'json',
+            h: 'index,shard,segment,generation,docs.count,docs.deleted,size,size.memory'
+        });
+        res.json(segments);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/cat/recovery', requireConnection, async (req, res) => {
+    try {
+        const recovery = await esClient!.cat.recovery({
+            format: 'json',
+            active_only: true
+        });
+        res.json(recovery);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ==================== OPERATIONS / TASKS API ====================
+
+// Get running tasks
+app.get('/api/tasks', requireConnection, async (req, res) => {
+    try {
+        const tasks = await esClient!.tasks.list({
+            detailed: true,
+            group_by: 'parents'
+        });
+        res.json(tasks);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get pending cluster tasks
+app.get('/api/cluster/pending_tasks', requireConnection, async (req, res) => {
+    try {
+        const pending = await esClient!.cluster.pendingTasks();
+        res.json(pending);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get thread pool stats
+app.get('/api/thread_pool', requireConnection, async (req, res) => {
+    try {
+        const threadPool = await esClient!.cat.threadPool({
+            format: 'json',
+            h: 'node_name,name,active,queue,rejected,completed,type,size,queue_size'
+        });
+        res.json(threadPool);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get indexing stats (all indices)
+app.get('/api/stats/indexing', requireConnection, async (req, res) => {
+    try {
+        const stats = await esClient!.indices.stats({
+            metric: ['indexing', 'search', 'get', 'merge', 'refresh', 'flush', 'segments']
+        });
+        res.json(stats);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get hot threads
+app.get('/api/nodes/hot_threads', requireConnection, async (req, res) => {
+    try {
+        const hotThreads = await esClient!.nodes.hotThreads({
+            threads: 3,
+            interval: '500ms'
+        });
+        res.json({ threads: hotThreads });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Cancel a task
+app.post('/api/tasks/:taskId/cancel', requireConnection, async (req, res) => {
+    try {
+        const { taskId } = req.params;
+        const result = await esClient!.tasks.cancel({
+            task_id: taskId
+        });
+        res.json(result);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Index listesi
 app.get('/api/indices', requireConnection, async (req, res) => {
     try {

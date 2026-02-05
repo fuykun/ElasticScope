@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, GitCompare, Github, Star, Code } from 'lucide-react';
+import { Search, GitCompare, Github, Star, Code, BarChart3 } from 'lucide-react';
 import { ConnectionSelector } from './components/ConnectionSelector';
 import { ConnectionFormModal } from './components/ConnectionFormModal';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
@@ -9,6 +9,7 @@ import { IndexList } from './components/IndexList';
 import { IndexPage } from './components/IndexPage';
 import { Dashboard } from './components/Dashboard';
 import { RestPage } from './components/RestPage';
+import { ClusterMonitor } from './components/ClusterMonitor';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { ComparisonModal } from './components/ComparisonModal';
 import { getConnectionStatus, SavedConnection } from './api/elasticsearchClient';
@@ -34,9 +35,10 @@ function App() {
         return params.get('index');
     });
 
-    const [currentView, setCurrentView] = useState<'dashboard' | 'index' | 'rest'>(() => {
+    const [currentView, setCurrentView] = useState<'dashboard' | 'index' | 'rest' | 'monitor'>(() => {
         const params = new URLSearchParams(window.location.search);
         if (params.get('view') === 'rest') return 'rest';
+        if (params.get('view') === 'monitor') return 'monitor';
         if (params.get('index')) return 'index';
         return 'dashboard';
     });
@@ -50,6 +52,8 @@ function App() {
             setSelectedIndex(index);
             if (view === 'rest') {
                 setCurrentView('rest');
+            } else if (view === 'monitor') {
+                setCurrentView('monitor');
             } else if (index) {
                 setCurrentView('index');
             } else {
@@ -189,21 +193,38 @@ function App() {
                 </div>
                 <div className="header-right">
                     {isConnected && (
-                        <button
-                            className={`btn btn-ghost ${currentView === 'rest' ? 'btn-active' : ''}`}
-                            onClick={() => {
-                                setCurrentView('rest');
-                                setSelectedIndex(null);
-                                const url = new URL(window.location.href);
-                                url.searchParams.delete('index');
-                                url.searchParams.set('view', 'rest');
-                                window.history.pushState({}, '', url.toString());
-                            }}
-                            title="REST Console"
-                        >
-                            <Code size={18} />
-                            REST Console
-                        </button>
+                        <>
+                            <button
+                                className={`btn btn-ghost ${currentView === 'monitor' ? 'btn-active' : ''}`}
+                                onClick={() => {
+                                    setCurrentView('monitor');
+                                    setSelectedIndex(null);
+                                    const url = new URL(window.location.href);
+                                    url.searchParams.delete('index');
+                                    url.searchParams.set('view', 'monitor');
+                                    window.history.pushState({}, '', url.toString());
+                                }}
+                                title={t('clusterMonitor.title')}
+                            >
+                                <BarChart3 size={18} />
+                                {t('clusterMonitor.title')}
+                            </button>
+                            <button
+                                className={`btn btn-ghost ${currentView === 'rest' ? 'btn-active' : ''}`}
+                                onClick={() => {
+                                    setCurrentView('rest');
+                                    setSelectedIndex(null);
+                                    const url = new URL(window.location.href);
+                                    url.searchParams.delete('index');
+                                    url.searchParams.set('view', 'rest');
+                                    window.history.pushState({}, '', url.toString());
+                                }}
+                                title="REST Console"
+                            >
+                                <Code size={18} />
+                                REST Console
+                            </button>
+                        </>
                     )}
                     {comparisonDocs.length > 0 && (
                         <button
@@ -279,6 +300,8 @@ function App() {
                                 initialIndex={selectedIndex || undefined}
                                 connectionId={connectionId || 0}
                             />
+                        ) : currentView === 'monitor' ? (
+                            <ClusterMonitor connectionId={connectionId || 0} />
                         ) : selectedIndex ? (
                             <IndexPage
                                 indexName={selectedIndex}

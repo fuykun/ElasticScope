@@ -274,6 +274,448 @@ export const getNodesInfo = () =>
         }>;
     }>('/nodes/info');
 
+// ==================== OPERATIONS / TASKS API ====================
+
+export interface TaskInfo {
+    node: string;
+    id: number;
+    type: string;
+    action: string;
+    status?: {
+        total?: number;
+        updated?: number;
+        created?: number;
+        deleted?: number;
+        batches?: number;
+        version_conflicts?: number;
+        noops?: number;
+        retries?: {
+            bulk?: number;
+            search?: number;
+        };
+        throttled_millis?: number;
+        requests_per_second?: number;
+        throttled_until_millis?: number;
+        phases?: Record<string, any>;
+    };
+    description?: string;
+    start_time_in_millis: number;
+    running_time_in_nanos: number;
+    cancellable: boolean;
+    cancelled?: boolean;
+    parent_task_id?: string;
+    headers?: Record<string, string>;
+}
+
+export interface ThreadPoolInfo {
+    node_name: string;
+    name: string;
+    active: string;
+    queue: string;
+    rejected: string;
+    completed: string;
+    type: string;
+    size: string;
+    queue_size: string;
+}
+
+export interface IndexingStats {
+    _shards: {
+        total: number;
+        successful: number;
+        failed: number;
+    };
+    _all: {
+        primaries: {
+            indexing: {
+                index_total: number;
+                index_time_in_millis: number;
+                index_current: number;
+                index_failed: number;
+                delete_total: number;
+                delete_time_in_millis: number;
+                delete_current: number;
+            };
+            search: {
+                query_total: number;
+                query_time_in_millis: number;
+                query_current: number;
+                fetch_total: number;
+                fetch_time_in_millis: number;
+                fetch_current: number;
+            };
+            get: {
+                total: number;
+                time_in_millis: number;
+                exists_total: number;
+                exists_time_in_millis: number;
+                missing_total: number;
+                missing_time_in_millis: number;
+                current: number;
+            };
+            merge: {
+                current: number;
+                current_docs: number;
+                current_size_in_bytes: number;
+                total: number;
+                total_time_in_millis: number;
+                total_docs: number;
+                total_size_in_bytes: number;
+            };
+            refresh: {
+                total: number;
+                total_time_in_millis: number;
+            };
+            flush: {
+                total: number;
+                total_time_in_millis: number;
+            };
+            segments: {
+                count: number;
+                memory_in_bytes: number;
+            };
+        };
+        total: {
+            indexing: {
+                index_total: number;
+                index_time_in_millis: number;
+                index_current: number;
+                index_failed: number;
+                delete_total: number;
+                delete_time_in_millis: number;
+                delete_current: number;
+            };
+            search: {
+                query_total: number;
+                query_time_in_millis: number;
+                query_current: number;
+                fetch_total: number;
+                fetch_time_in_millis: number;
+                fetch_current: number;
+            };
+        };
+    };
+    indices: Record<string, any>;
+}
+
+export const getTasks = () =>
+    apiRequest<{
+        nodes: Record<string, {
+            name: string;
+            tasks: Record<string, TaskInfo>;
+        }>;
+    }>('/tasks');
+
+export const getPendingTasks = () =>
+    apiRequest<{
+        tasks: Array<{
+            insert_order: number;
+            priority: string;
+            source: string;
+            time_in_queue_millis: number;
+            time_in_queue: string;
+        }>;
+    }>('/cluster/pending_tasks');
+
+export const getThreadPool = () =>
+    apiRequest<ThreadPoolInfo[]>('/thread_pool');
+
+export const getIndexingStats = () =>
+    apiRequest<IndexingStats>('/stats/indexing');
+
+export const getHotThreads = () =>
+    apiRequest<{ threads: string }>('/nodes/hot_threads');
+
+export const cancelTask = (taskId: string) =>
+    apiRequest<any>(`/tasks/${encodeURIComponent(taskId)}/cancel`, {
+        method: 'POST',
+    });
+
+// ==================== CLUSTER MONITORING API ====================
+
+// Full node stats (JVM, OS, FS, indices, thread_pool, transport, http, breaker)
+export interface NodeStats {
+    name: string;
+    transport_address: string;
+    host: string;
+    ip: string;
+    roles: string[];
+    os: {
+        timestamp: number;
+        cpu: {
+            percent: number;
+            load_average?: {
+                '1m': number;
+                '5m': number;
+                '15m': number;
+            };
+        };
+        mem: {
+            total_in_bytes: number;
+            free_in_bytes: number;
+            used_in_bytes: number;
+            free_percent: number;
+            used_percent: number;
+        };
+        swap: {
+            total_in_bytes: number;
+            free_in_bytes: number;
+            used_in_bytes: number;
+        };
+    };
+    jvm: {
+        timestamp: number;
+        uptime_in_millis: number;
+        mem: {
+            heap_used_in_bytes: number;
+            heap_used_percent: number;
+            heap_committed_in_bytes: number;
+            heap_max_in_bytes: number;
+            non_heap_used_in_bytes: number;
+            non_heap_committed_in_bytes: number;
+        };
+        gc: {
+            collectors: {
+                young: {
+                    collection_count: number;
+                    collection_time_in_millis: number;
+                };
+                old: {
+                    collection_count: number;
+                    collection_time_in_millis: number;
+                };
+            };
+        };
+        threads: {
+            count: number;
+            peak_count: number;
+        };
+    };
+    fs: {
+        timestamp: number;
+        total: {
+            total_in_bytes: number;
+            free_in_bytes: number;
+            available_in_bytes: number;
+        };
+        data: Array<{
+            path: string;
+            mount: string;
+            type: string;
+            total_in_bytes: number;
+            free_in_bytes: number;
+            available_in_bytes: number;
+        }>;
+    };
+    transport: {
+        server_open: number;
+        total_outbound_connections: number;
+        rx_count: number;
+        rx_size_in_bytes: number;
+        tx_count: number;
+        tx_size_in_bytes: number;
+    };
+    http: {
+        current_open: number;
+        total_opened: number;
+    };
+    breaker: {
+        [key: string]: {
+            limit_size_in_bytes: number;
+            limit_size: string;
+            estimated_size_in_bytes: number;
+            estimated_size: string;
+            overhead: number;
+            tripped: number;
+        };
+    };
+    thread_pool: {
+        [key: string]: {
+            threads: number;
+            queue: number;
+            active: number;
+            rejected: number;
+            largest: number;
+            completed: number;
+        };
+    };
+    indices: {
+        docs: {
+            count: number;
+            deleted: number;
+        };
+        store: {
+            size_in_bytes: number;
+        };
+        indexing: {
+            index_total: number;
+            index_time_in_millis: number;
+            index_current: number;
+            index_failed: number;
+            delete_total: number;
+            delete_time_in_millis: number;
+            delete_current: number;
+        };
+        get: {
+            total: number;
+            time_in_millis: number;
+            exists_total: number;
+            exists_time_in_millis: number;
+            missing_total: number;
+            missing_time_in_millis: number;
+            current: number;
+        };
+        search: {
+            query_total: number;
+            query_time_in_millis: number;
+            query_current: number;
+            fetch_total: number;
+            fetch_time_in_millis: number;
+            fetch_current: number;
+            open_contexts: number;
+        };
+        merges: {
+            current: number;
+            current_docs: number;
+            current_size_in_bytes: number;
+            total: number;
+            total_time_in_millis: number;
+            total_docs: number;
+            total_size_in_bytes: number;
+        };
+        refresh: {
+            total: number;
+            total_time_in_millis: number;
+        };
+        flush: {
+            total: number;
+            total_time_in_millis: number;
+        };
+        translog: {
+            operations: number;
+            size_in_bytes: number;
+            uncommitted_operations: number;
+            uncommitted_size_in_bytes: number;
+        };
+        segments: {
+            count: number;
+            memory_in_bytes: number;
+            terms_memory_in_bytes: number;
+            stored_fields_memory_in_bytes: number;
+            term_vectors_memory_in_bytes: number;
+            norms_memory_in_bytes: number;
+            points_memory_in_bytes: number;
+            doc_values_memory_in_bytes: number;
+            index_writer_memory_in_bytes: number;
+            version_map_memory_in_bytes: number;
+            fixed_bit_set_memory_in_bytes: number;
+            max_unsafe_auto_id_timestamp: number;
+            file_sizes: Record<string, any>;
+        };
+        fielddata: {
+            memory_size_in_bytes: number;
+            evictions: number;
+        };
+        query_cache: {
+            memory_size_in_bytes: number;
+            total_count: number;
+            hit_count: number;
+            miss_count: number;
+            cache_size: number;
+            cache_count: number;
+            evictions: number;
+        };
+        request_cache: {
+            memory_size_in_bytes: number;
+            evictions: number;
+            hit_count: number;
+            miss_count: number;
+        };
+    };
+    process: {
+        timestamp: number;
+        open_file_descriptors: number;
+        max_file_descriptors: number;
+        cpu: {
+            percent: number;
+            total_in_millis: number;
+        };
+        mem: {
+            total_virtual_in_bytes: number;
+        };
+    };
+}
+
+export interface NodesStatsResponse {
+    cluster_name: string;
+    nodes: Record<string, NodeStats>;
+}
+
+export const getNodesStatsAll = () =>
+    apiRequest<NodesStatsResponse>('/nodes/stats/all');
+
+export const getCatNodes = () =>
+    apiRequest<Array<{
+        name: string;
+        ip: string;
+        'node.role': string;
+        master: string;
+        'heap.percent': string;
+        'ram.percent': string;
+        cpu: string;
+        'load_1m': string;
+        'load_5m': string;
+        'load_15m': string;
+        'disk.used_percent': string;
+        'disk.total': string;
+        'disk.used': string;
+    }>>('/cat/nodes');
+
+export const getCatShards = () =>
+    apiRequest<Array<{
+        index: string;
+        shard: string;
+        prirep: string;
+        state: string;
+        docs: string;
+        store: string;
+        node: string;
+    }>>('/cat/shards');
+
+export const getCatSegments = () =>
+    apiRequest<Array<{
+        index: string;
+        shard: string;
+        segment: string;
+        generation: string;
+        'docs.count': string;
+        'docs.deleted': string;
+        size: string;
+        'size.memory': string;
+    }>>('/cat/segments');
+
+export const getCatRecovery = () =>
+    apiRequest<Array<{
+        index: string;
+        shard: string;
+        type: string;
+        stage: string;
+        source_host: string;
+        source_node: string;
+        target_host: string;
+        target_node: string;
+        repository: string;
+        snapshot: string;
+        files: string;
+        files_recovered: string;
+        files_percent: string;
+        files_total: string;
+        bytes: string;
+        bytes_recovered: string;
+        bytes_percent: string;
+        bytes_total: string;
+    }>>('/cat/recovery');
+
 // Index listesi
 export const getIndices = () => apiRequest<IndexInfo[]>('/indices');
 

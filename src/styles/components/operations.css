@@ -1,0 +1,424 @@
+/* ==================== OPERATIONS MONITOR ==================== */
+.operations-monitor {
+    padding: var(--spacing-xl);
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.operations-loading,
+.operations-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    height: 100%;
+    min-height: 400px;
+    color: var(--text-secondary);
+}
+
+.operations-error {
+    color: var(--danger);
+}
+
+.operations-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-lg);
+}
+
+.operations-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.operations-title h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.operations-title svg {
+    color: var(--accent);
+}
+
+.operations-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.auto-refresh-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.auto-refresh-toggle input {
+    cursor: pointer;
+}
+
+.refresh-interval-select {
+    padding: 4px 8px;
+    font-size: var(--font-xs);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+/* Quick Stats */
+.operations-quick-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+@media (max-width: 768px) {
+    .operations-quick-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.quick-stat {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+}
+
+.quick-stat svg {
+    color: var(--accent);
+}
+
+.quick-stat-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.quick-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.quick-stat-label {
+    font-size: var(--font-xs);
+    color: var(--text-secondary);
+}
+
+/* Tabs */
+.operations-tabs {
+    display: flex;
+    gap: var(--spacing-xs);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: var(--spacing-lg);
+}
+
+.operations-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-sm);
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.operations-tab:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.operations-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+.tab-badge {
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--accent);
+    color: white;
+    border-radius: 10px;
+}
+
+/* Operations Content */
+.operations-content {
+    min-height: 300px;
+}
+
+/* Tasks Panel */
+.tasks-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.tasks-section h3 {
+    font-size: var(--font-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 var(--spacing-sm) 0;
+}
+
+.tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    transition: all 0.15s ease;
+}
+
+.task-item:hover {
+    border-color: var(--border-strong);
+}
+
+.task-item.pending {
+    border-left: 3px solid var(--warning);
+}
+
+.task-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: var(--accent-alpha);
+    color: var(--accent);
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+}
+
+.task-item.pending .task-icon {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+}
+
+.task-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.task-action {
+    font-size: var(--font-sm);
+    font-weight: 500;
+    color: var(--text-primary);
+    word-break: break-all;
+}
+
+.task-description {
+    font-size: var(--font-xs);
+    color: var(--text-secondary);
+    margin-top: 2px;
+    word-break: break-all;
+}
+
+.task-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-xs);
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.task-node {
+    padding: 2px 6px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+}
+
+.task-duration {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.task-progress {
+    color: var(--accent);
+    font-weight: 500;
+}
+
+.task-priority {
+    padding: 2px 6px;
+    background: var(--warning);
+    color: white;
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.task-cancel {
+    padding: 4px 8px;
+    flex-shrink: 0;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-xl);
+    color: var(--text-muted);
+}
+
+.empty-state svg {
+    color: var(--success);
+    opacity: 0.5;
+}
+
+/* Thread Pool Panel */
+.threadpool-panel {
+    overflow-x: auto;
+}
+
+.threadpool-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.threadpool-table th,
+.threadpool-table td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.threadpool-table th {
+    font-size: var(--font-xs);
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--bg-secondary);
+}
+
+.threadpool-table td {
+    font-size: var(--font-sm);
+    color: var(--text-primary);
+}
+
+.pool-name {
+    font-weight: 500;
+    color: var(--accent);
+}
+
+.stat-badge {
+    font-weight: 600;
+}
+
+.empty-row {
+    text-align: center !important;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Indexing Panel */
+.indexing-panel {
+    padding: var(--spacing-md) 0;
+}
+
+.indexing-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-lg);
+}
+
+@media (max-width: 768px) {
+    .indexing-stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.stats-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.stats-card-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border);
+}
+
+.stats-card-header svg {
+    color: var(--accent);
+}
+
+.stats-card-header h4 {
+    margin: 0;
+    font-size: var(--font-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.stats-card-body {
+    padding: var(--spacing-md);
+}
+
+.stat-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-xs) 0;
+}
+
+.stat-row:not(:last-child) {
+    border-bottom: 1px solid var(--border);
+}
+
+.stat-label {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+}
+
+.stat-value {
+    font-size: var(--font-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.stat-value.highlight {
+    color: var(--accent);
+}
+
+.stat-value.danger {
+    color: var(--danger);
+}
