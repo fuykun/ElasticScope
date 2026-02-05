@@ -17,6 +17,32 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
+      # ========== Database Configuration ==========
+      # Database type: sqlite (default) | postgresql | mysql
+      - DB_TYPE=${DB_TYPE:-sqlite}
+      # Password encryption key (REQUIRED in production!)
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-elasticscope-default-key-change-me!}
+      # ---------- SQLite (default) ----------
+      # Path to SQLite database file
+      - DB_PATH=${DB_PATH:-/app/data/connections.db}
+      # ---------- PostgreSQL ----------
+      # Uncomment these when using DB_TYPE=postgresql
+      # - DB_HOST=${DB_HOST:-localhost}
+      # - DB_PORT=${DB_PORT:-5432}
+      # - DB_NAME=${DB_NAME:-elasticscope}
+      # - DB_USER=${DB_USER:-postgres}
+      # - DB_PASSWORD=${DB_PASSWORD:-}
+      # - DB_SSL=${DB_SSL:-false}
+      # - DB_POOL_SIZE=${DB_POOL_SIZE:-10}
+      # ---------- MySQL ----------
+      # Uncomment these when using DB_TYPE=mysql
+      # - DB_HOST=${DB_HOST:-localhost}
+      # - DB_PORT=${DB_PORT:-3306}
+      # - DB_NAME=${DB_NAME:-elasticscope}
+      # - DB_USER=${DB_USER:-root}
+      # - DB_PASSWORD=${DB_PASSWORD:-}
+      # - DB_SSL=${DB_SSL:-false}
+      # - DB_POOL_SIZE=${DB_POOL_SIZE:-10}
     restart: unless-stopped
     networks:
       - elasticscope-network
@@ -39,6 +65,18 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3001
+      # ========== Database Configuration ==========
+      - DB_TYPE=${DB_TYPE:-sqlite}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-elasticscope-default-key-change-me!}
+      - DB_PATH=${DB_PATH:-/app/data/connections.db}
+      # Uncomment for PostgreSQL/MySQL (see production config above)
+      # - DB_HOST=${DB_HOST:-localhost}
+      # - DB_PORT=${DB_PORT:-5432}
+      # - DB_NAME=${DB_NAME:-elasticscope}
+      # - DB_USER=${DB_USER:-postgres}
+      # - DB_PASSWORD=${DB_PASSWORD:-}
+      # - DB_SSL=${DB_SSL:-false}
+      # - DB_POOL_SIZE=${DB_POOL_SIZE:-10}
     profiles:
       - dev
     networks:

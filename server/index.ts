@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -5,6 +6,8 @@ import { fileURLToPath } from 'url';
 import { Client } from '@elastic/elasticsearch';
 import https from 'https';
 import {
+    initializeDatabase,
+    closeDatabase,
     getAllConnections,
     getConnectionById,
     createConnection,
@@ -179,7 +182,7 @@ const getClientForConnection = async (connectionId: number): Promise<Client | nu
         return esClientsCache.get(connectionId)!;
     }
 
-    const conn = getConnectionById(connectionId);
+    const conn = await getConnectionById(connectionId);
     if (!conn) return null;
 
     try {
@@ -209,9 +212,9 @@ const getClientForConnection = async (connectionId: number): Promise<Client | nu
 
 // ==================== SAVED CONNECTIONS API ====================
 
-app.get('/api/connections', (req, res) => {
+app.get('/api/connections', async (req, res) => {
     try {
-        const connections = getAllConnections();
+        const connections = await getAllConnections();
         const safeConnections = connections.map(c => ({
             ...c,
             password: c.password ? '••••••••' : null
@@ -223,9 +226,9 @@ app.get('/api/connections', (req, res) => {
 });
 
 
-app.get('/api/connections/:id', (req, res) => {
+app.get('/api/connections/:id', async (req, res) => {
     try {
-        const connection = getConnectionById(parseInt(req.params.id));
+        const connection = await getConnectionById(parseInt(req.params.id));
         if (!connection) {
             return res.status(404).json({ errorCode: 'CONNECTION_NOT_FOUND' });
         }
@@ -235,7 +238,7 @@ app.get('/api/connections/:id', (req, res) => {
     }
 });
 
-app.post('/api/connections', (req, res) => {
+app.post('/api/connections', async (req, res) => {
     try {
         const { name, url, username, password, color } = req.body;
 
@@ -245,17 +248,17 @@ app.post('/api/connections', (req, res) => {
             return res.status(400).json({ errorCode: validation.error });
         }
 
-        const connection = createConnection({ name, url, username, password, color });
+        const connection = await createConnection({ name, url, username, password, color });
         res.json({ ...connection, password: connection.password ? '••••••••' : null });
     } catch (error: any) {
         res.status(500).json({ errorCode: 'INTERNAL_ERROR', details: error.message });
     }
 });
 
-app.put('/api/connections/:id', (req, res) => {
+app.put('/api/connections/:id', async (req, res) => {
     try {
         const { name, url, username, password, color } = req.body;
-        const connection = updateConnection(parseInt(req.params.id), {
+        const connection = await updateConnection(parseInt(req.params.id), {
             name, url, username, password, color
         });
         if (!connection) {
@@ -267,9 +270,9 @@ app.put('/api/connections/:id', (req, res) => {
     }
 });
 
-app.delete('/api/connections/:id', (req, res) => {
+app.delete('/api/connections/:id', async (req, res) => {
     try {
-        const success = deleteConnection(parseInt(req.params.id));
+        const success = await deleteConnection(parseInt(req.params.id));
         if (!success) {
             return res.status(404).json({ errorCode: 'CONNECTION_NOT_FOUND' });
         }
@@ -296,7 +299,7 @@ app.post('/api/connect', async (req, res) => {
     let connId: number | null = null;
 
     if (connectionId) {
-        const savedConn = getConnectionById(connectionId);
+        const savedConn = await getConnectionById(connectionId);
         if (!savedConn) {
             return res.status(404).json({ errorCode: 'SAVED_CONNECTION_NOT_FOUND' });
         }
@@ -924,9 +927,9 @@ app.post('/api/rest', requireConnection, async (req, res) => {
 
 // ==================== SAVED QUERIES API ====================
 
-app.get('/api/queries', (req, res) => {
+app.get('/api/queries', async (req, res) => {
     try {
-        const queries = getAllQueries();
+        const queries = await getAllQueries();
         res.json(queries);
     } catch (error: any) {
         res.status(500).json({ error: error.message });
@@ -934,9 +937,9 @@ app.get('/api/queries', (req, res) => {
 });
 
 // Tek sorgu getir
-app.get('/api/queries/:id', (req, res) => {
+app.get('/api/queries/:id', async (req, res) => {
     try {
-        const query = getQueryById(parseInt(req.params.id));
+        const query = await getQueryById(parseInt(req.params.id));
         if (!query) {
             return res.status(404).json({ errorCode: 'QUERY_NOT_FOUND' });
         }
@@ -947,23 +950,23 @@ app.get('/api/queries/:id', (req, res) => {
 });
 
 // Yeni sorgu ekle
-app.post('/api/queries', (req, res) => {
+app.post('/api/queries', async (req, res) => {
     try {
         const { name, method, path, body } = req.body;
         if (!name || !method || !path) {
             return res.status(400).json({ errorCode: 'NAME_METHOD_PATH_REQUIRED' });
         }
-        const query = createQuery({ name, method, path, body });
+        const query = await createQuery({ name, method, path, body });
         res.json(query);
     } catch (error: any) {
         res.status(500).json({ errorCode: 'INTERNAL_ERROR', details: error.message });
     }
 });
 
-app.put('/api/queries/:id', (req, res) => {
+app.put('/api/queries/:id', async (req, res) => {
     try {
         const { name, method, path, body } = req.body;
-        const query = updateQuery(parseInt(req.params.id), {
+        const query = await updateQuery(parseInt(req.params.id), {
             name, method, path, body
         });
         if (!query) {
@@ -976,9 +979,9 @@ app.put('/api/queries/:id', (req, res) => {
 });
 
 // Sorgu sil
-app.delete('/api/queries/:id', (req, res) => {
+app.delete('/api/queries/:id', async (req, res) => {
     try {
-        const success = deleteQuery(parseInt(req.params.id));
+        const success = await deleteQuery(parseInt(req.params.id));
         if (!success) {
             return res.status(404).json({ errorCode: 'QUERY_NOT_FOUND' });
         }
@@ -1237,11 +1240,36 @@ if (process.env.NODE_ENV === 'production') {
 
 const PORT = process.env.PORT || 3001;
 
-app.listen(PORT, () => {
-    console.log(`ElasticScope Server running on http://localhost:${PORT}`);
-    if (process.env.NODE_ENV === 'production') {
-        console.log(`Serving static files from dist folder`);
-    } else {
-        console.log(`Frontend can connect without CORS issues`);
+// ==================== APPLICATION STARTUP ====================
+
+const startServer = async () => {
+    try {
+        // Initialize database
+        await initializeDatabase();
+
+        app.listen(PORT, () => {
+            console.log(`ElasticScope Server running on http://localhost:${PORT}`);
+            if (process.env.NODE_ENV === 'production') {
+                console.log(`Serving static files from dist folder`);
+            } else {
+                console.log(`Frontend can connect without CORS issues`);
+            }
+        });
+
+        // Graceful shutdown
+        const shutdown = async () => {
+            console.log('\n🛑 Shutting down gracefully...');
+            await closeDatabase();
+            process.exit(0);
+        };
+
+        process.on('SIGINT', shutdown);
+        process.on('SIGTERM', shutdown);
+
+    } catch (error) {
+        console.error('❌ Failed to start server:', error);
+        process.exit(1);
     }
-});
+};
+
+startServer();
