@@ -135,6 +135,10 @@ Unlike heavyweight alternatives, ElasticScope is lightweight, fast, and easy to 
 
 ![REST Console](docs/screenshots/rest-console.png)
 
+### Cluster Monitor
+
+![Cluster Monitor](docs/screenshots/cluster-monitor.png)
+
 </details>
 
 ## Installation
