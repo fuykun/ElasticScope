@@ -464,51 +464,59 @@ export const Dashboard: React.FC<DashboardProps> = ({ connectionName, connection
                                     <td>{node.ip}</td>
                                     <td>{node.version}</td>
                                     <td>
-                                        <div className="mini-progress">
-                                            <div
-                                                className="mini-progress-bar"
-                                                style={{
-                                                    width: `${node.cpuPercent}%`,
-                                                    backgroundColor: getProgressColor(node.cpuPercent)
-                                                }}
-                                            />
-                                            <span className="mini-progress-text">{node.cpuPercent}%</span>
+                                        <div className="node-metric-group">
+                                            <div className="node-metric-bar-bg">
+                                                <div
+                                                    className="node-metric-bar-fill"
+                                                    style={{
+                                                        width: `${node.cpuPercent}%`,
+                                                        backgroundColor: getProgressColor(node.cpuPercent)
+                                                    }}
+                                                />
+                                            </div>
+                                            <span className="node-metric-value">{node.cpuPercent}%</span>
                                         </div>
                                     </td>
                                     <td>
-                                        <div className="mini-progress">
-                                            <div
-                                                className="mini-progress-bar"
-                                                style={{
-                                                    width: `${node.memPercent}%`,
-                                                    backgroundColor: getProgressColor(node.memPercent)
-                                                }}
-                                            />
-                                            <span className="mini-progress-text">{node.memPercent}%</span>
+                                        <div className="node-metric-group">
+                                            <div className="node-metric-bar-bg">
+                                                <div
+                                                    className="node-metric-bar-fill"
+                                                    style={{
+                                                        width: `${node.memPercent}%`,
+                                                        backgroundColor: getProgressColor(node.memPercent)
+                                                    }}
+                                                />
+                                            </div>
+                                            <span className="node-metric-value">{node.memPercent}%</span>
                                         </div>
                                     </td>
                                     <td>
-                                        <div className="mini-progress">
-                                            <div
-                                                className="mini-progress-bar"
-                                                style={{
-                                                    width: `${node.heapPercent}%`,
-                                                    backgroundColor: getProgressColor(node.heapPercent)
-                                                }}
-                                            />
-                                            <span className="mini-progress-text">{node.heapPercent}%</span>
+                                        <div className="node-metric-group">
+                                            <div className="node-metric-bar-bg">
+                                                <div
+                                                    className="node-metric-bar-fill"
+                                                    style={{
+                                                        width: `${node.heapPercent}%`,
+                                                        backgroundColor: getProgressColor(node.heapPercent)
+                                                    }}
+                                                />
+                                            </div>
+                                            <span className="node-metric-value">{node.heapPercent}%</span>
                                         </div>
                                     </td>
                                     <td>
-                                        <div className="mini-progress">
-                                            <div
-                                                className="mini-progress-bar"
-                                                style={{
-                                                    width: `${node.diskPercent}%`,
-                                                    backgroundColor: getProgressColor(node.diskPercent)
-                                                }}
-                                            />
-                                            <span className="mini-progress-text">{node.diskPercent}%</span>
+                                        <div className="node-metric-group">
+                                            <div className="node-metric-bar-bg">
+                                                <div
+                                                    className="node-metric-bar-fill"
+                                                    style={{
+                                                        width: `${node.diskPercent}%`,
+                                                        backgroundColor: getProgressColor(node.diskPercent)
+                                                    }}
+                                                />
+                                            </div>
+                                            <span className="node-metric-value">{node.diskPercent}%</span>
                                         </div>
                                     </td>
                                     <td>
