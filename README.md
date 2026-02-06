@@ -104,9 +104,7 @@ Unlike heavyweight alternatives, ElasticScope is lightweight, fast, and easy to 
 - Execute raw Elasticsearch queries with context-aware autocomplete
 - Multi-tab support for managing multiple queries
 - Save, load, and organize requests in collections
-- History of executed requests (per connection)
 - Split-screen view for request/response
-- cURL import/export support
 
 ### Enhanced Document List
 
