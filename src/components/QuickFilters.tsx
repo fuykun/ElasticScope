@@ -128,7 +128,7 @@ const DATE_QUICK_FILTERS = [
 ];
 
 export const QuickFilters: React.FC<QuickFiltersProps> = ({
-    indexName,
+
     dateFields,
     keywordFields,
     activeFilters,

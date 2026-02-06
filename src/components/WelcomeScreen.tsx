@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Database, Search, Code, Plus, Loader, Server } from 'lucide-react';
+import { Plus, Loader, Server } from 'lucide-react';
 import { getSavedConnections, connectWithSavedConnection, SavedConnection } from '../api/elasticsearchClient';
 
 interface WelcomeScreenProps {
