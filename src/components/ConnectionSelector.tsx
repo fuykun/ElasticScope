@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, Plus, Power, Trash2, Pencil } from 'lucide-react';
+import { ChevronDown, Plus, Power, Trash2, Pencil, Download, Upload } from 'lucide-react';
 import {
     SavedConnection,
     getSavedConnections,
@@ -8,6 +8,9 @@ import {
     disconnect,
     deleteSavedConnection,
     getClusterHealth,
+    exportConnectionsData,
+    importConnectionsData,
+    ConnectionsExportData,
 } from '../api/elasticsearchClient';
 import { useClickOutside } from '../hooks/useClickOutside';
 
@@ -34,6 +37,7 @@ export const ConnectionSelector: React.FC<ConnectionSelectorProps> = ({
     const [loading, setLoading] = useState(false);
     const [clusterStatus, setClusterStatus] = useState<'green' | 'yellow' | 'red' | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Click outside hook
     const closeDropdown = useCallback(() => setIsOpen(false), []);
@@ -117,10 +121,83 @@ export const ConnectionSelector: React.FC<ConnectionSelectorProps> = ({
         onEdit(connection);
     };
 
+    const handleExport = async () => {
+        try {
+            if (connections.length === 0) {
+                alert(t('connection.noConnectionsToExport'));
+                return;
+            }
+
+            const exportData = await exportConnectionsData();
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `elasticscope-connections-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            setIsOpen(false);
+        } catch (error) {
+            console.error('Export error:', error);
+        }
+    };
+
+    const handleImportClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            const text = await file.text();
+            const importData: ConnectionsExportData = JSON.parse(text);
+
+            // Validate the data structure
+            if (!importData.connections || !Array.isArray(importData.connections)) {
+                alert(t('connection.importError'));
+                return;
+            }
+
+            const result = await importConnectionsData(importData, connections);
+
+            if (result.imported > 0) {
+                await loadConnections();
+            }
+
+            let message = t('connection.importSuccess', { count: result.imported });
+            if (result.skipped > 0) {
+                message += '\n' + t('connection.importDuplicate', { count: result.skipped });
+            }
+
+            alert(message);
+            setIsOpen(false);
+        } catch (error) {
+            console.error('Import error:', error);
+            alert(t('connection.importError'));
+        } finally {
+            // Reset the file input
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
+    };
+
     const currentConnection = connections.find((c) => c.id === currentConnectionId);
 
     return (
         <div className="connection-selector" ref={dropdownRef}>
+            <input
+                type="file"
+                ref={fileInputRef}
+                accept=".json"
+                onChange={handleImportFile}
+                style={{ display: 'none' }}
+            />
             <button
                 className="connection-selector-trigger"
                 onClick={() => setIsOpen(!isOpen)}
@@ -185,10 +262,20 @@ export const ConnectionSelector: React.FC<ConnectionSelectorProps> = ({
                     </div>
 
                     <div className="connection-dropdown-actions">
-                        <button className="btn btn-add-connection" onClick={() => { onAddNew(); setIsOpen(false); }}>
-                            <Plus size={16} />
-                            {t('connection.addNew')}
-                        </button>
+                        <div className="connection-actions-row">
+                            <button className="btn btn-add-connection" onClick={() => { onAddNew(); setIsOpen(false); }}>
+                                <Plus size={16} />
+                                {t('connection.addNew')}
+                            </button>
+                            <div className="connection-import-export">
+                                <button className="btn btn-import" onClick={handleImportClick} title={t('connection.import')}>
+                                    <Upload size={16} />
+                                </button>
+                                <button className="btn btn-export" onClick={handleExport} title={t('connection.export')}>
+                                    <Download size={16} />
+                                </button>
+                            </div>
+                        </div>
                         {isConnected && (
                             <button className="btn btn-disconnect-small" onClick={handleDisconnect}>
                                 <Power size={16} />

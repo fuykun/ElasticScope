@@ -112,7 +112,14 @@
             "nameMaxLength": "Bağlantı adı en fazla 50 karakter olabilir",
             "urlRequired": "Elasticsearch URL gerekli",
             "urlInvalid": "Geçerli bir URL girin (http:// veya https://)"
-        }
+        },
+        "export": "Bağlantıları Dışa Aktar",
+        "import": "Bağlantıları İçe Aktar",
+        "exportSuccess": "Bağlantılar başarıyla dışa aktarıldı",
+        "importSuccess": "{{count}} bağlantı başarıyla içe aktarıldı",
+        "importError": "Bağlantılar içe aktarılamadı. Lütfen dosya formatını kontrol edin.",
+        "noConnectionsToExport": "Dışa aktarılacak bağlantı yok",
+        "importDuplicate": "{{count}} yinelenen bağlantı atlandı"
     },
     "dashboard": {
         "title": "Dashboard",

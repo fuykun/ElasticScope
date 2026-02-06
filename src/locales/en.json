@@ -112,7 +112,14 @@
             "nameMaxLength": "Connection name can be at most 50 characters",
             "urlRequired": "Elasticsearch URL is required",
             "urlInvalid": "Enter a valid URL (http:// or https://)"
-        }
+        },
+        "export": "Export Connections",
+        "import": "Import Connections",
+        "exportSuccess": "Connections exported successfully",
+        "importSuccess": "{{count}} connection(s) imported successfully",
+        "importError": "Failed to import connections. Please check the file format.",
+        "noConnectionsToExport": "No connections to export",
+        "importDuplicate": "Skipped {{count}} duplicate connection(s)"
     },
     "dashboard": {
         "title": "Dashboard",

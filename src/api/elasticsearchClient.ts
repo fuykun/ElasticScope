@@ -97,6 +97,82 @@ export const deleteSavedConnection = (id: number) =>
         method: 'DELETE',
     });
 
+// Export connection data format (without sensitive info and internal fields)
+export interface ExportedConnection {
+    name: string;
+    url: string;
+    username?: string;
+    color: string;
+}
+
+// Format for export file
+export interface ConnectionsExportData {
+    version: string;
+    exportedAt: string;
+    connections: ExportedConnection[];
+}
+
+// Result of import operation
+export interface ImportResult {
+    imported: number;
+    skipped: number;
+    errors: string[];
+}
+
+// Export connections to JSON format
+export const exportConnectionsData = async (): Promise<ConnectionsExportData> => {
+    const connections = await getSavedConnections();
+
+    return {
+        version: '1.0',
+        exportedAt: new Date().toISOString(),
+        connections: connections.map(conn => ({
+            name: conn.name,
+            url: conn.url,
+            username: conn.username || undefined,
+            color: conn.color,
+        })),
+    };
+};
+
+// Import connections from exported data
+export const importConnectionsData = async (
+    data: ConnectionsExportData,
+    existingConnections: SavedConnection[]
+): Promise<ImportResult> => {
+    const result: ImportResult = {
+        imported: 0,
+        skipped: 0,
+        errors: [],
+    };
+
+    for (const conn of data.connections) {
+        // Check for duplicates (same name or same URL)
+        const isDuplicate = existingConnections.some(
+            existing => existing.name === conn.name || existing.url === conn.url
+        );
+
+        if (isDuplicate) {
+            result.skipped++;
+            continue;
+        }
+
+        try {
+            await createSavedConnection({
+                name: conn.name,
+                url: conn.url,
+                username: conn.username,
+                color: conn.color,
+            });
+            result.imported++;
+        } catch (error) {
+            result.errors.push(`Failed to import "${conn.name}": ${error}`);
+        }
+    }
+
+    return result;
+};
+
 // ==================== ELASTICSEARCH CONNECTION API ====================
 
 export const getConnectionStatus = () =>
