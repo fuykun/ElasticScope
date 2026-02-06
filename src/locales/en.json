@@ -539,7 +539,20 @@
         "evictions": "Evictions",
         "cacheByNode": "Cache by Node",
         "fieldData": "Field Data",
-        "segmentMem": "Segment Memory"
+        "segmentMem": "Segment Memory",
+        "tasksTab": "Tasks",
+        "activeTasks": "Active Tasks",
+        "noActiveTasks": "No active cancellable tasks",
+        "taskAction": "Action",
+        "taskNode": "Node",
+        "taskProgress": "Progress",
+        "taskRunning": "Running Time",
+        "taskActions": "Actions",
+        "cancelTask": "Cancel Task",
+        "taskCancelled": "Cancelled",
+        "pausedBackground": "Paused (background)",
+        "idleWarning": "Will pause in {{minutes}}m due to inactivity",
+        "idleIn": "Idle: {{minutes}}m left"
     },
     "footer": {
         "version": "ElasticScope v1.0.0"

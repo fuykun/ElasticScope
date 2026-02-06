@@ -57,21 +57,6 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                     </p>
                 </div>
 
-                <div className="welcome-features">
-                    <div className="feature-card">
-                        <Database size={24} />
-                        <span>{t('welcome.features.viewIndices')}</span>
-                    </div>
-                    <div className="feature-card">
-                        <Search size={24} />
-                        <span>{t('welcome.features.searchDocuments')}</span>
-                    </div>
-                    <div className="feature-card">
-                        <Code size={24} />
-                        <span>{t('welcome.features.queryDsl')}</span>
-                    </div>
-                </div>
-
                 {loading ? (
                     <div className="welcome-loading">
                         <Loader size={24} className="spin" />

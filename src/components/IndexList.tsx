@@ -151,47 +151,35 @@ export const IndexList: React.FC<IndexListProps> = ({
                     filteredIndices.map((idx) => (
                         <div
                             key={idx.index}
-                            className={`index-item ${selectedIndex === idx.index ? 'selected' : ''} ${idx.aliases?.length > 0 ? 'has-alias' : ''}`}
+                            className={`index-item ${selectedIndex === idx.index ? 'selected' : ''}`}
                             onClick={() => onSelectIndex(idx.index)}
                             title={idx.index}
                         >
+                            <span
+                                className="health-dot"
+                                title={`Health: ${idx.health}`}
+                                style={{ backgroundColor: getHealthColor(idx.health) }}
+                            />
                             <div className="index-content">
-                                <span className="index-name">{idx.index}</span>
-                                {idx['store.size'] && (
-                                    <span className="index-size" title="Storage Size">
-                                        {idx['store.size']}
-                                    </span>
-                                )}
-                                {idx.aliases?.length > 0 && (
-                                    <div className="index-aliases">
-                                        <Tag size={10} className="alias-icon" />
-                                        {idx.aliases.slice(0, 2).map((alias) => (
-                                            <span key={alias} className="alias-tag">
-                                                {alias}
-                                            </span>
-                                        ))}
-                                        {idx.aliases.length > 2 && (
-                                            <span className="alias-more">+{idx.aliases.length - 2}</span>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="index-meta-right">
-                                <span
-                                    className="health-badge"
-                                    title={`Health: ${idx.health}`}
-                                    style={{
-                                        backgroundColor: getHealthColor(idx.health),
-                                        boxShadow: `0 0 8px ${getHealthColor(idx.health)}`
-                                    }}
-                                >
-                                    {idx.health}
-                                </span>
-                                {idx.creation_date && (
-                                    <span className="index-date" title={formatDate(idx.creation_date)}>
-                                        {formatRelativeDate(idx.creation_date)}
-                                    </span>
-                                )}
+                                <div className="index-top-row">
+                                    <span className="index-name">{idx.index}</span>
+                                    {idx.aliases?.length > 0 && (
+                                        <span className="alias-count" title={idx.aliases.join(', ')}>
+                                            <Tag size={9} />
+                                            {idx.aliases.length}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="index-bottom-row">
+                                    {idx['store.size'] && (
+                                        <span className="index-size">{idx['store.size']}</span>
+                                    )}
+                                    {idx.creation_date && (
+                                        <span className="index-date" title={formatDate(idx.creation_date)}>
+                                            {formatRelativeDate(idx.creation_date)}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     ))

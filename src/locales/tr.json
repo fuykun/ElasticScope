@@ -539,7 +539,20 @@
         "evictions": "Eviction Sayısı",
         "cacheByNode": "Node Bazlı Önbellek",
         "fieldData": "Field Data",
-        "segmentMem": "Segment Bellek"
+        "segmentMem": "Segment Bellek",
+        "tasksTab": "Görevler",
+        "activeTasks": "Aktif Görevler",
+        "noActiveTasks": "İptal edilebilir aktif görev yok",
+        "taskAction": "Aksiyon",
+        "taskNode": "Node",
+        "taskProgress": "İlerleme",
+        "taskRunning": "Çalışma Süresi",
+        "taskActions": "İşlemler",
+        "cancelTask": "Görevi İptal Et",
+        "taskCancelled": "İptal Edildi",
+        "pausedBackground": "Duraklatıldı (arka plan)",
+        "idleWarning": "{{minutes}}dk sonra inaktiflik nedeniyle duracak",
+        "idleIn": "Kalan: {{minutes}}dk"
     },
     "footer": {
         "version": "ElasticScope v1.0.0"

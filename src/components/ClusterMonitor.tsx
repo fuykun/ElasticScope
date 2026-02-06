@@ -27,6 +27,9 @@ import {
     Merge,
     Play,
     Pause,
+    X,
+    ListTodo,
+    Loader,
 } from 'lucide-react';
 import {
     getClusterHealth,
@@ -35,6 +38,9 @@ import {
     getCatNodes,
     NodesStatsResponse,
     NodeStats,
+    getTasks,
+    cancelTask,
+    TaskInfo,
 } from '../api/elasticsearchClient';
 import { formatBytes } from '../utils/formatters';
 
@@ -63,17 +69,34 @@ const MAX_HISTORY_POINTS = 60; // 5 dakika (5 saniye interval ile)
 
 export const ClusterMonitor: React.FC<ClusterMonitorProps> = ({ connectionId }) => {
     const { t } = useTranslation();
-    const [activeTab, setActiveTab] = useState<'overview' | 'nodes' | 'operations' | 'caches'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'nodes' | 'operations' | 'caches' | 'tasks'>('overview');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [autoRefresh, setAutoRefresh] = useState(true);
-    const [refreshInterval] = useState(5000);
+    const [refreshInterval, setRefreshInterval] = useState(5000);
+    const [isPageVisible, setIsPageVisible] = useState(!document.hidden);
+    const [idleMinutes, setIdleMinutes] = useState(0);
+    const lastActivityRef = useRef(Date.now());
+
+    const IDLE_TIMEOUT_MINUTES = 30; // 30 dakika sonra otomatik durdur
+    const REFRESH_OPTIONS = [
+        { value: 5000, label: '5s' },
+        { value: 10000, label: '10s' },
+        { value: 30000, label: '30s' },
+        { value: 60000, label: '1m' },
+        { value: 300000, label: '5m' },
+    ];
 
     // Cluster data
     const [clusterHealth, setClusterHealth] = useState<any>(null);
     const [, setClusterStats] = useState<any>(null);
     const [nodesStats, setNodesStats] = useState<NodesStatsResponse | null>(null);
     const [catNodes, setCatNodes] = useState<any[]>([]);
+
+    // Tasks data
+    const [tasks, setTasks] = useState<Array<TaskInfo & { nodeId: string; nodeName: string; taskId: string }>>([]);
+    const [tasksLoading, setTasksLoading] = useState(false);
+    const [cancellingTasks, setCancellingTasks] = useState<Set<string>>(new Set());
 
     // History for charts
     const [history, setHistory] = useState<HistoryData>({
@@ -191,15 +214,129 @@ export const ClusterMonitor: React.FC<ClusterMonitorProps> = ({ connectionId }) 
         }
     }, [t]);
 
+    const loadTasks = useCallback(async () => {
+        setTasksLoading(true);
+        try {
+            const data = await getTasks();
+            const taskList: Array<TaskInfo & { nodeId: string; nodeName: string; taskId: string }> = [];
+
+            if (data?.nodes) {
+                Object.entries(data.nodes).forEach(([nodeId, nodeData]) => {
+                    const nodeName = nodeData.name;
+                    Object.entries(nodeData.tasks).forEach(([, task]) => {
+                        // Only show cancellable long-running tasks
+                        if (task.cancellable) {
+                            taskList.push({
+                                ...task,
+                                nodeId,
+                                nodeName,
+                                taskId: `${nodeId}:${task.id}`,
+                            });
+                        }
+                    });
+                });
+            }
+
+            // Sort by running time (longest first)
+            taskList.sort((a, b) => b.running_time_in_nanos - a.running_time_in_nanos);
+            setTasks(taskList);
+        } catch (err) {
+            console.error('Failed to load tasks:', err);
+        } finally {
+            setTasksLoading(false);
+        }
+    }, []);
+
+    const handleCancelTask = async (taskId: string) => {
+        setCancellingTasks(prev => new Set(prev).add(taskId));
+        try {
+            await cancelTask(taskId);
+            // Reload tasks after cancellation
+            await loadTasks();
+        } catch (err) {
+            console.error('Failed to cancel task:', err);
+        } finally {
+            setCancellingTasks(prev => {
+                const next = new Set(prev);
+                next.delete(taskId);
+                return next;
+            });
+        }
+    };
+
     useEffect(() => {
         loadData();
     }, [connectionId, loadData]);
 
+    // Load tasks when switching to tasks tab
     useEffect(() => {
-        if (!autoRefresh) return;
-        const interval = setInterval(loadData, refreshInterval);
+        if (activeTab === 'tasks') {
+            loadTasks();
+        }
+    }, [activeTab, loadTasks]);
+
+    // Visibility change listener - sayfa görünür olmadığında refresh durur
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            setIsPageVisible(!document.hidden);
+            if (!document.hidden) {
+                // Sayfa tekrar görünür olduğunda activity'yi resetle
+                lastActivityRef.current = Date.now();
+                setIdleMinutes(0);
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, []);
+
+    // User activity tracker
+    useEffect(() => {
+        const handleActivity = () => {
+            lastActivityRef.current = Date.now();
+            setIdleMinutes(0);
+        };
+
+        // Mouse ve keyboard activity'sini dinle
+        window.addEventListener('mousemove', handleActivity);
+        window.addEventListener('keydown', handleActivity);
+        window.addEventListener('click', handleActivity);
+        window.addEventListener('scroll', handleActivity);
+
+        return () => {
+            window.removeEventListener('mousemove', handleActivity);
+            window.removeEventListener('keydown', handleActivity);
+            window.removeEventListener('click', handleActivity);
+            window.removeEventListener('scroll', handleActivity);
+        };
+    }, []);
+
+    // Idle checker - her dakika kontrol et
+    useEffect(() => {
+        const idleChecker = setInterval(() => {
+            const minutesIdle = Math.floor((Date.now() - lastActivityRef.current) / 60000);
+            setIdleMinutes(minutesIdle);
+
+            if (minutesIdle >= IDLE_TIMEOUT_MINUTES && autoRefresh) {
+                setAutoRefresh(false);
+            }
+        }, 60000); // Her dakika kontrol
+
+        return () => clearInterval(idleChecker);
+    }, [autoRefresh]);
+
+    // Auto refresh - sadece sayfa görünürse ve idle değilse çalışır
+    useEffect(() => {
+        if (!autoRefresh || !isPageVisible) return;
+
+        const interval = setInterval(() => {
+            loadData();
+            if (activeTab === 'tasks') {
+                loadTasks();
+            }
+        }, refreshInterval);
         return () => clearInterval(interval);
-    }, [autoRefresh, refreshInterval, loadData]);
+    }, [autoRefresh, refreshInterval, loadData, loadTasks, activeTab, isPageVisible]);
 
     const getHealthColor = (status: string) => {
         switch (status) {
@@ -425,9 +562,25 @@ export const ClusterMonitor: React.FC<ClusterMonitorProps> = ({ connectionId }) 
                     <h2>{t('clusterMonitor.title')}</h2>
                 </div>
                 <div className="cluster-monitor-controls">
+                    {/* Refresh interval seçici */}
+                    <select
+                        className="refresh-interval-select"
+                        value={refreshInterval}
+                        onChange={(e) => setRefreshInterval(Number(e.target.value))}
+                        disabled={!autoRefresh}
+                    >
+                        {REFRESH_OPTIONS.map(opt => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                    </select>
+
                     <button
-                        className={`btn btn-sm ${autoRefresh ? 'btn-primary' : 'btn-secondary'}`}
-                        onClick={() => setAutoRefresh(!autoRefresh)}
+                        className={`btn btn-sm ${autoRefresh && isPageVisible ? 'btn-primary' : 'btn-secondary'}`}
+                        onClick={() => {
+                            setAutoRefresh(!autoRefresh);
+                            lastActivityRef.current = Date.now();
+                            setIdleMinutes(0);
+                        }}
                         title={t('clusterMonitor.autoRefresh')}
                     >
                         {autoRefresh ? <Pause size={16} /> : <Play size={16} />}
@@ -440,6 +593,18 @@ export const ClusterMonitor: React.FC<ClusterMonitorProps> = ({ connectionId }) 
                     >
                         <RefreshCw size={16} />
                     </button>
+
+                    {/* Durum göstergesi */}
+                    {autoRefresh && !isPageVisible && (
+                        <span className="refresh-status paused" title={t('clusterMonitor.pausedBackground')}>
+                            {t('clusterMonitor.pausedBackground')}
+                        </span>
+                    )}
+                    {autoRefresh && isPageVisible && idleMinutes > 0 && (
+                        <span className="refresh-status idle" title={t('clusterMonitor.idleWarning', { minutes: IDLE_TIMEOUT_MINUTES - idleMinutes })}>
+                            {t('clusterMonitor.idleIn', { minutes: IDLE_TIMEOUT_MINUTES - idleMinutes })}
+                        </span>
+                    )}
                 </div>
             </div>
 
@@ -564,6 +729,16 @@ export const ClusterMonitor: React.FC<ClusterMonitorProps> = ({ connectionId }) 
                 >
                     <Database size={16} />
                     {t('clusterMonitor.cachesTab')}
+                </button>
+                <button
+                    className={`cluster-tab ${activeTab === 'tasks' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('tasks')}
+                >
+                    <ListTodo size={16} />
+                    {t('clusterMonitor.tasksTab')}
+                    {tasks.length > 0 && (
+                        <span className="tab-badge">{tasks.length}</span>
+                    )}
                 </button>
             </div>
 
@@ -1023,6 +1198,131 @@ export const ClusterMonitor: React.FC<ClusterMonitorProps> = ({ connectionId }) 
                                                 <td>{formatBytes(node.indices?.segments?.memory_in_bytes || 0)}</td>
                                             </tr>
                                         ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {activeTab === 'tasks' && (
+                    <div className="tasks-content">
+                        <div className="tasks-header">
+                            <h4><ListTodo size={16} /> {t('clusterMonitor.activeTasks')}</h4>
+                            <button
+                                className="btn btn-sm btn-secondary"
+                                onClick={loadTasks}
+                                disabled={tasksLoading}
+                            >
+                                <RefreshCw size={14} className={tasksLoading ? 'spin' : ''} />
+                            </button>
+                        </div>
+
+                        {tasksLoading && tasks.length === 0 ? (
+                            <div className="tasks-loading">
+                                <Loader size={24} className="spin" />
+                                <span>{t('common.loading')}</span>
+                            </div>
+                        ) : tasks.length === 0 ? (
+                            <div className="tasks-empty">
+                                <CheckCircle size={32} />
+                                <p>{t('clusterMonitor.noActiveTasks')}</p>
+                            </div>
+                        ) : (
+                            <div className="tasks-table-container">
+                                <table className="tasks-table">
+                                    <thead>
+                                        <tr>
+                                            <th>{t('clusterMonitor.taskAction')}</th>
+                                            <th>{t('clusterMonitor.taskNode')}</th>
+                                            <th>{t('clusterMonitor.taskProgress')}</th>
+                                            <th>{t('clusterMonitor.taskRunning')}</th>
+                                            <th>{t('clusterMonitor.taskActions')}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {tasks.map((task) => {
+                                            const runningMs = Math.floor(task.running_time_in_nanos / 1_000_000);
+                                            const runningSeconds = Math.floor(runningMs / 1000);
+                                            const runningMinutes = Math.floor(runningSeconds / 60);
+                                            const runningHours = Math.floor(runningMinutes / 60);
+
+                                            let runningTimeStr = '';
+                                            if (runningHours > 0) {
+                                                runningTimeStr = `${runningHours}h ${runningMinutes % 60}m`;
+                                            } else if (runningMinutes > 0) {
+                                                runningTimeStr = `${runningMinutes}m ${runningSeconds % 60}s`;
+                                            } else {
+                                                runningTimeStr = `${runningSeconds}s`;
+                                            }
+
+                                            const progress = task.status?.total
+                                                ? Math.round(((task.status.updated || 0) + (task.status.created || 0) + (task.status.deleted || 0)) / task.status.total * 100)
+                                                : null;
+
+                                            const isCancelling = cancellingTasks.has(task.taskId);
+
+                                            return (
+                                                <tr key={task.taskId} className={task.cancelled ? 'cancelled' : ''}>
+                                                    <td>
+                                                        <div className="task-action">
+                                                            <code>{task.action}</code>
+                                                            {task.description && (
+                                                                <span className="task-description" title={task.description}>
+                                                                    {task.description.length > 60
+                                                                        ? task.description.substring(0, 60) + '...'
+                                                                        : task.description}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <span className="task-node">{task.nodeName}</span>
+                                                    </td>
+                                                    <td>
+                                                        {progress !== null ? (
+                                                            <div className="task-progress">
+                                                                <div className="mini-progress">
+                                                                    <div
+                                                                        className="mini-progress-bar"
+                                                                        style={{
+                                                                            width: `${progress}%`,
+                                                                            backgroundColor: 'var(--accent)'
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                                <span>{progress}%</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="task-no-progress">-</span>
+                                                        )}
+                                                    </td>
+                                                    <td>
+                                                        <span className="task-time">{runningTimeStr}</span>
+                                                    </td>
+                                                    <td>
+                                                        {task.cancellable && !task.cancelled ? (
+                                                            <button
+                                                                className="btn btn-sm btn-danger task-cancel-btn"
+                                                                onClick={() => handleCancelTask(task.taskId)}
+                                                                disabled={isCancelling}
+                                                                title={t('clusterMonitor.cancelTask')}
+                                                            >
+                                                                {isCancelling ? (
+                                                                    <Loader size={14} className="spin" />
+                                                                ) : (
+                                                                    <X size={14} />
+                                                                )}
+                                                            </button>
+                                                        ) : task.cancelled ? (
+                                                            <span className="task-cancelled-badge">
+                                                                {t('clusterMonitor.taskCancelled')}
+                                                            </span>
+                                                        ) : null}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>

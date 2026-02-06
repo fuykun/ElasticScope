@@ -44,7 +44,45 @@
 
 .cluster-monitor-controls {
     display: flex;
+    align-items: center;
     gap: 8px;
+}
+
+.refresh-interval-select {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.refresh-interval-select:hover:not(:disabled) {
+    border-color: var(--accent);
+}
+
+.refresh-interval-select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.refresh-status {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+}
+
+.refresh-status.paused {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--warning);
+}
+
+.refresh-status.idle {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--text-muted);
 }
 
 /* KPI Grid */
@@ -731,6 +769,167 @@
 
 .cache-table tbody tr:hover {
     background: var(--bg-tertiary);
+}
+
+/* Tasks Tab */
+.tasks-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.tasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tasks-header h4 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.tasks-loading,
+.tasks-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    gap: 12px;
+    color: var(--text-muted);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+}
+
+.tasks-empty svg {
+    color: var(--success);
+    opacity: 0.6;
+}
+
+.tasks-table-container {
+    overflow-x: auto;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+}
+
+.tasks-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.tasks-table th,
+.tasks-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.tasks-table th {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--bg-tertiary);
+}
+
+.tasks-table tr:last-child td {
+    border-bottom: none;
+}
+
+.tasks-table tbody tr:hover {
+    background: var(--bg-tertiary);
+}
+
+.tasks-table tbody tr.cancelled {
+    opacity: 0.6;
+}
+
+.task-action {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.task-action code {
+    font-size: 0.8rem;
+    color: var(--accent);
+    background: var(--bg-tertiary);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.task-description {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    word-break: break-word;
+}
+
+.task-node {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.task-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.task-progress .mini-progress {
+    width: 60px;
+}
+
+.task-no-progress {
+    color: var(--text-muted);
+}
+
+.task-time {
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.task-cancel-btn {
+    padding: 4px 8px !important;
+    min-width: auto;
+}
+
+.task-cancel-btn:hover {
+    background: var(--danger) !important;
+}
+
+.task-cancelled-badge {
+    font-size: 0.7rem;
+    color: var(--warning);
+    background: rgba(245, 158, 11, 0.15);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+}
+
+.tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    margin-left: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: white;
+    background: var(--accent);
+    border-radius: 9px;
 }
 
 /* Responsive */
