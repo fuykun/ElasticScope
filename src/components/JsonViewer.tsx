@@ -30,6 +30,7 @@ interface JsonViewerProps {
     enablePinning?: boolean;
     forcePinnedFields?: string[]; // Fields that are always pinned and cannot be unpinned
     enableCopy?: boolean; // Enable copy button for JSON
+    loading?: boolean; // Show loading state
 }
 
 interface JsonNodeProps {
@@ -346,6 +347,7 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({
     enablePinning = false,
     forcePinnedFields = [],
     enableCopy = false,
+    loading = false,
 }) => {
     const { t } = useTranslation();
     const [internalSearch, setInternalSearch] = useState('');
@@ -498,7 +500,7 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({
     }, [matchCount]);
 
     return (
-        <div className="json-viewer">
+        <div className={`json-viewer ${loading ? 'json-viewer-loading' : ''}`}>
             {showSearchBar && !isEditing && (
                 <div className="json-toolbar">
                     <div className="json-search">
@@ -576,6 +578,7 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({
                                 className="btn btn-icon-sm json-edit-btn"
                                 onClick={handleEdit}
                                 title={t('common.edit')}
+                                disabled={loading}
                             >
                                 <Pencil size={14} />
                             </button>
@@ -613,6 +616,7 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({
                             className="btn btn-icon-sm json-edit-btn"
                             onClick={handleEdit}
                             title={t('common.edit')}
+                            disabled={loading}
                         >
                             <Pencil size={14} />
                         </button>

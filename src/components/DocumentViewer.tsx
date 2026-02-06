@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Copy, Trash2, ChevronDown, ChevronRight, X, Check, Maximize2, GitCompare, Upload, RefreshCw, ArrowUp, ArrowDown } from 'lucide-react';
 import { SearchHit } from '../types';
-import { deleteDocument, saveDocument } from '../api/elasticsearchClient';
+import { deleteDocument, saveDocument, getDocument } from '../api/elasticsearchClient';
 import { JsonViewer } from './JsonViewer';
 import { SkeletonLoader } from './SkeletonLoader';
 
@@ -145,8 +145,17 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
     const handleRefreshDocument = async (docId: string) => {
         setRefreshingDoc(docId);
         try {
-            // Trigger parent refresh - it will update the documents prop
-            await onRefresh();
+            // Fetch single document instead of full refresh
+            const result = await getDocument(selectedIndex, docId);
+            setLocalDocuments(prev =>
+                prev.map(doc =>
+                    doc._id === docId
+                        ? { ...doc, _source: result._source }
+                        : doc
+                )
+            );
+        } catch (error) {
+            console.error('Document refresh error:', error);
         } finally {
             setRefreshingDoc(null);
         }
@@ -386,6 +395,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
                                                         onCancel={handleCancelEdit}
                                                         enablePinning={true}
                                                         forcePinnedFields={selectedColumns}
+                                                        loading={refreshingDoc === doc._id}
                                                     />
                                                 </div>
                                             </td>
@@ -532,6 +542,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
                                         onCancel={handleCancelEdit}
                                         enablePinning={true}
                                         forcePinnedFields={selectedColumns}
+                                        loading={refreshingDoc === doc._id}
                                     />
                                 </div>
                             )}
@@ -599,6 +610,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
                                 onCancel={handleCancelEdit}
                                 enablePinning={true}
                                 forcePinnedFields={selectedColumns}
+                                loading={refreshingDoc === fullscreenDocument._id}
                             />
                         </div>
                     </div>

@@ -1447,7 +1447,7 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                                                             key={`selected-${field}`}
                                                             className="column-selector-item selected with-reorder"
                                                         >
-                                                            <div 
+                                                            <div
                                                                 className="column-selector-checkbox"
                                                                 onClick={() => toggleColumn(field)}
                                                             >
@@ -1485,7 +1485,7 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                                                     <div className="column-selector-divider" />
                                                 </div>
                                             )}
-                                            
+
                                             {/* All fields list */}
                                             {filteredFields.length === 0 ? (
                                                 <div className="column-selector-empty">
