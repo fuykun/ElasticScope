@@ -147,3 +147,14 @@ export const searchFieldConfigStorage = createStorageItem<Record<string, string[
     'es_viewer_search_field',
     {}
 );
+
+// REST Tabs storage
+export const restTabsStorage = createStorageItem<any[]>(
+    'rest_tabs',
+    []
+);
+
+export const restActiveTabIdStorage = createStorageItem<string>(
+    'rest_active_tab_id',
+    ''
+);

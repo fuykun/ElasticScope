@@ -30,7 +30,6 @@ function App() {
     const [editingConnection, setEditingConnection] = useState<SavedConnection | null>(null);
 
     const [selectedIndex, setSelectedIndex] = useState<string | null>(() => {
-        // URL'den index ismini oku
         const params = new URLSearchParams(window.location.search);
         return params.get('index');
     });
@@ -125,7 +124,20 @@ function App() {
             url.searchParams.delete('view');
         } else {
             url.searchParams.delete('index');
+            url.searchParams.delete('page');
         }
+        window.history.pushState({}, '', url.toString());
+    };
+
+    const handleOpenRest = () => {
+        setIsRestMode(true);
+        // Maybe keep selected index internally but clear from URL to avoid confusion?
+        // Or keep it. Let's clear index from URL but can keep internal state if needed.
+        // Actually, if we go to REST, we probably want to support "context" of selected index if we were to support it.
+        // But for now, let's just clean URL.
+        const url = new URL(window.location.href);
+        url.searchParams.set('page', 'rest');
+        // url.searchParams.delete('index'); // Optional: keep index param if we want to use it as context
         window.history.pushState({}, '', url.toString());
     };
 
@@ -163,7 +175,7 @@ function App() {
         setConnectionId(null);
         setConnectionName('');
         setConnectionColor('');
-        handleSelectIndex(null);
+        handleSelectIndex(null); // This clears isRestMode too via logic above
     };
 
     return (
@@ -279,21 +291,25 @@ function App() {
 
             {isConnected ? (
                 <main className="app-main">
-                    <aside
-                        className="sidebar"
-                        style={{ width: sidebarWidth, minWidth: sidebarWidth }}
-                    >
-                        <IndexList
-                            onSelectIndex={handleSelectIndex}
-                            selectedIndex={selectedIndex}
-                            refreshTrigger={refreshTrigger}
-                            onRefreshNeeded={() => setRefreshTrigger((prev) => prev + 1)}
-                        />
-                    </aside>
-                    <div
-                        className="sidebar-resizer"
-                        onMouseDown={handleMouseDown}
-                    />
+                    {!isRestMode && (
+                        <>
+                            <aside
+                                className="sidebar"
+                                style={{ width: sidebarWidth, minWidth: sidebarWidth }}
+                            >
+                                <IndexList
+                                    onSelectIndex={handleSelectIndex}
+                                    selectedIndex={selectedIndex}
+                                    refreshTrigger={refreshTrigger}
+                                    onRefreshNeeded={() => setRefreshTrigger((prev) => prev + 1)}
+                                />
+                            </aside>
+                            <div
+                                className="sidebar-resizer"
+                                onMouseDown={handleMouseDown}
+                            />
+                        </>
+                    )}
                     <section className="content">
                         {currentView === 'rest' ? (
                             <RestPage

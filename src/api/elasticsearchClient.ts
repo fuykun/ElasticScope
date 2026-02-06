@@ -62,7 +62,7 @@ async function apiRequest<T>(
             error.details = data.details;
             throw error;
         }
-        // Fallback for old-style errors - stringify object errors (e.g., Elasticsearch error responses)
+        // Fallback for old-style errors
         const errorMessage = typeof data.error === 'object'
             ? JSON.stringify(data)
             : (data.error || 'UNKNOWN_ERROR');
