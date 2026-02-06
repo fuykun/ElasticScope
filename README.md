@@ -42,48 +42,79 @@ Unlike heavyweight alternatives, ElasticScope is lightweight, fast, and easy to 
 ## Features
 
 ### API Proxy (No CORS Issues)
+
 - Built-in Node.js proxy server eliminates CORS problems
 - Connect to any Elasticsearch cluster without browser restrictions
 - Support for self-signed SSL certificates
 
 ### Multi-Connection Management
+
 - Save and switch between multiple Elasticsearch connections
 - Color-coded connections for easy identification
 - Support for basic authentication
 
 ### Document Comparison
+
 - Compare any two documents side-by-side with diff view
 - Highlight differences between document versions
 - Useful for debugging and auditing changes
 
 ### Cross-Server Document Copy
+
 - Copy documents between different Elasticsearch clusters
 - Migrate data across environments (dev, staging, prod)
 - Preserve document structure during transfer
 
+### Flexible Database Support
+
+- Default SQLite storage for zero-configuration setup
+- Support for **PostgreSQL** and **MySQL** for scalable deployments
+- Seamless switching between database backends via environment variables
+
 ### Customizable Document List
+
 - Select which fields to display in the table view
 - Reorder and resize columns
 - Pin frequently accessed fields in JSON viewer
 - Save column preferences per index
 
 ### Index Management
+
 - Browse all indices with health status indicators
 - View index settings, mappings, and statistics
 - Create and delete indices
 - Manage index aliases
 
 ### Document Explorer
+
 - Paginated document browsing with customizable page size
 - Sort by any field
 - Expandable JSON viewer with syntax highlighting
 - Edit documents inline with JSON validation
 
-### REST Console
-- Execute raw Elasticsearch queries
-- Save and load frequently used queries
-- Syntax highlighting and JSON formatting
-- Response time and status tracking
+### Cluster Monitor
+
+- Real-time cluster health and performance monitoring
+- Visualizations for CPU, Memory, Heap, and Disk usage
+- Node-level statistics and resource tracking
+- Active tasks management (view and cancel tasks)
+
+### Advanced REST Console
+
+- Execute raw Elasticsearch queries with context-aware autocomplete
+- Multi-tab support for managing multiple queries
+- Save, load, and organize requests in collections
+- History of executed requests (per connection)
+- Split-screen view for request/response
+- cURL import/export support
+
+### Enhanced Document List
+
+- Redesigned interface for better usability
+- Adjustable column widths and ordering
+- Toggle visibility of any field
+- Quick filters and advanced search integration
+- Compact and comfortable view modes
 
 ## Screenshots
 
@@ -91,15 +122,19 @@ Unlike heavyweight alternatives, ElasticScope is lightweight, fast, and easy to 
 <summary>Click to view screenshots</summary>
 
 ### Dashboard
+
 ![Dashboard](docs/screenshots/dashboard.png)
 
 ### Document Viewer
+
 ![Document Viewer](docs/screenshots/document-viewer.png)
 
 ### Document Comparison
+
 ![Document Comparison](docs/screenshots/comparison.png)
 
 ### REST Console
+
 ![REST Console](docs/screenshots/rest-console.png)
 
 </details>
@@ -190,11 +225,11 @@ docker compose --profile with-es up -d
 
 When adding a connection in ElasticScope, use these settings:
 
-| Field | Value |
-|-------|-------|
-| URL | `http://elasticsearch:9200` |
-| Username | *(leave empty)* |
-| Password | *(leave empty)* |
+| Field    | Value                       |
+| -------- | --------------------------- |
+| URL      | `http://elasticsearch:9200` |
+| Username | _(leave empty)_             |
+| Password | _(leave empty)_             |
 
 > **Note:** Use `elasticsearch:9200` (container name) instead of `localhost:9200` because ElasticScope runs inside the Docker network.
 
@@ -263,14 +298,48 @@ npm run start:prod
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Backend server port | `3001` |
+| Variable       | Description          | Default                     |
+| -------------- | -------------------- | --------------------------- |
+| `PORT`         | Backend server port  | `3001`                      |
 | `VITE_API_URL` | API URL for frontend | `http://localhost:3001/api` |
+
+### Database Configuration
+
+ElasticScope supports **SQLite** (default), **PostgreSQL**, and **MySQL**.
+
+**SQLite (Default):**
+
+```env
+DB_TYPE=sqlite
+# DB_PATH=./data/connections.db  # Optional
+```
+
+**PostgreSQL:**
+
+```env
+DB_TYPE=postgresql
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=elasticscope
+DB_USER=postgres
+DB_PASSWORD=secret
+```
+
+**MySQL:**
+
+```env
+DB_TYPE=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=elasticscope
+DB_USER=root
+DB_PASSWORD=secret
+```
 
 ### Elasticsearch Connection Options
 
 ElasticScope supports:
+
 - HTTP and HTTPS connections
 - Basic authentication (username/password)
 - Self-signed SSL certificates
@@ -278,14 +347,14 @@ ElasticScope supports:
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | React 18, TypeScript, Vite |
-| Backend | Express.js, Node.js |
-| Database | SQLite (better-sqlite3) |
-| ES Client | @elastic/elasticsearch |
-| UI Icons | Lucide React |
-| Diff View | react-diff-viewer-continued |
+| Layer     | Technology                              |
+| --------- | --------------------------------------- |
+| Frontend  | React 18, TypeScript, Vite              |
+| Backend   | Express.js, Node.js                     |
+| Database  | SQLite, PostgreSQL, MySQL (via Knex.js) |
+| ES Client | @elastic/elasticsearch                  |
+| UI Icons  | Lucide React                            |
+| Diff View | react-diff-viewer-continued             |
 
 ## Project Structure
 
@@ -398,5 +467,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <p align="center">
   If you find this project useful, please consider giving it a ⭐
 </p>
-
-
