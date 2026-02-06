@@ -35,11 +35,77 @@ const formatDisplayValue = (value: any, maxLength = 100): string => {
     if (value === undefined) return '-';
 
     if (Array.isArray(value)) {
+        if (value.length === 0) return '[]';
+
+        const firstItem = value[0];
+
+        // Primitive array (string, number, boolean)
+        if (typeof firstItem !== 'object' || firstItem === null) {
+            const maxItems = 3;
+            const displayItems = value.slice(0, maxItems).map(v => String(v));
+            const remaining = value.length - maxItems;
+
+            if (remaining > 0) {
+                return `[${displayItems.join(', ')} +${remaining}]`;
+            }
+            return `[${displayItems.join(', ')}]`;
+        }
+
+        // Object array - look for name-like fields
+        const nameFields = ['name', 'title', 'label', 'displayName', 'display_name'];
+        const nameField = nameFields.find(field => firstItem[field] !== undefined);
+
+        if (nameField) {
+            const maxItems = 3;
+            const displayItems = value.slice(0, maxItems).map(v => String(v[nameField]));
+            const remaining = value.length - maxItems;
+
+            if (remaining > 0) {
+                return `[${displayItems.join(', ')} +${remaining}]`;
+            }
+            return `[${displayItems.join(', ')}]`;
+        }
+
+        // No name field found
         return `[${value.length} items]`;
     }
 
     if (typeof value === 'object') {
         return '{...}';
+    }
+
+    // Check if it's a date string (ISO 8601 format or epoch milliseconds)
+    if (typeof value === 'string') {
+        // ISO 8601 date pattern: 2026-02-06T13:04:47.134925Z
+        const isoDatePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+        if (isoDatePattern.test(value)) {
+            const date = new Date(value);
+            if (!isNaN(date.getTime())) {
+                return date.toLocaleString('tr-TR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                });
+            }
+        }
+    }
+
+    // Check for epoch timestamp (13 digits = milliseconds)
+    if (typeof value === 'number' && value > 1000000000000 && value < 9999999999999) {
+        const date = new Date(value);
+        if (!isNaN(date.getTime())) {
+            return date.toLocaleString('tr-TR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+            });
+        }
     }
 
     const str = String(value);
@@ -313,12 +379,13 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
                                                     )}
                                                     <JsonViewer
                                                         data={doc._source}
-                                                        defaultExpanded={true}
+                                                        defaultExpanded={false}
                                                         showSearchBar={true}
                                                         editable={true}
                                                         onSave={(newData) => handleSave(doc._id, newData)}
                                                         onCancel={handleCancelEdit}
                                                         enablePinning={true}
+                                                        forcePinnedFields={selectedColumns}
                                                     />
                                                 </div>
                                             </td>
@@ -458,12 +525,13 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
                                     )}
                                     <JsonViewer
                                         data={doc._source}
-                                        defaultExpanded={true}
+                                        defaultExpanded={false}
                                         showSearchBar={true}
                                         editable={true}
                                         onSave={(newData) => handleSave(doc._id, newData)}
                                         onCancel={handleCancelEdit}
                                         enablePinning={true}
+                                        forcePinnedFields={selectedColumns}
                                     />
                                 </div>
                             )}
@@ -524,12 +592,13 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
                             )}
                             <JsonViewer
                                 data={fullscreenDocument._source}
-                                defaultExpanded={true}
+                                defaultExpanded={false}
                                 showSearchBar={true}
                                 editable={true}
                                 onSave={(newData) => handleSave(fullscreenDocument._id, newData)}
                                 onCancel={handleCancelEdit}
                                 enablePinning={true}
+                                forcePinnedFields={selectedColumns}
                             />
                         </div>
                     </div>

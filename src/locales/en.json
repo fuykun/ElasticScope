@@ -244,6 +244,9 @@
         "searchFields": "Search Fields",
         "allFields": "All fields",
         "selectedFields": "{{count}} field(s) selected",
+        "selectedColumns": "Selected Columns",
+        "moveUp": "Move up",
+        "moveDown": "Move down",
         "invalidJson": "Invalid JSON format",
         "pagination": {
             "page": "Page",
@@ -413,6 +416,7 @@
         "collapseAll": "Collapse All",
         "pin": "Pin",
         "unpin": "Unpin",
+        "columnPinned": "Pinned (selected column)",
         "previous": "Previous (Shift+Enter)",
         "next": "Next (Enter)"
     },

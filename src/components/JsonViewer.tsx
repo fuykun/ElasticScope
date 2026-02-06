@@ -28,6 +28,7 @@ interface JsonViewerProps {
     onSave?: (newData: any) => void;
     onCancel?: () => void;
     enablePinning?: boolean;
+    forcePinnedFields?: string[]; // Fields that are always pinned and cannot be unpinned
     enableCopy?: boolean; // Enable copy button for JSON
 }
 
@@ -42,6 +43,7 @@ interface JsonNodeProps {
     currentMatchIndex: number;
     matchCounter: { current: number };
     pinnedFields?: string[];
+    forcePinnedFields?: string[]; // Fields that cannot be unpinned
     onTogglePin?: (fieldName: string) => void;
     showPinButton?: boolean;
     expandTrigger?: number; // 0: no action, positive: expand all, negative: collapse all
@@ -117,6 +119,7 @@ const JsonNode: React.FC<JsonNodeProps> = ({
     currentMatchIndex,
     matchCounter,
     pinnedFields = [],
+    forcePinnedFields = [],
     onTogglePin,
     showPinButton = false,
     expandTrigger = 0,
@@ -125,13 +128,16 @@ const JsonNode: React.FC<JsonNodeProps> = ({
     const { t } = useTranslation();
     const isObject = value !== null && typeof value === 'object';
     const isArray = Array.isArray(value);
-    const isPinned = depth === 1 && keyName !== null && pinnedFields.includes(keyName);
+    const isForcePinned = depth === 1 && keyName !== null && forcePinnedFields.includes(keyName);
+    const isUserPinned = depth === 1 && keyName !== null && pinnedFields.includes(keyName);
+    const isPinned = isForcePinned || isUserPinned;
 
     const hasMatch = useMemo(() => containsSearchTerm(value, keyName, searchQuery), [value, keyName, searchQuery]);
 
     const [isExpanded, setIsExpanded] = useState(() => {
         if (searchQuery && hasMatch) return true;
         if (expandAllByDefault) return true;
+        if (depth === 0) return true; // Root is always expanded
         if (defaultExpanded && depth < 2) return true;
         return false;
     });
@@ -167,16 +173,25 @@ const JsonNode: React.FC<JsonNodeProps> = ({
                 {keyName !== null && (
                     <>
                         {showPinButton && depth === 1 && onTogglePin && (
-                            <button
-                                className={`json-pin-btn ${isPinned ? 'pinned' : ''}`}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onTogglePin(keyName);
-                                }}
-                                title={isPinned ? t('jsonViewer.unpin') : t('jsonViewer.pin')}
-                            >
-                                {isPinned ? <PinOff size={10} /> : <Pin size={10} />}
-                            </button>
+                            isForcePinned ? (
+                                <span
+                                    className="json-pin-btn pinned force-pinned"
+                                    title={t('jsonViewer.columnPinned')}
+                                >
+                                    <Pin size={10} />
+                                </span>
+                            ) : (
+                                <button
+                                    className={`json-pin-btn ${isUserPinned ? 'pinned' : ''}`}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onTogglePin(keyName);
+                                    }}
+                                    title={isUserPinned ? t('jsonViewer.unpin') : t('jsonViewer.pin')}
+                                >
+                                    {isUserPinned ? <PinOff size={10} /> : <Pin size={10} />}
+                                </button>
+                            )
                         )}
                         <span className={`json-key ${keyMatches ? 'json-match' : ''} ${isPinned ? 'json-key-pinned' : ''}`}>
                             {searchQuery ? highlightMatch(keyName, searchQuery, matchCounter, currentMatchIndex) : keyName}
@@ -199,14 +214,26 @@ const JsonNode: React.FC<JsonNodeProps> = ({
     const keyMatches = keyName && searchQuery && keyName.toLowerCase().includes(searchQuery.toLowerCase());
 
     const sortedEntries = useMemo(() => {
-        if (depth === 0 && !isArray && pinnedFields.length > 0) {
-            const pinned = entries.filter(([k]) => pinnedFields.includes(k));
-            const unpinned = entries.filter(([k]) => !pinnedFields.includes(k));
-            pinned.sort((a, b) => pinnedFields.indexOf(a[0]) - pinnedFields.indexOf(b[0]));
+        const allPinnedFields = [...new Set([...forcePinnedFields, ...pinnedFields])];
+        if (depth === 0 && !isArray && allPinnedFields.length > 0) {
+            const pinned = entries.filter(([k]) => allPinnedFields.includes(k));
+            const unpinned = entries.filter(([k]) => !allPinnedFields.includes(k));
+            // Sort pinned: forcePinned first, then userPinned
+            pinned.sort((a, b) => {
+                const aForce = forcePinnedFields.includes(a[0]);
+                const bForce = forcePinnedFields.includes(b[0]);
+                if (aForce && !bForce) return -1;
+                if (!aForce && bForce) return 1;
+                // Same type, keep original order within that type
+                if (aForce && bForce) {
+                    return forcePinnedFields.indexOf(a[0]) - forcePinnedFields.indexOf(b[0]);
+                }
+                return pinnedFields.indexOf(a[0]) - pinnedFields.indexOf(b[0]);
+            });
             return [...pinned, ...unpinned];
         }
         return entries;
-    }, [entries, depth, isArray, pinnedFields]);
+    }, [entries, depth, isArray, pinnedFields, forcePinnedFields]);
 
     return (
         <div className="json-node">
@@ -222,16 +249,25 @@ const JsonNode: React.FC<JsonNodeProps> = ({
                 {keyName !== null && (
                     <>
                         {showPinButton && depth === 1 && onTogglePin && (
-                            <button
-                                className={`json-pin-btn ${isPinned ? 'pinned' : ''}`}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onTogglePin(keyName);
-                                }}
-                                title={isPinned ? t('jsonViewer.unpin') : t('jsonViewer.pin')}
-                            >
-                                {isPinned ? <PinOff size={10} /> : <Pin size={10} />}
-                            </button>
+                            isForcePinned ? (
+                                <span
+                                    className="json-pin-btn pinned force-pinned"
+                                    title={t('jsonViewer.columnPinned')}
+                                >
+                                    <Pin size={10} />
+                                </span>
+                            ) : (
+                                <button
+                                    className={`json-pin-btn ${isUserPinned ? 'pinned' : ''}`}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onTogglePin(keyName);
+                                    }}
+                                    title={isUserPinned ? t('jsonViewer.unpin') : t('jsonViewer.pin')}
+                                >
+                                    {isUserPinned ? <PinOff size={10} /> : <Pin size={10} />}
+                                </button>
+                            )
                         )}
                         <span className={`json-key ${keyMatches ? 'json-match' : ''} ${isPinned ? 'json-key-pinned' : ''}`}>
                             {searchQuery ? highlightMatch(keyName, searchQuery, matchCounter, currentMatchIndex) : keyName}
@@ -280,6 +316,7 @@ const JsonNode: React.FC<JsonNodeProps> = ({
                             currentMatchIndex={currentMatchIndex}
                             matchCounter={matchCounter}
                             pinnedFields={pinnedFields}
+                            forcePinnedFields={forcePinnedFields}
                             onTogglePin={onTogglePin}
                             showPinButton={showPinButton}
                             expandTrigger={expandTrigger}
@@ -307,6 +344,7 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({
     onSave,
     onCancel,
     enablePinning = false,
+    forcePinnedFields = [],
     enableCopy = false,
 }) => {
     const { t } = useTranslation();
@@ -628,6 +666,7 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({
                         currentMatchIndex={currentMatchIndex}
                         matchCounter={matchCounter.current}
                         pinnedFields={enablePinning ? pinnedFields : []}
+                        forcePinnedFields={forcePinnedFields}
                         onTogglePin={enablePinning ? handleTogglePin : undefined}
                         showPinButton={enablePinning}
                         expandTrigger={expandTrigger}

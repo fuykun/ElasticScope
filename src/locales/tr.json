@@ -244,6 +244,9 @@
         "searchFields": "Arama Alanları",
         "allFields": "Tüm alanlar",
         "selectedFields": "{{count}} alan seçili",
+        "selectedColumns": "Seçili Kolonlar",
+        "moveUp": "Yukarı taşı",
+        "moveDown": "Aşağı taşı",
         "invalidJson": "Geçersiz JSON formatı",
         "pagination": {
             "page": "Sayfa",
@@ -413,6 +416,7 @@
         "collapseAll": "Tümünü Kapat",
         "pin": "Pinle",
         "unpin": "Pin kaldır",
+        "columnPinned": "Pinli (seçili kolon)",
         "previous": "Önceki (Shift+Enter)",
         "next": "Sonraki (Enter)"
     },

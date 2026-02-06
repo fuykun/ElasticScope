@@ -422,6 +422,16 @@
   color: var(--danger);
 }
 
+.json-pin-btn.force-pinned {
+  opacity: 0.7;
+  color: var(--accent);
+  cursor: default;
+}
+
+.json-line:hover .json-pin-btn.force-pinned {
+  opacity: 0.7;
+}
+
 .json-pin-btn svg {
   flex-shrink: 0;
   min-width: 10px;

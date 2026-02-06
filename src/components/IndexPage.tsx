@@ -573,6 +573,26 @@ export const IndexPage: React.FC<IndexPageProps> = ({
         });
     };
 
+    const moveColumnUp = (field: string) => {
+        setSelectedColumns((prev) => {
+            const index = prev.indexOf(field);
+            if (index <= 0) return prev;
+            const newColumns = [...prev];
+            [newColumns[index - 1], newColumns[index]] = [newColumns[index], newColumns[index - 1]];
+            return newColumns;
+        });
+    };
+
+    const moveColumnDown = (field: string) => {
+        setSelectedColumns((prev) => {
+            const index = prev.indexOf(field);
+            if (index < 0 || index >= prev.length - 1) return prev;
+            const newColumns = [...prev];
+            [newColumns[index], newColumns[index + 1]] = [newColumns[index + 1], newColumns[index]];
+            return newColumns;
+        });
+    };
+
     const handleApplyColumns = () => {
         saveColumnsForPrefix(prefix, selectedColumns);
         setColumnDropdownOpen(false);
@@ -1416,29 +1436,82 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                                         </div>
 
                                         <div className="column-selector-list">
+                                            {/* Selected columns with reorder buttons */}
+                                            {selectedColumns.length > 0 && !columnSearch && (
+                                                <div className="column-selector-selected-section">
+                                                    <div className="column-selector-section-title">
+                                                        {t('indexPage.selectedColumns')}
+                                                    </div>
+                                                    {selectedColumns.map((field, index) => (
+                                                        <div
+                                                            key={`selected-${field}`}
+                                                            className="column-selector-item selected with-reorder"
+                                                        >
+                                                            <div 
+                                                                className="column-selector-checkbox"
+                                                                onClick={() => toggleColumn(field)}
+                                                            >
+                                                                <Check size={10} />
+                                                            </div>
+                                                            <span className="column-selector-label">
+                                                                {field}
+                                                            </span>
+                                                            <div className="column-reorder-buttons">
+                                                                <button
+                                                                    className="column-reorder-btn"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        moveColumnUp(field);
+                                                                    }}
+                                                                    disabled={index === 0}
+                                                                    title={t('indexPage.moveUp')}
+                                                                >
+                                                                    <ArrowUp size={12} />
+                                                                </button>
+                                                                <button
+                                                                    className="column-reorder-btn"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        moveColumnDown(field);
+                                                                    }}
+                                                                    disabled={index === selectedColumns.length - 1}
+                                                                    title={t('indexPage.moveDown')}
+                                                                >
+                                                                    <ArrowDown size={12} />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                    <div className="column-selector-divider" />
+                                                </div>
+                                            )}
+                                            
+                                            {/* All fields list */}
                                             {filteredFields.length === 0 ? (
                                                 <div className="column-selector-empty">
                                                     {t('common.noResults')}
                                                 </div>
                                             ) : (
-                                                filteredFields.map((field) => {
-                                                    const isSelected = selectedColumns.includes(field);
-                                                    const isDisabled = !isSelected && selectedColumns.length >= MAX_COLUMNS;
-                                                    return (
-                                                        <div
-                                                            key={field}
-                                                            className={`column-selector-item ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
-                                                            onClick={() => !isDisabled && toggleColumn(field)}
-                                                        >
-                                                            <div className="column-selector-checkbox">
-                                                                {isSelected && <Check size={10} />}
+                                                filteredFields
+                                                    .filter(field => columnSearch || !selectedColumns.includes(field))
+                                                    .map((field) => {
+                                                        const isSelected = selectedColumns.includes(field);
+                                                        const isDisabled = !isSelected && selectedColumns.length >= MAX_COLUMNS;
+                                                        return (
+                                                            <div
+                                                                key={field}
+                                                                className={`column-selector-item ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
+                                                                onClick={() => !isDisabled && toggleColumn(field)}
+                                                            >
+                                                                <div className="column-selector-checkbox">
+                                                                    {isSelected && <Check size={10} />}
+                                                                </div>
+                                                                <span className="column-selector-label">
+                                                                    {field}
+                                                                </span>
                                                             </div>
-                                                            <span className="column-selector-label">
-                                                                {field}
-                                                            </span>
-                                                        </div>
-                                                    );
-                                                })
+                                                        );
+                                                    })
                                             )}
                                         </div>
 
