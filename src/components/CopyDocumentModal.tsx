@@ -23,10 +23,19 @@ interface CopyDocumentModalProps {
 }
 
 // Searchable Select Component
+interface SelectOption {
+    id: string | number;
+    label: string;
+    sublabel?: string;
+    health?: string;
+    aliases?: string[];
+    storeSize?: string;
+}
+
 interface SearchableSelectProps {
     value: string | number | null;
     onChange: (value: string | number | null) => void;
-    options: Array<{ id: string | number; label: string; sublabel?: string }>;
+    options: SelectOption[];
     placeholder: string;
     icon?: React.ReactNode;
     loading?: boolean;
@@ -90,9 +99,28 @@ const SearchableSelect = ({
             >
                 {icon}
                 <span className={selectedOption ? '' : 'placeholder'}>
-                    {selectedOption ? selectedOption.label : placeholder}
+                    {selectedOption ? (
+                        <span className="copy-select-selected-text">
+                            {selectedOption.health && <span className={`copy-select-health health-${selectedOption.health}`} />}
+                            {selectedOption.label}
+                        </span>
+                    ) : placeholder}
                 </span>
-                <ChevronDown size={14} />
+                <div className="copy-select-trigger-actions">
+                    {selectedOption && (
+                        <span
+                            className="copy-select-trigger-clear"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onChange(null);
+                                setSearch('');
+                            }}
+                        >
+                            <X size={14} />
+                        </span>
+                    )}
+                    <ChevronDown size={14} className={isOpen ? 'rotated' : ''} />
+                </div>
             </button>
             {isOpen && (
                 <div className="copy-select-dropdown">
@@ -128,12 +156,26 @@ const SearchableSelect = ({
                                     }}
                                 >
                                     <div className="copy-select-option-content">
-                                        <span className="copy-select-option-label">{opt.label}</span>
-                                        {opt.sublabel && (
+                                        <div className="copy-select-option-main">
+                                            {opt.health && <span className={`copy-select-health health-${opt.health}`} />}
+                                            <span className="copy-select-option-label">{opt.label}</span>
+                                            {opt.aliases && opt.aliases.length > 0 && (
+                                                <span className="copy-select-aliases">
+                                                    <span className="copy-select-alias-tag">{opt.aliases[0]}</span>
+                                                    {opt.aliases.length > 1 && (
+                                                        <span className="copy-select-alias-more">+{opt.aliases.length - 1}</span>
+                                                    )}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {opt.sublabel && !opt.health && (
                                             <span className="copy-select-option-sublabel">{opt.sublabel}</span>
                                         )}
                                     </div>
-                                    {opt.id === value && <Check size={14} />}
+                                    <div className="copy-select-option-meta">
+                                        {opt.storeSize && <span className="copy-select-store-size">{opt.storeSize}</span>}
+                                        {opt.id === value && <Check size={14} />}
+                                    </div>
                                 </button>
                             ))
                         )}
@@ -326,10 +368,12 @@ export const CopyDocumentModal = ({
         }));
 
     // Index options for searchable select
-    const indexOptions = targetIndices.map(idx => ({
+    const indexOptions: SelectOption[] = targetIndices.map(idx => ({
         id: idx.index,
         label: idx.index,
-        sublabel: `${idx.docsCount} docs · ${idx.storeSize}`
+        health: idx.health,
+        aliases: idx.aliases,
+        storeSize: idx.storeSize
     }));
 
     return (

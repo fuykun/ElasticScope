@@ -87,6 +87,10 @@
   overflow: visible;
 }
 
+.modal-body:has(.create-index-form) {
+  overflow: visible;
+}
+
 .json-modal-content {
   height: 100%;
   display: flex;

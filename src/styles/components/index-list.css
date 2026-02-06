@@ -27,7 +27,8 @@
   transition: all 0.15s ease;
 }
 
-.index-list-header .btn-icon:hover {
+.index-list-header .btn-icon:hover,
+.index-list-header .btn-icon.active {
   background: var(--bg-primary);
   border-color: var(--accent);
   color: var(--accent);
@@ -218,6 +219,108 @@
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.3px;
+}
+
+/* ==================== GROUPED VIEW ==================== */
+.index-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.index-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.index-group-header:hover {
+  background: var(--bg-tertiary);
+}
+
+.group-chevron {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.index-group-header:hover .group-chevron {
+  color: var(--text-secondary);
+}
+
+.group-folder-icon {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.index-group.has-selected .group-folder-icon,
+.index-group-header:hover .group-folder-icon {
+  color: var(--accent);
+  opacity: 1;
+}
+
+.group-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  text-transform: lowercase;
+  letter-spacing: 0.2px;
+}
+
+.index-group-header:hover .group-name,
+.index-group.has-selected .group-name {
+  color: var(--text-primary);
+}
+
+.group-health-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.group-count {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
+  padding: 1px 5px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  line-height: 1.2;
+}
+
+.index-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 12px;
+  margin-left: 8px;
+  border-left: 1px solid var(--border);
+}
+
+.index-item.grouped-child {
+  padding: 6px 8px;
+}
+
+.index-item.grouped-child .index-name {
+  font-size: 11px;
+  font-weight: 500;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
 }
 
 /* ==================== SIDEBAR EMPTY STATE ==================== */

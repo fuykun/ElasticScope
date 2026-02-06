@@ -3,6 +3,8 @@ import type {
     CreateConnectionInput,
     SavedQuery,
     CreateQueryInput,
+    SavedSearchQuery,
+    CreateSearchQueryInput,
     IndexInfo,
     SearchResult,
     ConnectionIndex,
@@ -22,6 +24,8 @@ export type {
     CreateConnectionInput,
     SavedQuery,
     CreateQueryInput,
+    SavedSearchQuery,
+    CreateSearchQueryInput,
     IndexInfo,
     SearchResult,
     ConnectionIndex,
@@ -871,6 +875,22 @@ export const updateSavedQuery = (id: number, input: Partial<CreateQueryInput>) =
 // Sorgu sil
 export const deleteSavedQuery = (id: number) =>
     apiRequest<{ success: boolean }>(`/queries/${id}`, {
+        method: 'DELETE',
+    });
+
+// ==================== SAVED SEARCH QUERIES ====================
+
+export const getSavedSearchQueries = () =>
+    apiRequest<SavedSearchQuery[]>('/search-queries');
+
+export const createSavedSearchQuery = (input: CreateSearchQueryInput) =>
+    apiRequest<SavedSearchQuery>('/search-queries', {
+        method: 'POST',
+        body: JSON.stringify(input),
+    });
+
+export const deleteSavedSearchQuery = (id: number) =>
+    apiRequest<{ success: boolean }>(`/search-queries/${id}`, {
         method: 'DELETE',
     });
 

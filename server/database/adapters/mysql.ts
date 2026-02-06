@@ -5,6 +5,8 @@ import {
     CreateConnectionInput,
     SavedQuery,
     CreateQueryInput,
+    SavedSearchQuery,
+    CreateSearchQueryInput,
     MySQLConfig
 } from '../types';
 import { encryptPassword } from '../encryption';
@@ -55,6 +57,19 @@ export class MySQLAdapter implements DatabaseAdapter {
                     method VARCHAR(20) NOT NULL,
                     path TEXT NOT NULL,
                     body TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                )
+            `);
+
+            await connection.execute(`
+                CREATE TABLE IF NOT EXISTS saved_search_queries (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    index_pattern VARCHAR(255) NOT NULL,
+                    query TEXT NOT NULL,
+                    sort_field VARCHAR(255),
+                    sort_order VARCHAR(10),
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
                 )
@@ -220,6 +235,37 @@ export class MySQLAdapter implements DatabaseAdapter {
         return (result as mysql.ResultSetHeader).affectedRows > 0;
     }
 
+    // ==================== SEARCH QUERIES ====================
+
+    async getAllSearchQueries(): Promise<SavedSearchQuery[]> {
+        const [rows] = await this.getPool().execute<mysql.RowDataPacket[]>(
+            'SELECT * FROM saved_search_queries ORDER BY created_at DESC'
+        );
+        return rows.map(this.mapSearchQuery);
+    }
+
+    async createSearchQuery(input: CreateSearchQueryInput): Promise<SavedSearchQuery> {
+        const [result] = await this.getPool().execute<mysql.ResultSetHeader>(
+            `INSERT INTO saved_search_queries (name, index_pattern, query, sort_field, sort_order)
+             VALUES (?, ?, ?, ?, ?)`,
+            [input.name, input.index_pattern, input.query, input.sort_field || null, input.sort_order || null]
+        );
+
+        const [rows] = await this.getPool().execute<mysql.RowDataPacket[]>(
+            'SELECT * FROM saved_search_queries WHERE id = ?',
+            [result.insertId]
+        );
+        return this.mapSearchQuery(rows[0]);
+    }
+
+    async deleteSearchQuery(id: number): Promise<boolean> {
+        const [result] = await this.getPool().execute(
+            'DELETE FROM saved_search_queries WHERE id = ?',
+            [id]
+        );
+        return (result as mysql.ResultSetHeader).affectedRows > 0;
+    }
+
     // ==================== HELPERS ====================
 
     private mapConnection(row: any): SavedConnection {
@@ -242,6 +288,19 @@ export class MySQLAdapter implements DatabaseAdapter {
             method: row.method,
             path: row.path,
             body: row.body,
+            created_at: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
+            updated_at: row.updated_at instanceof Date ? row.updated_at.toISOString() : row.updated_at,
+        };
+    }
+
+    private mapSearchQuery(row: any): SavedSearchQuery {
+        return {
+            id: row.id,
+            name: row.name,
+            index_pattern: row.index_pattern,
+            query: row.query,
+            sort_field: row.sort_field,
+            sort_order: row.sort_order,
             created_at: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
             updated_at: row.updated_at instanceof Date ? row.updated_at.toISOString() : row.updated_at,
         };

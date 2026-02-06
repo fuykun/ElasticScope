@@ -5,6 +5,8 @@ import {
     CreateConnectionInput,
     SavedQuery,
     CreateQueryInput,
+    SavedSearchQuery,
+    CreateSearchQueryInput,
     SQLiteConfig
 } from '../types';
 import { encryptPassword } from '../encryption';
@@ -42,6 +44,20 @@ export class SQLiteAdapter implements DatabaseAdapter {
                 method TEXT NOT NULL,
                 path TEXT NOT NULL,
                 body TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // Create saved_search_queries table
+        this.db.exec(`
+            CREATE TABLE IF NOT EXISTS saved_search_queries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                index_pattern TEXT NOT NULL,
+                query TEXT NOT NULL,
+                sort_field TEXT,
+                sort_order TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
@@ -186,6 +202,40 @@ export class SQLiteAdapter implements DatabaseAdapter {
 
     async deleteQuery(id: number): Promise<boolean> {
         const stmt = this.getDb().prepare('DELETE FROM saved_queries WHERE id = ?');
+        const result = stmt.run(id);
+        return result.changes > 0;
+    }
+
+    // ==================== SEARCH QUERIES ====================
+
+    async getAllSearchQueries(): Promise<SavedSearchQuery[]> {
+        const stmt = this.getDb().prepare('SELECT * FROM saved_search_queries ORDER BY created_at DESC');
+        return stmt.all() as SavedSearchQuery[];
+    }
+
+    async createSearchQuery(input: CreateSearchQueryInput): Promise<SavedSearchQuery> {
+        const stmt = this.getDb().prepare(`
+            INSERT INTO saved_search_queries (name, index_pattern, query, sort_field, sort_order)
+            VALUES (?, ?, ?, ?, ?)
+        `);
+
+        const result = stmt.run(
+            input.name,
+            input.index_pattern,
+            input.query,
+            input.sort_field || null,
+            input.sort_order || null
+        );
+
+        const createdQuery = this.getDb().prepare(
+            'SELECT * FROM saved_search_queries WHERE id = ?'
+        ).get(result.lastInsertRowid) as SavedSearchQuery;
+
+        return createdQuery;
+    }
+
+    async deleteSearchQuery(id: number): Promise<boolean> {
+        const stmt = this.getDb().prepare('DELETE FROM saved_search_queries WHERE id = ?');
         const result = stmt.run(id);
         return result.changes > 0;
     }

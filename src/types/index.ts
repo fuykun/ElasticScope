@@ -164,6 +164,25 @@ export interface CreateQueryInput {
     body?: string;
 }
 
+export interface SavedSearchQuery {
+    id: number;
+    name: string;
+    index_pattern: string;
+    query: string; // JSON stringified query
+    sort_field: string | null;
+    sort_order: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface CreateSearchQueryInput {
+    name: string;
+    index_pattern: string;
+    query: string; // JSON stringified query
+    sort_field?: string;
+    sort_order?: string;
+}
+
 // ==================== COPY TYPES ====================
 
 export interface ConnectionIndex {

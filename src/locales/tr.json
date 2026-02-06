@@ -46,6 +46,7 @@
         "clear": "Temizle",
         "add": "Ekle",
         "create": "Oluştur",
+        "reset": "Sıfırla",
         "yes": "Evet",
         "no": "Hayır",
         "confirm": "Onayla",
@@ -133,6 +134,11 @@
         "luceneVersion": "Lucene",
         "buildType": "Build",
         "clusterUuid": "Cluster UUID",
+        "pauseRefresh": "Otomatik yenilemeyi durdur",
+        "resumeRefresh": "Otomatik yenilemeyi başlat",
+        "pausedBackground": "Duraklatıldı (arka plan)",
+        "idleWarning": "Otomatik yenileme {{minutes}} dk sonra duracak",
+        "idleIn": "Boşta {{minutes}}dk",
         "table": {
             "node": "Node",
             "ip": "IP",
@@ -149,7 +155,9 @@
         "title": "Index'ler",
         "createNew": "Yeni Index Oluştur",
         "searchPlaceholder": "Ara...",
-        "noIndices": "Index bulunamadı"
+        "noIndices": "Index bulunamadı",
+        "grouped": "Prefix'e göre grupla",
+        "flat": "Düz liste"
     },
     "indexPage": {
         "deleteIndex": "Index'i Sil",
@@ -158,6 +166,8 @@
         "indexActions": "Index İşlemleri",
         "settingsMappings": "Ayarlar & Mappings",
         "refreshIndex": "Index'i Yenile",
+        "reset": "Sıfırla",
+        "resetQuery": "Tüm filtreleri ve sorguyu sıfırla",
         "deleteConfirm": "Silmek için index adını yazın:",
         "deleteWarning": "Bu işlem geri alınamaz!",
         "deleteAliasWarning": "Bu index'in silinecek aliasları var:",

@@ -143,3 +143,8 @@ export const createQuery = (input: Parameters<DatabaseAdapter['createQuery']>[0]
 export const updateQuery = (id: number, input: Parameters<DatabaseAdapter['updateQuery']>[1]) =>
     getDatabase().updateQuery(id, input);
 export const deleteQuery = (id: number) => getDatabase().deleteQuery(id);
+
+export const getAllSearchQueries = () => getDatabase().getAllSearchQueries();
+export const createSearchQuery = (input: Parameters<DatabaseAdapter['createSearchQuery']>[0]) =>
+    getDatabase().createSearchQuery(input);
+export const deleteSearchQuery = (id: number) => getDatabase().deleteSearchQuery(id);

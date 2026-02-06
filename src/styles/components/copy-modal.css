@@ -105,14 +105,42 @@
     color: var(--text-tertiary);
 }
 
-.copy-select-trigger svg:last-child {
-    color: var(--text-tertiary);
+.copy-select-trigger-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     flex-shrink: 0;
+}
+
+.copy-select-trigger-actions svg {
+    color: var(--text-tertiary);
     transition: transform 0.15s;
 }
 
-.copy-select-trigger.open svg:last-child {
+.copy-select-trigger-actions svg.rotated {
     transform: rotate(180deg);
+}
+
+.copy-select-trigger-clear {
+    display: flex;
+    align-items: center;
+    padding: 2px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.copy-select-trigger-clear:hover {
+    background: var(--bg-tertiary);
+}
+
+.copy-select-selected-text {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .copy-select-dropdown {
@@ -210,12 +238,83 @@
     flex-direction: column;
     gap: 2px;
     overflow: hidden;
+    flex: 1;
+    min-width: 0;
+}
+
+.copy-select-option-main {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+}
+
+.copy-select-health {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.copy-select-health.health-green {
+    background: #22c55e;
+    box-shadow: 0 0 4px rgba(34, 197, 94, 0.3);
+}
+
+.copy-select-health.health-yellow {
+    background: #eab308;
+    box-shadow: 0 0 4px rgba(234, 179, 8, 0.3);
+}
+
+.copy-select-health.health-red {
+    background: #ef4444;
+    box-shadow: 0 0 4px rgba(239, 68, 68, 0.3);
 }
 
 .copy-select-option-label {
     font-weight: 500;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.copy-select-aliases {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.copy-select-alias-tag {
+    padding: 1px 6px;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--accent, var(--primary));
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 4px;
+    white-space: nowrap;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.copy-select-alias-more {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    font-weight: 500;
+}
+
+.copy-select-option-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.copy-select-store-size {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-family: var(--font-mono);
     white-space: nowrap;
 }
 

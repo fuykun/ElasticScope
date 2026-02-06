@@ -5,6 +5,8 @@ import {
     CreateConnectionInput,
     SavedQuery,
     CreateQueryInput,
+    SavedSearchQuery,
+    CreateSearchQueryInput,
     PostgreSQLConfig
 } from '../types';
 import { encryptPassword } from '../encryption';
@@ -57,6 +59,19 @@ export class PostgreSQLAdapter implements DatabaseAdapter {
                     method VARCHAR(20) NOT NULL,
                     path TEXT NOT NULL,
                     body TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+
+            await client.query(`
+                CREATE TABLE IF NOT EXISTS saved_search_queries (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    index_pattern VARCHAR(255) NOT NULL,
+                    query TEXT NOT NULL,
+                    sort_field VARCHAR(255),
+                    sort_order VARCHAR(10),
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
@@ -212,6 +227,33 @@ export class PostgreSQLAdapter implements DatabaseAdapter {
         return (result.rowCount ?? 0) > 0;
     }
 
+    // ==================== SEARCH QUERIES ====================
+
+    async getAllSearchQueries(): Promise<SavedSearchQuery[]> {
+        const result = await this.getPool().query(
+            'SELECT * FROM saved_search_queries ORDER BY created_at DESC'
+        );
+        return result.rows.map(this.mapSearchQuery);
+    }
+
+    async createSearchQuery(input: CreateSearchQueryInput): Promise<SavedSearchQuery> {
+        const result = await this.getPool().query(
+            `INSERT INTO saved_search_queries (name, index_pattern, query, sort_field, sort_order)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING *`,
+            [input.name, input.index_pattern, input.query, input.sort_field || null, input.sort_order || null]
+        );
+        return this.mapSearchQuery(result.rows[0]);
+    }
+
+    async deleteSearchQuery(id: number): Promise<boolean> {
+        const result = await this.getPool().query(
+            'DELETE FROM saved_search_queries WHERE id = $1',
+            [id]
+        );
+        return (result.rowCount ?? 0) > 0;
+    }
+
     // ==================== HELPERS ====================
 
     private mapConnection(row: any): SavedConnection {
@@ -234,6 +276,19 @@ export class PostgreSQLAdapter implements DatabaseAdapter {
             method: row.method,
             path: row.path,
             body: row.body,
+            created_at: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
+            updated_at: row.updated_at instanceof Date ? row.updated_at.toISOString() : row.updated_at,
+        };
+    }
+
+    private mapSearchQuery(row: any): SavedSearchQuery {
+        return {
+            id: row.id,
+            name: row.name,
+            index_pattern: row.index_pattern,
+            query: row.query,
+            sort_field: row.sort_field,
+            sort_order: row.sort_order,
             created_at: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
             updated_at: row.updated_at instanceof Date ? row.updated_at.toISOString() : row.updated_at,
         };

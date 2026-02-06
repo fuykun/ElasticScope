@@ -28,6 +28,9 @@ import {
     MoreVertical,
     LayoutGrid,
     Table,
+    Save,
+    FolderOpen,
+    AlertCircle,
 } from 'lucide-react';
 import {
     getIndices,
@@ -41,6 +44,10 @@ import {
     addAlias,
     deleteAlias,
     saveDocument,
+    getSavedSearchQueries,
+    createSavedSearchQuery,
+    deleteSavedSearchQuery,
+    SavedSearchQuery,
 } from '../api/elasticsearchClient';
 import { Modal } from './Modal';
 import { DocumentViewer } from './DocumentViewer';
@@ -173,6 +180,16 @@ export const IndexPage: React.FC<IndexPageProps> = ({
     // View Query Modal
     const [showQueryModal, setShowQueryModal] = useState(false);
 
+    // Saved Search Queries
+    const [savedSearchQueries, setSavedSearchQueries] = useState<SavedSearchQuery[]>([]);
+    const [showSaveQueryModal, setShowSaveQueryModal] = useState(false);
+    const [saveQueryName, setSaveQueryName] = useState('');
+    const [saveQueryError, setSaveQueryError] = useState<string | null>(null);
+    const [savingQuery, setSavingQuery] = useState(false);
+    const [showSavedQueriesDropdown, setShowSavedQueriesDropdown] = useState(false);
+    const [loadingSavedQueries, setLoadingSavedQueries] = useState(false);
+    const savedQueriesDropdownRef = React.useRef<HTMLDivElement>(null);
+
     const prefix = getIndexPrefix(indexName);
 
     // Load index info
@@ -206,6 +223,12 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                 !indexActionsRef.current.contains(event.target as Node)
             ) {
                 setIndexActionsOpen(false);
+            }
+            if (
+                savedQueriesDropdownRef.current &&
+                !savedQueriesDropdownRef.current.contains(event.target as Node)
+            ) {
+                setShowSavedQueriesDropdown(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -307,8 +330,40 @@ export const IndexPage: React.FC<IndexPageProps> = ({
         }
     };
 
+    // Build combined query from all active filters
+    const buildCombinedQuery = useCallback((simpleSearchQuery?: object | null, dateFilterQuery?: object | null, queryBuilderQueryParam?: object | null) => {
+        const queries: object[] = [];
+
+        if (simpleSearchQuery) {
+            queries.push(simpleSearchQuery);
+        }
+
+        if (dateFilterQuery) {
+            queries.push(dateFilterQuery);
+        }
+
+        if (queryBuilderQueryParam) {
+            queries.push(queryBuilderQueryParam);
+        }
+
+        if (queries.length === 0) {
+            return null;
+        }
+
+        if (queries.length === 1) {
+            return queries[0];
+        }
+
+        // Combine multiple queries with bool must
+        return {
+            bool: {
+                must: queries,
+            },
+        };
+    }, []);
+
     const performSearch = useCallback(
-        async (query: object | null, newPage = 0, customSort?: object) => {
+        async (query: object | null, newPage = 0, customSort?: object, customPageSize?: number) => {
             setLoading(true);
             try {
                 let sortObj: object | undefined = customSort;
@@ -316,11 +371,13 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                     sortObj = [{ [sortField]: { order: sortOrder } }];
                 }
 
+                const effectivePageSize = customPageSize !== undefined ? customPageSize : pageSize;
+
                 const result = await searchDocuments(
                     indexName,
                     query || undefined,
-                    newPage * pageSize,
-                    pageSize,
+                    newPage * effectivePageSize,
+                    effectivePageSize,
                     sortObj
                 );
                 setDocuments(result.hits);
@@ -343,37 +400,41 @@ export const IndexPage: React.FC<IndexPageProps> = ({
         if (e) e.preventDefault();
         setSearchError(null);
 
-        // If Query Builder is active and has a query, use it
-        if (showQueryBuilder && queryBuilderQuery) {
-            performSearch(queryBuilderQuery);
-            setSimpleQuery(''); // Clear simple search
-            setDateFilter(null); // Clear date filter
-            return;
+        // Build simple search query
+        let simpleSearchQuery: object | null = null;
+        if (simpleQuery.trim()) {
+            if (searchField) {
+                simpleSearchQuery = {
+                    match_phrase_prefix: {
+                        [searchField]: simpleQuery,
+                    },
+                };
+            } else {
+                simpleSearchQuery = {
+                    query_string: {
+                        query: `*${simpleQuery}*`,
+                        default_operator: 'AND',
+                    },
+                };
+            }
         }
 
-        // Otherwise use simple search
-        if (!simpleQuery.trim()) {
-            performSearch(null);
-            return;
+        // Build date filter query
+        let dateFilterQuery: object | null = null;
+        if (dateFilter) {
+            dateFilterQuery = {
+                range: {
+                    [dateFilter.field]: {
+                        gte: dateFilter.from,
+                        lte: dateFilter.to,
+                    },
+                },
+            };
         }
 
-        let query;
-        if (searchField) {
-            // Belirli alanda ara - match kullan
-            query = {
-                match_phrase_prefix: {
-                    [searchField]: simpleQuery,
-                },
-            };
-        } else {
-            query = {
-                query_string: {
-                    query: `*${simpleQuery}*`,
-                    default_operator: 'AND',
-                },
-            };
-        }
-        performSearch(query);
+        // Combine all queries
+        const combinedQuery = buildCombinedQuery(simpleSearchQuery, dateFilterQuery, queryBuilderQuery);
+        performSearch(combinedQuery);
     };
 
     const handleSelectSearchField = (field: string) => {
@@ -398,6 +459,28 @@ export const IndexPage: React.FC<IndexPageProps> = ({
     const handleRefresh = () => {
         performSearch(currentQuery, page);
     };
+
+    const handleResetQuery = () => {
+        // Clear all query states
+        setSimpleQuery('');
+        setQueryBuilderQuery(null);
+        setQueryBuilderRootGroup(createEmptyGroup());
+        setDateFilter(null);
+        setSortField('');
+        setSortOrder('desc');
+        setPage(0);
+        // Perform search with null query (match all)
+        performSearch(null, 0);
+    };
+
+    // Check if there's any active query/filter (not default state)
+    const hasActiveQuery = Boolean(
+        simpleQuery.trim() ||
+        queryBuilderQuery ||
+        dateFilter ||
+        sortField ||
+        currentQuery
+    );
 
     const handleOpenCloseIndex = async () => {
         if (!indexInfo) return;
@@ -426,7 +509,7 @@ export const IndexPage: React.FC<IndexPageProps> = ({
         setPageSize(newSize);
         pageSizeStorage.set(newSize);
         setPage(0);
-        performSearch(currentQuery, 0);
+        performSearch(currentQuery, 0, undefined, newSize);
     };
 
     // Settings/Mappings handlers
@@ -567,6 +650,88 @@ export const IndexPage: React.FC<IndexPageProps> = ({
             setAddDocError(error.message || t('indexPage.documentAddFailed'));
         } finally {
             setAddDocLoading(false);
+        }
+    };
+
+    // Saved Search Queries handlers
+    const loadSavedSearchQueries = async () => {
+        setLoadingSavedQueries(true);
+        try {
+            const queries = await getSavedSearchQueries();
+            setSavedSearchQueries(queries);
+        } catch (error) {
+            console.error('Failed to load saved queries:', error);
+        } finally {
+            setLoadingSavedQueries(false);
+        }
+    };
+
+    // Group saved queries by prefix
+    const groupedSavedQueries = React.useMemo(() => {
+        const groups: Record<string, SavedSearchQuery[]> = {};
+        savedSearchQueries.forEach(query => {
+            const queryPrefix = getIndexPrefix(query.index_pattern);
+            if (!groups[queryPrefix]) {
+                groups[queryPrefix] = [];
+            }
+            groups[queryPrefix].push(query);
+        });
+        return groups;
+    }, [savedSearchQueries]);
+
+    const handleSaveSearchQuery = async () => {
+        if (!saveQueryName.trim()) {
+            setSaveQueryError(t('restModal.queryNamePlaceholder'));
+            return;
+        }
+
+        setSavingQuery(true);
+        setSaveQueryError(null);
+
+        try {
+            await createSavedSearchQuery({
+                name: saveQueryName.trim(),
+                index_pattern: indexName,
+                query: JSON.stringify(currentQuery || { match_all: {} }),
+                sort_field: sortField || undefined,
+                sort_order: sortOrder || undefined,
+            });
+            setShowSaveQueryModal(false);
+            setSaveQueryName('');
+            loadSavedSearchQueries();
+        } catch (err: any) {
+            setSaveQueryError(err.message || t('restModal.saveError'));
+        } finally {
+            setSavingQuery(false);
+        }
+    };
+
+    const handleLoadSavedQuery = (query: SavedSearchQuery) => {
+        try {
+            const parsedQuery = JSON.parse(query.query);
+            if (query.sort_field) {
+                setSortField(query.sort_field);
+                setSortOrder((query.sort_order as 'asc' | 'desc') || 'desc');
+                const sortObj = [{ [query.sort_field]: { order: query.sort_order || 'desc' } }];
+                performSearch(parsedQuery, 0, sortObj);
+            } else {
+                performSearch(parsedQuery);
+            }
+            setShowSavedQueriesDropdown(false);
+        } catch (error) {
+            console.error('Failed to load query:', error);
+        }
+    };
+
+    const handleDeleteSavedQuery = async (id: number, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!window.confirm(t('common.confirmDelete'))) return;
+
+        try {
+            await deleteSavedSearchQuery(id);
+            loadSavedSearchQueries();
+        } catch (error) {
+            console.error('Failed to delete query:', error);
         }
     };
 
@@ -782,6 +947,80 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                             onSubmit={handleSimpleSearch}
                             style={{ display: 'flex', flex: 1, alignItems: 'center' }}
                         >
+                            {/* Saved Queries Dropdown */}
+                            <div
+                                className="saved-queries-selector-container"
+                                ref={savedQueriesDropdownRef}
+                            >
+                                <button
+                                    type="button"
+                                    className="saved-queries-trigger-inline"
+                                    onClick={() => {
+                                        if (!showSavedQueriesDropdown) {
+                                            loadSavedSearchQueries();
+                                        }
+                                        setShowSavedQueriesDropdown(!showSavedQueriesDropdown);
+                                    }}
+                                    title={t('restModal.savedQueries')}
+                                >
+                                    <FolderOpen size={14} />
+                                    <ChevronDown
+                                        size={12}
+                                        style={{
+                                            transform: showSavedQueriesDropdown
+                                                ? 'rotate(180deg)'
+                                                : 'rotate(0deg)',
+                                            transition: 'transform 0.15s ease',
+                                        }}
+                                    />
+                                </button>
+
+                                {showSavedQueriesDropdown && (
+                                    <div className="saved-queries-dropdown">
+                                        {loadingSavedQueries ? (
+                                            <div className="saved-queries-loading">
+                                                <Loader size={16} className="spin" />
+                                            </div>
+                                        ) : savedSearchQueries.length === 0 ? (
+                                            <div className="saved-queries-empty">
+                                                {t('restModal.noSavedQueries')}
+                                            </div>
+                                        ) : (
+                                            Object.entries(groupedSavedQueries).map(([groupPrefix, queries]) => (
+                                                <div key={groupPrefix} className="saved-queries-group">
+                                                    <div className="saved-queries-group-header">
+                                                        {groupPrefix}
+                                                    </div>
+                                                    {queries.map((query) => (
+                                                        <div
+                                                            key={query.id}
+                                                            className="saved-query-item"
+                                                            onClick={() => {
+                                                                handleLoadSavedQuery(query);
+                                                                setShowSavedQueriesDropdown(false);
+                                                            }}
+                                                        >
+                                                            <div className="saved-query-info">
+                                                                <span className="saved-query-name">{query.name}</span>
+                                                                <span className="saved-query-index">{query.index_pattern}</span>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                className="saved-query-delete"
+                                                                onClick={(e) => handleDeleteSavedQuery(query.id, e)}
+                                                                title={t('common.delete')}
+                                                            >
+                                                                <Trash2 size={12} />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
                             {/* Search Field Selector - Inside Input */}
                             <div
                                 className="search-field-selector-container"
@@ -879,6 +1118,34 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                     >
                         {loading ? <Loader size={14} className="spin" /> : <Search size={14} />}
                         {t('common.search')}
+                    </button>
+
+                    <button
+                        className="btn btn-ghost btn-icon"
+                        onClick={handleRefresh}
+                        disabled={loading}
+                        title={t('common.refresh')}
+                    >
+                        <RefreshCw size={16} className={loading ? 'spin' : ''} />
+                    </button>
+
+                    {hasActiveQuery && (
+                        <button
+                            className="btn btn-ghost btn-icon"
+                            onClick={handleResetQuery}
+                            disabled={loading}
+                            title={t('indexPage.resetQuery')}
+                        >
+                            <X size={16} />
+                        </button>
+                    )}
+
+                    <button
+                        className="btn btn-ghost btn-icon"
+                        onClick={() => setShowSaveQueryModal(true)}
+                        title={t('restModal.saveQuery')}
+                    >
+                        <Save size={16} />
                     </button>
 
                     {/* Column Selector */}
@@ -1050,12 +1317,28 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                     activeFilter={dateFilter}
                     onFilterChange={setDateFilter}
                     onQueryChange={(filterQuery) => {
-                        // Merge with search query if exists
-                        if (!filterQuery && !simpleQuery.trim()) {
-                            performSearch(null);
-                        } else if (filterQuery) {
-                            performSearch(filterQuery);
+                        // Build simple search query
+                        let simpleSearchQuery: object | null = null;
+                        if (simpleQuery.trim()) {
+                            if (searchField) {
+                                simpleSearchQuery = {
+                                    match_phrase_prefix: {
+                                        [searchField]: simpleQuery,
+                                    },
+                                };
+                            } else {
+                                simpleSearchQuery = {
+                                    query_string: {
+                                        query: `*${simpleQuery}*`,
+                                        default_operator: 'AND',
+                                    },
+                                };
+                            }
                         }
+
+                        // Combine all queries
+                        const combinedQuery = buildCombinedQuery(simpleSearchQuery, filterQuery, queryBuilderQuery);
+                        performSearch(combinedQuery);
                     }}
                 />
             )}
@@ -1489,6 +1772,23 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                 size="lg"
             >
                 <div className="view-query-modal">
+                    {/* Save Button */}
+                    <div className="view-query-header-actions" style={{
+                        display: 'flex',
+                        gap: '8px',
+                        marginBottom: '12px',
+                        justifyContent: 'flex-end'
+                    }}>
+                        <button
+                            className="btn btn-ghost btn-sm"
+                            onClick={() => setShowSaveQueryModal(true)}
+                            title={t('restModal.saveQuery')}
+                        >
+                            <Save size={16} />
+                            {t('common.save')}
+                        </button>
+                    </div>
+
                     <div className="view-query-content">
                         <JsonViewer
                             data={(() => {
@@ -1496,7 +1796,7 @@ export const IndexPage: React.FC<IndexPageProps> = ({
 
                                 // Add query part
                                 if (currentQuery) {
-                                    Object.assign(fullQuery, currentQuery);
+                                    fullQuery.query = currentQuery;
                                 } else {
                                     fullQuery.query = { match_all: {} };
                                 }
@@ -1505,6 +1805,10 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                                 if (sortField) {
                                     fullQuery.sort = [{ [sortField]: { order: sortOrder } }];
                                 }
+
+                                // Add pagination
+                                fullQuery.from = page * pageSize;
+                                fullQuery.size = pageSize;
 
                                 return fullQuery;
                             })()}
@@ -1518,13 +1822,74 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                     <div className="view-query-actions">
                         <button
                             className="btn btn-primary"
-                            onClick={() => setShowQueryModal(false)}
+                            onClick={() => {
+                                setShowQueryModal(false);
+                                setShowSavedQueriesDropdown(false);
+                            }}
                         >
                             {t('common.close')}
                         </button>
                     </div>
                 </div>
             </Modal>
+
+            {/* Save Query Modal */}
+            {showSaveQueryModal && (
+                <div className="rest-save-modal-overlay" onClick={() => setShowSaveQueryModal(false)}>
+                    <div className="rest-save-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="rest-save-modal-header">
+                            <h4>{t('restModal.saveQuery')}</h4>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setShowSaveQueryModal(false)}>
+                                <X size={16} />
+                            </button>
+                        </div>
+                        <div className="rest-save-modal-body">
+                            <label>
+                                {t('restModal.queryName')} <span className="required">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                value={saveQueryName}
+                                onChange={(e) => setSaveQueryName(e.target.value)}
+                                placeholder={t('restModal.queryNamePlaceholder')}
+                                autoFocus
+                            />
+                            {saveQueryError && (
+                                <div className="rest-save-error">
+                                    <AlertCircle size={14} />
+                                    {saveQueryError}
+                                </div>
+                            )}
+                            <div className="rest-save-preview">
+                                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                    {t('indexPage.index')}: <strong>{indexName}</strong>
+                                </span>
+                            </div>
+                        </div>
+                        <div className="rest-save-modal-footer">
+                            <button
+                                className="btn btn-secondary"
+                                onClick={() => setShowSaveQueryModal(false)}
+                                disabled={savingQuery}
+                            >
+                                {t('common.cancel')}
+                            </button>
+                            <button
+                                className="btn btn-primary"
+                                onClick={handleSaveSearchQuery}
+                                disabled={savingQuery || !saveQueryName.trim()}
+                            >
+                                {savingQuery ? (
+                                    <Loader size={14} className="spin" />
+                                ) : (
+                                    <Save size={14} />
+                                )}
+                                {t('common.save')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

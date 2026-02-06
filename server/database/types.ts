@@ -36,6 +36,25 @@ export interface CreateQueryInput {
     body?: string;
 }
 
+export interface SavedSearchQuery {
+    id: number;
+    name: string;
+    index_pattern: string;
+    query: string;
+    sort_field: string | null;
+    sort_order: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface CreateSearchQueryInput {
+    name: string;
+    index_pattern: string;
+    query: string;
+    sort_field?: string;
+    sort_order?: string;
+}
+
 // ==================== DATABASE ADAPTER INTERFACE ====================
 
 export interface DatabaseAdapter {
@@ -52,6 +71,11 @@ export interface DatabaseAdapter {
     createQuery(input: CreateQueryInput): Promise<SavedQuery>;
     updateQuery(id: number, input: Partial<CreateQueryInput>): Promise<SavedQuery | undefined>;
     deleteQuery(id: number): Promise<boolean>;
+
+    // Search Queries
+    getAllSearchQueries(): Promise<SavedSearchQuery[]>;
+    createSearchQuery(input: CreateSearchQueryInput): Promise<SavedSearchQuery>;
+    deleteSearchQuery(id: number): Promise<boolean>;
 
     // Lifecycle
     initialize(): Promise<void>;

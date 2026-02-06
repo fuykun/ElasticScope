@@ -20,6 +20,9 @@ import {
     updateQuery,
     deleteQuery,
     SavedQuery,
+    getAllSearchQueries,
+    createSearchQuery,
+    deleteSearchQuery,
     decryptPassword
 } from './database';
 
@@ -982,6 +985,45 @@ app.put('/api/queries/:id', async (req, res) => {
 app.delete('/api/queries/:id', async (req, res) => {
     try {
         const success = await deleteQuery(parseInt(req.params.id));
+        if (!success) {
+            return res.status(404).json({ errorCode: 'QUERY_NOT_FOUND' });
+        }
+        res.json({ success: true });
+    } catch (error: any) {
+        res.status(500).json({ errorCode: 'INTERNAL_ERROR', details: error.message });
+    }
+});
+
+// ==================== SAVED SEARCH QUERIES API ====================
+
+// Tüm search sorguları listele
+app.get('/api/search-queries', async (req, res) => {
+    try {
+        const queries = await getAllSearchQueries();
+        res.json(queries);
+    } catch (error: any) {
+        res.status(500).json({ errorCode: 'INTERNAL_ERROR', details: error.message });
+    }
+});
+
+// Yeni search sorgusu kaydet
+app.post('/api/search-queries', async (req, res) => {
+    try {
+        const { name, index_pattern, query, sort_field, sort_order } = req.body;
+        if (!name || !index_pattern || !query) {
+            return res.status(400).json({ errorCode: 'MISSING_REQUIRED_FIELDS' });
+        }
+        const savedQuery = await createSearchQuery({ name, index_pattern, query, sort_field, sort_order });
+        res.status(201).json(savedQuery);
+    } catch (error: any) {
+        res.status(500).json({ errorCode: 'INTERNAL_ERROR', details: error.message });
+    }
+});
+
+// Search sorgusu sil
+app.delete('/api/search-queries/:id', async (req, res) => {
+    try {
+        const success = await deleteSearchQuery(parseInt(req.params.id));
         if (!success) {
             return res.status(404).json({ errorCode: 'QUERY_NOT_FOUND' });
         }

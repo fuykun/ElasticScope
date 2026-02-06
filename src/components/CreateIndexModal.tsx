@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Copy, Loader, AlertCircle } from 'lucide-react';
+import { Plus, Copy, Loader, AlertCircle, Search, Check, ChevronDown, X, Database } from 'lucide-react';
 import {
     getIndices,
     getIndexMapping,
@@ -8,6 +8,7 @@ import {
     createIndex,
     IndexInfo
 } from '../api/elasticsearchClient';
+import { useClickOutside } from '../hooks/useClickOutside';
 
 interface CreateIndexModalProps {
     onSuccess: () => void;
@@ -28,6 +29,18 @@ export const CreateIndexModal: React.FC<CreateIndexModalProps> = ({
     const [loading, setLoading] = useState(false);
     const [loadingIndices, setLoadingIndices] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Source index searchable dropdown
+    const [sourceSearch, setSourceSearch] = useState('');
+    const [sourceDropdownOpen, setSourceDropdownOpen] = useState(false);
+    const sourceDropdownRef = useRef<HTMLDivElement>(null);
+    useClickOutside(sourceDropdownRef as React.RefObject<HTMLElement>, () => setSourceDropdownOpen(false), sourceDropdownOpen);
+
+    const filteredIndices = useMemo(() => {
+        if (!sourceSearch.trim()) return indices;
+        const q = sourceSearch.toLowerCase();
+        return indices.filter(idx => idx.index.toLowerCase().includes(q));
+    }, [indices, sourceSearch]);
 
     const [numberOfShards, setNumberOfShards] = useState('1');
     const [numberOfReplicas, setNumberOfReplicas] = useState('1');
@@ -204,18 +217,92 @@ export const CreateIndexModal: React.FC<CreateIndexModalProps> = ({
                                 {t('createIndex.loadingIndices')}
                             </div>
                         ) : (
-                            <select
-                                className="form-input"
-                                value={sourceIndex}
-                                onChange={(e) => setSourceIndex(e.target.value)}
-                            >
-                                <option value="">{t('createIndex.selectAnIndex')}</option>
-                                {indices.map((idx) => (
-                                    <option key={idx.index} value={idx.index}>
-                                        {idx.index}
-                                    </option>
-                                ))}
-                            </select>
+                            <div className="source-index-dropdown" ref={sourceDropdownRef}>
+                                <button
+                                    type="button"
+                                    className={`source-index-trigger ${sourceDropdownOpen ? 'open' : ''}`}
+                                    onClick={() => {
+                                        setSourceDropdownOpen(!sourceDropdownOpen);
+                                        setSourceSearch('');
+                                    }}
+                                >
+                                    {sourceIndex ? (
+                                        <span className="source-index-selected">
+                                            <Database size={14} />
+                                            {sourceIndex}
+                                        </span>
+                                    ) : (
+                                        <span className="source-index-placeholder">
+                                            {t('createIndex.selectAnIndex')}
+                                        </span>
+                                    )}
+                                    <div className="source-index-actions">
+                                        {sourceIndex && (
+                                            <span
+                                                className="source-index-clear"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSourceIndex('');
+                                                }}
+                                            >
+                                                <X size={14} />
+                                            </span>
+                                        )}
+                                        <ChevronDown size={14} className={`source-index-chevron ${sourceDropdownOpen ? 'rotated' : ''}`} />
+                                    </div>
+                                </button>
+                                {sourceDropdownOpen && (
+                                    <div className="source-index-panel">
+                                        <div className="source-index-search">
+                                            <Search size={14} />
+                                            <input
+                                                type="text"
+                                                value={sourceSearch}
+                                                onChange={(e) => setSourceSearch(e.target.value)}
+                                                placeholder={t('common.search')}
+                                                autoFocus
+                                            />
+                                        </div>
+                                        <div className="source-index-list">
+                                            {filteredIndices.length === 0 ? (
+                                                <div className="source-index-empty">
+                                                    {t('common.noResults')}
+                                                </div>
+                                            ) : (
+                                                filteredIndices.map((idx) => (
+                                                    <button
+                                                        type="button"
+                                                        key={idx.index}
+                                                        className={`source-index-option ${sourceIndex === idx.index ? 'selected' : ''}`}
+                                                        onClick={() => {
+                                                            setSourceIndex(idx.index);
+                                                            setSourceDropdownOpen(false);
+                                                            setSourceSearch('');
+                                                        }}
+                                                    >
+                                                        <div className="source-index-option-info">
+                                                            <span className={`source-index-health health-${idx.health}`} />
+                                                            <span className="source-index-name">{idx.index}</span>
+                                                            {idx.aliases && idx.aliases.length > 0 && (
+                                                                <span className="source-index-aliases">
+                                                                    <span className="source-index-alias-tag">{idx.aliases[0]}</span>
+                                                                    {idx.aliases.length > 1 && (
+                                                                        <span className="source-index-alias-more">+{idx.aliases.length - 1}</span>
+                                                                    )}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="source-index-option-meta">
+                                                            <span>{idx['store.size'] || ''}</span>
+                                                            {sourceIndex === idx.index && <Check size={14} />}
+                                                        </div>
+                                                    </button>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         )}
                         <span className="form-hint">
                             {t('createIndex.copyHint')}

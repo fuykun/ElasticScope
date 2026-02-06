@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Server,
@@ -11,7 +11,9 @@ import {
     FileText,
     Layers,
     RefreshCw,
-    AlertCircle
+    AlertCircle,
+    Pause,
+    Play
 } from 'lucide-react';
 import {
     getClusterHealth,
@@ -39,8 +41,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ connectionName, connection
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const loadData = async () => {
-        setLoading(true);
+    // Auto-refresh state
+    const [autoRefresh, setAutoRefresh] = useState(true);
+    const [refreshInterval, setRefreshInterval] = useState(10000);
+    const [isPageVisible, setIsPageVisible] = useState(!document.hidden);
+    const [idleMinutes, setIdleMinutes] = useState(0);
+    const lastActivityRef = useRef(Date.now());
+    const isFirstLoad = useRef(true);
+
+    const IDLE_TIMEOUT_MINUTES = 30;
+    const REFRESH_OPTIONS = [
+        { value: 5000, label: '5s' },
+        { value: 10000, label: '10s' },
+        { value: 30000, label: '30s' },
+        { value: 60000, label: '1m' },
+        { value: 300000, label: '5m' },
+    ];
+
+    const loadData = useCallback(async () => {
+        if (isFirstLoad.current) {
+            setLoading(true);
+        }
         setError(null);
 
         try {
@@ -87,12 +108,66 @@ export const Dashboard: React.FC<DashboardProps> = ({ connectionName, connection
             setError(err.message || t('common.error'));
         } finally {
             setLoading(false);
+            isFirstLoad.current = false;
         }
-    };
+    }, [t]);
 
     useEffect(() => {
+        isFirstLoad.current = true;
         loadData();
-    }, [connectionId]);
+    }, [connectionId, loadData]);
+
+    // Visibility change listener
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            setIsPageVisible(!document.hidden);
+            if (!document.hidden) {
+                lastActivityRef.current = Date.now();
+                setIdleMinutes(0);
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, []);
+
+    // User activity tracker
+    useEffect(() => {
+        const handleActivity = () => {
+            lastActivityRef.current = Date.now();
+            setIdleMinutes(0);
+        };
+        window.addEventListener('mousemove', handleActivity);
+        window.addEventListener('keydown', handleActivity);
+        window.addEventListener('click', handleActivity);
+        window.addEventListener('scroll', handleActivity);
+        return () => {
+            window.removeEventListener('mousemove', handleActivity);
+            window.removeEventListener('keydown', handleActivity);
+            window.removeEventListener('click', handleActivity);
+            window.removeEventListener('scroll', handleActivity);
+        };
+    }, []);
+
+    // Idle checker
+    useEffect(() => {
+        const idleChecker = setInterval(() => {
+            const minutesIdle = Math.floor((Date.now() - lastActivityRef.current) / 60000);
+            setIdleMinutes(minutesIdle);
+            if (minutesIdle >= IDLE_TIMEOUT_MINUTES && autoRefresh) {
+                setAutoRefresh(false);
+            }
+        }, 60000);
+        return () => clearInterval(idleChecker);
+    }, [autoRefresh]);
+
+    // Auto refresh
+    useEffect(() => {
+        if (!autoRefresh || !isPageVisible) return;
+        const interval = setInterval(() => {
+            loadData();
+        }, refreshInterval);
+        return () => clearInterval(interval);
+    }, [autoRefresh, refreshInterval, loadData, isPageVisible]);
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -153,10 +228,45 @@ export const Dashboard: React.FC<DashboardProps> = ({ connectionName, connection
                         </span>
                     )}
                 </div>
-                <button className="btn btn-secondary btn-sm" onClick={loadData}>
-                    <RefreshCw size={14} />
-                    {t('common.refresh')}
-                </button>
+                <div className="dashboard-header-actions">
+                    <div className="dashboard-refresh-controls">
+                        <select
+                            className="refresh-interval-select"
+                            value={refreshInterval}
+                            onChange={(e) => setRefreshInterval(Number(e.target.value))}
+                        >
+                            {REFRESH_OPTIONS.map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                        </select>
+                        <button
+                            className={`btn btn-sm ${autoRefresh && isPageVisible ? 'btn-primary' : 'btn-secondary'}`}
+                            onClick={() => {
+                                setAutoRefresh(!autoRefresh);
+                                if (!autoRefresh) {
+                                    lastActivityRef.current = Date.now();
+                                    setIdleMinutes(0);
+                                }
+                            }}
+                            title={autoRefresh ? t('dashboard.pauseRefresh') : t('dashboard.resumeRefresh')}
+                        >
+                            {autoRefresh ? <Pause size={14} /> : <Play size={14} />}
+                        </button>
+                        <button className="btn btn-secondary btn-sm" onClick={loadData}>
+                            <RefreshCw size={14} />
+                        </button>
+                        {autoRefresh && !isPageVisible && (
+                            <span className="refresh-status paused" title={t('dashboard.pausedBackground')}>
+                                ⏸ {t('dashboard.pausedBackground')}
+                            </span>
+                        )}
+                        {autoRefresh && isPageVisible && idleMinutes > 0 && (
+                            <span className="refresh-status idle" title={t('dashboard.idleWarning', { minutes: IDLE_TIMEOUT_MINUTES - idleMinutes })}>
+                                {t('dashboard.idleIn', { minutes: IDLE_TIMEOUT_MINUTES - idleMinutes })}
+                            </span>
+                        )}
+                    </div>
+                </div>
             </div>
 
             {/* Version Info */}
@@ -356,49 +466,49 @@ export const Dashboard: React.FC<DashboardProps> = ({ connectionName, connection
                                     <td>
                                         <div className="mini-progress">
                                             <div
-                                                className="mini-progress-fill"
+                                                className="mini-progress-bar"
                                                 style={{
                                                     width: `${node.cpuPercent}%`,
                                                     backgroundColor: getProgressColor(node.cpuPercent)
                                                 }}
                                             />
-                                            <span>{node.cpuPercent}%</span>
+                                            <span className="mini-progress-text">{node.cpuPercent}%</span>
                                         </div>
                                     </td>
                                     <td>
                                         <div className="mini-progress">
                                             <div
-                                                className="mini-progress-fill"
+                                                className="mini-progress-bar"
                                                 style={{
                                                     width: `${node.memPercent}%`,
                                                     backgroundColor: getProgressColor(node.memPercent)
                                                 }}
                                             />
-                                            <span>{node.memPercent}%</span>
+                                            <span className="mini-progress-text">{node.memPercent}%</span>
                                         </div>
                                     </td>
                                     <td>
                                         <div className="mini-progress">
                                             <div
-                                                className="mini-progress-fill"
+                                                className="mini-progress-bar"
                                                 style={{
                                                     width: `${node.heapPercent}%`,
                                                     backgroundColor: getProgressColor(node.heapPercent)
                                                 }}
                                             />
-                                            <span>{node.heapPercent}%</span>
+                                            <span className="mini-progress-text">{node.heapPercent}%</span>
                                         </div>
                                     </td>
                                     <td>
                                         <div className="mini-progress">
                                             <div
-                                                className="mini-progress-fill"
+                                                className="mini-progress-bar"
                                                 style={{
                                                     width: `${node.diskPercent}%`,
                                                     backgroundColor: getProgressColor(node.diskPercent)
                                                 }}
                                             />
-                                            <span>{node.diskPercent}%</span>
+                                            <span className="mini-progress-text">{node.diskPercent}%</span>
                                         </div>
                                     </td>
                                     <td>

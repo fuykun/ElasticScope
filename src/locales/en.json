@@ -46,6 +46,7 @@
         "clear": "Clear",
         "add": "Add",
         "create": "Create",
+        "reset": "Reset",
         "yes": "Yes",
         "no": "No",
         "confirm": "Confirm",
@@ -133,6 +134,11 @@
         "luceneVersion": "Lucene",
         "buildType": "Build",
         "clusterUuid": "Cluster UUID",
+        "pauseRefresh": "Pause auto-refresh",
+        "resumeRefresh": "Resume auto-refresh",
+        "pausedBackground": "Paused (background)",
+        "idleWarning": "Auto-refresh will stop in {{minutes}} min",
+        "idleIn": "Idle {{minutes}}m",
         "table": {
             "node": "Node",
             "ip": "IP",
@@ -149,7 +155,9 @@
         "title": "Indices",
         "createNew": "Create New Index",
         "searchPlaceholder": "Search...",
-        "noIndices": "No indices found"
+        "noIndices": "No indices found",
+        "grouped": "Group by prefix",
+        "flat": "Flat list"
     },
     "indexPage": {
         "deleteIndex": "Delete Index",
@@ -158,6 +166,8 @@
         "indexActions": "Index Actions",
         "settingsMappings": "Settings & Mappings",
         "refreshIndex": "Refresh Index",
+        "reset": "Reset",
+        "resetQuery": "Reset all filters and query",
         "deleteConfirm": "Type the index name to confirm deletion:",
         "deleteWarning": "This action cannot be undone!",
         "deleteAliasWarning": "This index has aliases that will also be deleted:",
