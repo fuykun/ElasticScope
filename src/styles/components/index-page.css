@@ -376,6 +376,32 @@
   font-weight: 500;
 }
 
+/* Refresh button inline (small) */
+.refresh-btn-inline {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.refresh-btn-inline:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.refresh-btn-inline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .view-query-btn {
   opacity: 0.6;
   transition: opacity var(--transition-base);
@@ -812,6 +838,69 @@
   max-width: 100px;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Date Filter Inline Trigger (inside search) */
+.date-filter-trigger-inline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: var(--bg-tertiary);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-base);
+  margin-left: 8px;
+  max-width: 140px;
+  height: 28px;
+}
+
+.date-filter-trigger-inline:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.date-filter-trigger-inline.has-value {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.date-filter-trigger-inline.has-value:hover {
+  background: var(--bg-secondary);
+}
+
+.date-filter-trigger-inline svg {
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+}
+
+.date-filter-trigger-inline .date-filter-value {
+  max-width: 70px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.date-filter-trigger-inline .date-filter-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border-radius: 50%;
+  transition: background var(--transition-base);
+  margin-left: 2px;
+  color: var(--text-secondary);
+}
+
+.date-filter-trigger-inline .date-filter-clear:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
 }
 
 .search-field-trigger {

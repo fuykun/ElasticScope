@@ -63,7 +63,8 @@
         "weeksAgo": "{{count}}h",
         "monthsAgo": "{{count}}ay",
         "yearsAgo": "{{count}}y",
-        "copy": "Kopyala"
+        "copy": "Kopyala",
+        "confirmDelete": "Silmek istediğinize emin misiniz?"
     },
     "header": {
         "home": "Ana Sayfa",
@@ -160,6 +161,7 @@
         "flat": "Düz liste"
     },
     "indexPage": {
+        "index": "Index",
         "deleteIndex": "Index'i Sil",
         "openIndex": "Index'i Aç",
         "closeIndex": "Index'i Kapat",
@@ -196,6 +198,13 @@
             "noFilters": "Filtre uygulanmadı",
             "noDateFields": "Tarih alanı bulunamadı",
             "facets": "Kategoriler",
+            "last5Min": "5dk",
+            "last15Min": "15dk",
+            "last30Min": "30dk",
+            "last1Hour": "1sa",
+            "last3Hours": "3sa",
+            "last6Hours": "6sa",
+            "last12Hours": "12sa",
             "today": "Bugün",
             "yesterday": "Dün",
             "last7Days": "Son 7 gün",

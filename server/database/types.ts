@@ -43,6 +43,7 @@ export interface SavedSearchQuery {
     query: string;
     sort_field: string | null;
     sort_order: string | null;
+    ui_state: string | null;
     created_at: string;
     updated_at: string;
 }
@@ -53,6 +54,7 @@ export interface CreateSearchQueryInput {
     query: string;
     sort_field?: string;
     sort_order?: string;
+    ui_state?: string;
 }
 
 // ==================== DATABASE ADAPTER INTERFACE ====================

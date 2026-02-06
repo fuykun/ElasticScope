@@ -58,10 +58,18 @@ export class SQLiteAdapter implements DatabaseAdapter {
                 query TEXT NOT NULL,
                 sort_field TEXT,
                 sort_order TEXT,
+                ui_state TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         `);
+
+        // Add ui_state column if it doesn't exist (for existing databases)
+        try {
+            this.db.exec(`ALTER TABLE saved_search_queries ADD COLUMN ui_state TEXT`);
+        } catch (e) {
+            // Column already exists, ignore
+        }
 
         console.log('✅ SQLite database initialized');
     }
@@ -215,8 +223,8 @@ export class SQLiteAdapter implements DatabaseAdapter {
 
     async createSearchQuery(input: CreateSearchQueryInput): Promise<SavedSearchQuery> {
         const stmt = this.getDb().prepare(`
-            INSERT INTO saved_search_queries (name, index_pattern, query, sort_field, sort_order)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO saved_search_queries (name, index_pattern, query, sort_field, sort_order, ui_state)
+            VALUES (?, ?, ?, ?, ?, ?)
         `);
 
         const result = stmt.run(
@@ -224,7 +232,8 @@ export class SQLiteAdapter implements DatabaseAdapter {
             input.index_pattern,
             input.query,
             input.sort_field || null,
-            input.sort_order || null
+            input.sort_order || null,
+            input.ui_state || null
         );
 
         const createdQuery = this.getDb().prepare(

@@ -171,6 +171,7 @@ export interface SavedSearchQuery {
     query: string; // JSON stringified query
     sort_field: string | null;
     sort_order: string | null;
+    ui_state: string | null; // JSON stringified UI state
     created_at: string;
     updated_at: string;
 }
@@ -181,6 +182,7 @@ export interface CreateSearchQueryInput {
     query: string; // JSON stringified query
     sort_field?: string;
     sort_order?: string;
+    ui_state?: string; // JSON stringified UI state
 }
 
 // ==================== COPY TYPES ====================

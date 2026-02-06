@@ -187,3 +187,27 @@
 .sort-order-badge svg {
   flex-shrink: 0;
 }
+
+/* ==================== COMPACT COLUMN SELECTOR ==================== */
+.column-selector-container.compact {
+  position: relative;
+}
+
+.column-selector-trigger.compact {
+  padding: 4px 10px;
+  font-size: 12px;
+  height: 28px;
+  gap: 6px;
+}
+
+.column-selector-trigger.compact .column-selector-count {
+  min-width: 18px;
+  height: 18px;
+  font-size: 10px;
+  padding: 0 5px;
+}
+
+.column-selector-container.compact .column-selector-dropdown {
+  right: auto;
+  left: 0;
+}

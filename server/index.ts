@@ -1009,11 +1009,11 @@ app.get('/api/search-queries', async (req, res) => {
 // Yeni search sorgusu kaydet
 app.post('/api/search-queries', async (req, res) => {
     try {
-        const { name, index_pattern, query, sort_field, sort_order } = req.body;
+        const { name, index_pattern, query, sort_field, sort_order, ui_state } = req.body;
         if (!name || !index_pattern || !query) {
             return res.status(400).json({ errorCode: 'MISSING_REQUIRED_FIELDS' });
         }
-        const savedQuery = await createSearchQuery({ name, index_pattern, query, sort_field, sort_order });
+        const savedQuery = await createSearchQuery({ name, index_pattern, query, sort_field, sort_order, ui_state });
         res.status(201).json(savedQuery);
     } catch (error: any) {
         res.status(500).json({ errorCode: 'INTERNAL_ERROR', details: error.message });

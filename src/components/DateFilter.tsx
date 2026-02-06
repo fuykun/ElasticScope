@@ -124,6 +124,13 @@ interface DateFilterProps {
 }
 
 const DATE_QUICK_FILTERS = [
+    { id: 'last_5_min', key: 'last5Min', from: 'now-5m', to: 'now' },
+    { id: 'last_15_min', key: 'last15Min', from: 'now-15m', to: 'now' },
+    { id: 'last_30_min', key: 'last30Min', from: 'now-30m', to: 'now' },
+    { id: 'last_1_hour', key: 'last1Hour', from: 'now-1h', to: 'now' },
+    { id: 'last_3_hours', key: 'last3Hours', from: 'now-3h', to: 'now' },
+    { id: 'last_6_hours', key: 'last6Hours', from: 'now-6h', to: 'now' },
+    { id: 'last_12_hours', key: 'last12Hours', from: 'now-12h', to: 'now' },
     { id: 'today', key: 'today', from: 'now/d', to: 'now' },
     { id: 'yesterday', key: 'yesterday', from: 'now-1d/d', to: 'now/d' },
     { id: 'last_7_days', key: 'last7Days', from: 'now-7d/d', to: 'now' },

@@ -72,9 +72,19 @@ export class PostgreSQLAdapter implements DatabaseAdapter {
                     query TEXT NOT NULL,
                     sort_field VARCHAR(255),
                     sort_order VARCHAR(10),
+                    ui_state TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
+            `);
+
+            // Add ui_state column if it doesn't exist (for existing databases)
+            await client.query(`
+                DO $$ BEGIN
+                    ALTER TABLE saved_search_queries ADD COLUMN ui_state TEXT;
+                EXCEPTION
+                    WHEN duplicate_column THEN NULL;
+                END $$;
             `);
 
             console.log('✅ PostgreSQL database initialized');
@@ -238,10 +248,10 @@ export class PostgreSQLAdapter implements DatabaseAdapter {
 
     async createSearchQuery(input: CreateSearchQueryInput): Promise<SavedSearchQuery> {
         const result = await this.getPool().query(
-            `INSERT INTO saved_search_queries (name, index_pattern, query, sort_field, sort_order)
-             VALUES ($1, $2, $3, $4, $5)
+            `INSERT INTO saved_search_queries (name, index_pattern, query, sort_field, sort_order, ui_state)
+             VALUES ($1, $2, $3, $4, $5, $6)
              RETURNING *`,
-            [input.name, input.index_pattern, input.query, input.sort_field || null, input.sort_order || null]
+            [input.name, input.index_pattern, input.query, input.sort_field || null, input.sort_order || null, input.ui_state || null]
         );
         return this.mapSearchQuery(result.rows[0]);
     }
@@ -289,6 +299,7 @@ export class PostgreSQLAdapter implements DatabaseAdapter {
             query: row.query,
             sort_field: row.sort_field,
             sort_order: row.sort_order,
+            ui_state: row.ui_state,
             created_at: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
             updated_at: row.updated_at instanceof Date ? row.updated_at.toISOString() : row.updated_at,
         };

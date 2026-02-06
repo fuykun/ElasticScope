@@ -63,7 +63,8 @@
         "weeksAgo": "{{count}}w",
         "monthsAgo": "{{count}}mo",
         "yearsAgo": "{{count}}y",
-        "copy": "Copy"
+        "copy": "Copy",
+        "confirmDelete": "Are you sure you want to delete?"
     },
     "header": {
         "home": "Home",
@@ -160,6 +161,7 @@
         "flat": "Flat list"
     },
     "indexPage": {
+        "index": "Index",
         "deleteIndex": "Delete Index",
         "openIndex": "Open Index",
         "closeIndex": "Close Index",
@@ -196,6 +198,13 @@
             "noFilters": "No filters applied",
             "noDateFields": "No date fields found",
             "facets": "Facets",
+            "last5Min": "5m",
+            "last15Min": "15m",
+            "last30Min": "30m",
+            "last1Hour": "1h",
+            "last3Hours": "3h",
+            "last6Hours": "6h",
+            "last12Hours": "12h",
             "today": "Today",
             "yesterday": "Yesterday",
             "last7Days": "Last 7 days",

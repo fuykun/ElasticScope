@@ -70,10 +70,18 @@ export class MySQLAdapter implements DatabaseAdapter {
                     query TEXT NOT NULL,
                     sort_field VARCHAR(255),
                     sort_order VARCHAR(10),
+                    ui_state TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
                 )
             `);
+
+            // Add ui_state column if it doesn't exist (for existing databases)
+            try {
+                await connection.execute(`ALTER TABLE saved_search_queries ADD COLUMN ui_state TEXT`);
+            } catch (e) {
+                // Column already exists, ignore
+            }
 
             console.log('✅ MySQL database initialized');
         } finally {
@@ -246,9 +254,9 @@ export class MySQLAdapter implements DatabaseAdapter {
 
     async createSearchQuery(input: CreateSearchQueryInput): Promise<SavedSearchQuery> {
         const [result] = await this.getPool().execute<mysql.ResultSetHeader>(
-            `INSERT INTO saved_search_queries (name, index_pattern, query, sort_field, sort_order)
-             VALUES (?, ?, ?, ?, ?)`,
-            [input.name, input.index_pattern, input.query, input.sort_field || null, input.sort_order || null]
+            `INSERT INTO saved_search_queries (name, index_pattern, query, sort_field, sort_order, ui_state)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [input.name, input.index_pattern, input.query, input.sort_field || null, input.sort_order || null, input.ui_state || null]
         );
 
         const [rows] = await this.getPool().execute<mysql.RowDataPacket[]>(
@@ -301,6 +309,7 @@ export class MySQLAdapter implements DatabaseAdapter {
             query: row.query,
             sort_field: row.sort_field,
             sort_order: row.sort_order,
+            ui_state: row.ui_state,
             created_at: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
             updated_at: row.updated_at instanceof Date ? row.updated_at.toISOString() : row.updated_at,
         };

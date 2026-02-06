@@ -437,6 +437,31 @@ export const IndexPage: React.FC<IndexPageProps> = ({
         performSearch(combinedQuery);
     };
 
+    const handleClearDateFilter = () => {
+        setDateFilter(null);
+        // Build simple search query
+        let simpleSearchQuery: object | null = null;
+        if (simpleQuery.trim()) {
+            if (searchField) {
+                simpleSearchQuery = {
+                    match_phrase_prefix: {
+                        [searchField]: simpleQuery,
+                    },
+                };
+            } else {
+                simpleSearchQuery = {
+                    query_string: {
+                        query: `*${simpleQuery}*`,
+                        default_operator: 'AND',
+                    },
+                };
+            }
+        }
+        // Combine queries without date filter
+        const combinedQuery = buildCombinedQuery(simpleSearchQuery, null, queryBuilderQuery);
+        performSearch(combinedQuery);
+    };
+
     const handleSelectSearchField = (field: string) => {
         setSearchField(field);
         saveSearchFieldsForPrefix(prefix, field ? [field] : []);
@@ -689,12 +714,24 @@ export const IndexPage: React.FC<IndexPageProps> = ({
         setSaveQueryError(null);
 
         try {
+            // Build ui_state with all current UI settings
+            const uiState = {
+                simpleQuery,
+                searchField,
+                dateFilter,
+                queryBuilderRootGroup,
+                pageSize,
+                sortField,
+                sortOrder,
+            };
+
             await createSavedSearchQuery({
                 name: saveQueryName.trim(),
                 index_pattern: indexName,
                 query: JSON.stringify(currentQuery || { match_all: {} }),
                 sort_field: sortField || undefined,
                 sort_order: sortOrder || undefined,
+                ui_state: JSON.stringify(uiState),
             });
             setShowSaveQueryModal(false);
             setSaveQueryName('');
@@ -709,14 +746,34 @@ export const IndexPage: React.FC<IndexPageProps> = ({
     const handleLoadSavedQuery = (query: SavedSearchQuery) => {
         try {
             const parsedQuery = JSON.parse(query.query);
-            if (query.sort_field) {
-                setSortField(query.sort_field);
-                setSortOrder((query.sort_order as 'asc' | 'desc') || 'desc');
-                const sortObj = [{ [query.sort_field]: { order: query.sort_order || 'desc' } }];
-                performSearch(parsedQuery, 0, sortObj);
+
+            // Restore UI state if available
+            if (query.ui_state) {
+                try {
+                    const uiState = JSON.parse(query.ui_state);
+                    if (uiState.simpleQuery !== undefined) setSimpleQuery(uiState.simpleQuery);
+                    if (uiState.searchField !== undefined) setSearchField(uiState.searchField);
+                    if (uiState.dateFilter !== undefined) setDateFilter(uiState.dateFilter);
+                    if (uiState.queryBuilderRootGroup !== undefined) setQueryBuilderRootGroup(uiState.queryBuilderRootGroup);
+                    if (uiState.pageSize !== undefined) setPageSize(uiState.pageSize);
+                    if (uiState.sortField !== undefined) setSortField(uiState.sortField);
+                    if (uiState.sortOrder !== undefined) setSortOrder(uiState.sortOrder);
+                } catch (uiError) {
+                    console.error('Failed to parse ui_state:', uiError);
+                }
             } else {
-                performSearch(parsedQuery);
+                // Fallback for queries saved without ui_state
+                if (query.sort_field) {
+                    setSortField(query.sort_field);
+                    setSortOrder((query.sort_order as 'asc' | 'desc') || 'desc');
+                }
             }
+
+            // Execute the query
+            const sortObj = query.sort_field
+                ? [{ [query.sort_field]: { order: query.sort_order || 'desc' } }]
+                : undefined;
+            performSearch(parsedQuery, 0, sortObj);
             setShowSavedQueriesDropdown(false);
         } catch (error) {
             console.error('Failed to load query:', error);
@@ -1108,8 +1165,52 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                                 style={{ flex: 1 }}
                                 disabled={showQueryBuilder && !!queryBuilderQuery}
                             />
+
+                            {/* Date Filter Selector - Inside Input (right side) */}
+                            {dateFields.length > 0 && (
+                                <button
+                                    type="button"
+                                    className={`date-filter-trigger-inline ${dateFilter ? 'has-value' : ''}`}
+                                    onClick={() => {
+                                        setShowDateFilter(!showDateFilter);
+                                        if (!showDateFilter) setShowQueryBuilder(false);
+                                    }}
+                                    title={t('indexPage.filters.dateFilter')}
+                                >
+                                    <Calendar size={14} />
+                                    <span className="date-filter-value">
+                                        {dateFilter ? dateFilter.label : t('indexPage.filters.dateFilter')}
+                                    </span>
+                                    {dateFilter && (
+                                        <span
+                                            className="date-filter-clear"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleClearDateFilter();
+                                            }}
+                                        >
+                                            <X size={12} />
+                                        </span>
+                                    )}
+                                </button>
+                            )}
                         </form>
                     </div>
+
+                    {/* Query Builder Toggle Button */}
+                    {queryBuilderFields.length > 0 && (
+                        <button
+                            className={`filter-toggle-btn query-builder-toggle ${showQueryBuilder ? 'active' : ''} ${queryBuilderQuery ? 'has-filters' : ''}`}
+                            onClick={() => {
+                                setShowQueryBuilder(!showQueryBuilder);
+                                if (!showQueryBuilder) setShowDateFilter(false);
+                            }}
+                            title={t('queryBuilder.title')}
+                        >
+                            <Code size={14} />
+                            <span className="toggle-label">{t('queryBuilder.title')}</span>
+                        </button>
+                    )}
 
                     <button
                         className={`search-btn ${showQueryBuilder && queryBuilderQuery ? 'query-builder-active' : ''}`}
@@ -1118,15 +1219,6 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                     >
                         {loading ? <Loader size={14} className="spin" /> : <Search size={14} />}
                         {t('common.search')}
-                    </button>
-
-                    <button
-                        className="btn btn-ghost btn-icon"
-                        onClick={handleRefresh}
-                        disabled={loading}
-                        title={t('common.refresh')}
-                    >
-                        <RefreshCw size={16} className={loading ? 'spin' : ''} />
                     </button>
 
                     {hasActiveQuery && (
@@ -1139,119 +1231,6 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                             <X size={16} />
                         </button>
                     )}
-
-                    <button
-                        className="btn btn-ghost btn-icon"
-                        onClick={() => setShowSaveQueryModal(true)}
-                        title={t('restModal.saveQuery')}
-                    >
-                        <Save size={16} />
-                    </button>
-
-                    {/* Column Selector */}
-                    <div
-                        className="column-selector-container"
-                        ref={columnDropdownRef}
-                    >
-                        <div className="column-selector">
-                            <button
-                                className="column-selector-trigger"
-                                onClick={() => setColumnDropdownOpen(!columnDropdownOpen)}
-                            >
-                                <Settings size={14} />
-                                <span>{t('indexPage.columns')}</span>
-                                <span className="column-selector-count">
-                                    {selectedColumns.length}
-                                </span>
-                                <ChevronDown
-                                    size={12}
-                                    style={{
-                                        transform: columnDropdownOpen
-                                            ? 'rotate(180deg)'
-                                            : 'rotate(0deg)',
-                                        transition: 'transform 0.15s ease',
-                                    }}
-                                />
-                            </button>
-
-                            {columnDropdownOpen && (
-                                <div className="column-selector-dropdown">
-                                    <div className="column-selector-header">
-                                        <span className="column-selector-title">
-                                            {selectedColumns.length}/{MAX_COLUMNS}
-                                        </span>
-                                        <div className="column-selector-actions">
-                                            <button
-                                                className="column-selector-action-btn"
-                                                onClick={() =>
-                                                    setSelectedColumns(availableFields.slice(0, MAX_COLUMNS))
-                                                }
-                                            >
-                                                {t('indexPage.allFields')}
-                                            </button>
-                                            <button
-                                                className="column-selector-action-btn"
-                                                onClick={() => setSelectedColumns([])}
-                                            >
-                                                {t('common.clear')}
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className="column-selector-search">
-                                        <input
-                                            type="text"
-                                            placeholder={t('common.search') + '...'}
-                                            value={columnSearch}
-                                            onChange={(e) => setColumnSearch(e.target.value)}
-                                        />
-                                    </div>
-
-                                    <div className="column-selector-list">
-                                        {filteredFields.length === 0 ? (
-                                            <div className="column-selector-empty">
-                                                {t('common.noResults')}
-                                            </div>
-                                        ) : (
-                                            filteredFields.map((field) => {
-                                                const isSelected = selectedColumns.includes(field);
-                                                const isDisabled = !isSelected && selectedColumns.length >= MAX_COLUMNS;
-                                                return (
-                                                    <div
-                                                        key={field}
-                                                        className={`column-selector-item ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
-                                                        onClick={() => !isDisabled && toggleColumn(field)}
-                                                    >
-                                                        <div className="column-selector-checkbox">
-                                                            {isSelected && <Check size={10} />}
-                                                        </div>
-                                                        <span className="column-selector-label">
-                                                            {field}
-                                                        </span>
-                                                    </div>
-                                                );
-                                            })
-                                        )}
-                                    </div>
-
-                                    <div className="modal-footer">
-                                        <button
-                                            className="btn btn-secondary btn-sm"
-                                            onClick={() => setColumnDropdownOpen(false)}
-                                        >
-                                            {t('common.cancel')}
-                                        </button>
-                                        <button
-                                            className="btn btn-primary btn-sm"
-                                            onClick={handleApplyColumns}
-                                        >
-                                            {t('common.apply')}
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
 
                     {/* Sort indicator - show when sorting is active */}
                     {sortField && (
@@ -1268,38 +1247,6 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                                 <X size={10} />
                             </button>
                         </div>
-                    )}
-
-                    {/* Date Filter Toggle Button */}
-                    {dateFields.length > 0 && (
-                        <button
-                            className={`filter-toggle-btn ${showDateFilter ? 'active' : ''} ${dateFilter ? 'has-filters' : ''}`}
-                            onClick={() => {
-                                setShowDateFilter(!showDateFilter);
-                                if (!showDateFilter) setShowQueryBuilder(false);
-                            }}
-                            title={t('indexPage.filters.dateFilter')}
-                        >
-                            <Calendar size={14} />
-                            {dateFilter && (
-                                <span className="filter-count">1</span>
-                            )}
-                        </button>
-                    )}
-
-                    {/* Query Builder Toggle Button */}
-                    {queryBuilderFields.length > 0 && (
-                        <button
-                            className={`filter-toggle-btn query-builder-toggle ${showQueryBuilder ? 'active' : ''} ${queryBuilderQuery ? 'has-filters' : ''}`}
-                            onClick={() => {
-                                setShowQueryBuilder(!showQueryBuilder);
-                                if (!showQueryBuilder) setShowDateFilter(false);
-                            }}
-                            title={t('queryBuilder.title')}
-                        >
-                            <Code size={14} />
-                            <span className="toggle-label">{t('queryBuilder.title')}</span>
-                        </button>
                     )}
                 </div>
 
@@ -1359,6 +1306,14 @@ export const IndexPage: React.FC<IndexPageProps> = ({
             <div className="documents-section">
                 <div className="documents-header">
                     <div className="documents-count">
+                        <button
+                            className="btn btn-icon btn-xs refresh-btn-inline"
+                            onClick={handleRefresh}
+                            disabled={loading}
+                            title={t('common.refresh')}
+                        >
+                            <RefreshCw size={12} className={loading ? 'spin' : ''} />
+                        </button>
                         <span>{formatDocCount(total)}</span> {t('indexPage.pagination.results')}
                         {took > 0 && (
                             <span style={{ marginLeft: '8px', opacity: 0.7 }}>
@@ -1371,6 +1326,13 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                             title={t('indexPage.viewQuery')}
                         >
                             <Eye size={14} />
+                        </button>
+                        <button
+                            className="btn btn-icon btn-sm view-query-btn"
+                            onClick={() => setShowSaveQueryModal(true)}
+                            title={t('restModal.saveQuery')}
+                        >
+                            <Save size={14} />
                         </button>
                     </div>
 
@@ -1391,6 +1353,112 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                             >
                                 <Table size={14} />
                             </button>
+                        </div>
+
+                        {/* Column Selector */}
+                        <div
+                            className="column-selector-container compact"
+                            ref={columnDropdownRef}
+                        >
+                            <div className="column-selector">
+                                <button
+                                    className="column-selector-trigger compact"
+                                    onClick={() => setColumnDropdownOpen(!columnDropdownOpen)}
+                                    title={t('indexPage.columns')}
+                                >
+                                    <Settings size={14} />
+                                    <span>{t('indexPage.columns')}</span>
+                                    <span className="column-selector-count">
+                                        {selectedColumns.length}
+                                    </span>
+                                    <ChevronDown
+                                        size={12}
+                                        style={{
+                                            transform: columnDropdownOpen
+                                                ? 'rotate(180deg)'
+                                                : 'rotate(0deg)',
+                                            transition: 'transform 0.15s ease',
+                                        }}
+                                    />
+                                </button>
+
+                                {columnDropdownOpen && (
+                                    <div className="column-selector-dropdown">
+                                        <div className="column-selector-header">
+                                            <span className="column-selector-title">
+                                                {selectedColumns.length}/{MAX_COLUMNS}
+                                            </span>
+                                            <div className="column-selector-actions">
+                                                <button
+                                                    className="column-selector-action-btn"
+                                                    onClick={() =>
+                                                        setSelectedColumns(availableFields.slice(0, MAX_COLUMNS))
+                                                    }
+                                                >
+                                                    {t('indexPage.allFields')}
+                                                </button>
+                                                <button
+                                                    className="column-selector-action-btn"
+                                                    onClick={() => setSelectedColumns([])}
+                                                >
+                                                    {t('common.clear')}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="column-selector-search">
+                                            <input
+                                                type="text"
+                                                placeholder={t('common.search') + '...'}
+                                                value={columnSearch}
+                                                onChange={(e) => setColumnSearch(e.target.value)}
+                                            />
+                                        </div>
+
+                                        <div className="column-selector-list">
+                                            {filteredFields.length === 0 ? (
+                                                <div className="column-selector-empty">
+                                                    {t('common.noResults')}
+                                                </div>
+                                            ) : (
+                                                filteredFields.map((field) => {
+                                                    const isSelected = selectedColumns.includes(field);
+                                                    const isDisabled = !isSelected && selectedColumns.length >= MAX_COLUMNS;
+                                                    return (
+                                                        <div
+                                                            key={field}
+                                                            className={`column-selector-item ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
+                                                            onClick={() => !isDisabled && toggleColumn(field)}
+                                                        >
+                                                            <div className="column-selector-checkbox">
+                                                                {isSelected && <Check size={10} />}
+                                                            </div>
+                                                            <span className="column-selector-label">
+                                                                {field}
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+
+                                        <div className="modal-footer">
+                                            <button
+                                                className="btn btn-secondary btn-sm"
+                                                onClick={() => setColumnDropdownOpen(false)}
+                                            >
+                                                {t('common.cancel')}
+                                            </button>
+                                            <button
+                                                className="btn btn-primary btn-sm"
+                                                onClick={handleApplyColumns}
+                                            >
+                                                {t('common.apply')}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* Page Size Selector */}
@@ -1772,23 +1840,6 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                 size="lg"
             >
                 <div className="view-query-modal">
-                    {/* Save Button */}
-                    <div className="view-query-header-actions" style={{
-                        display: 'flex',
-                        gap: '8px',
-                        marginBottom: '12px',
-                        justifyContent: 'flex-end'
-                    }}>
-                        <button
-                            className="btn btn-ghost btn-sm"
-                            onClick={() => setShowSaveQueryModal(true)}
-                            title={t('restModal.saveQuery')}
-                        >
-                            <Save size={16} />
-                            {t('common.save')}
-                        </button>
-                    </div>
-
                     <div className="view-query-content">
                         <JsonViewer
                             data={(() => {
