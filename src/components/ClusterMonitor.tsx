@@ -275,12 +275,10 @@ export const ClusterMonitor: React.FC<ClusterMonitorProps> = ({ connectionId }) 
         }
     }, [activeTab, loadTasks]);
 
-    // Visibility change listener - sayfa görünür olmadığında refresh durur
     useEffect(() => {
         const handleVisibilityChange = () => {
             setIsPageVisible(!document.hidden);
             if (!document.hidden) {
-                // Sayfa tekrar görünür olduğunda activity'yi resetle
                 lastActivityRef.current = Date.now();
                 setIdleMinutes(0);
             }
@@ -320,12 +318,11 @@ export const ClusterMonitor: React.FC<ClusterMonitorProps> = ({ connectionId }) 
             if (minutesIdle >= IDLE_TIMEOUT_MINUTES && autoRefresh) {
                 setAutoRefresh(false);
             }
-        }, 60000); // Her dakika kontrol
+        }, 60000);
 
         return () => clearInterval(idleChecker);
     }, [autoRefresh]);
 
-    // Auto refresh - sadece sayfa görünürse ve idle değilse çalışır
     useEffect(() => {
         if (!autoRefresh || !isPageVisible) return;
 
@@ -562,7 +559,6 @@ export const ClusterMonitor: React.FC<ClusterMonitorProps> = ({ connectionId }) 
                     <h2>{t('clusterMonitor.title')}</h2>
                 </div>
                 <div className="cluster-monitor-controls">
-                    {/* Refresh interval seçici */}
                     <select
                         className="refresh-interval-select"
                         value={refreshInterval}

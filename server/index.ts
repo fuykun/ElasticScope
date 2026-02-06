@@ -333,7 +333,7 @@ app.post('/api/connect', async (req, res) => {
         await esClient.ping();
 
         connectionInfo = { id: connId, url: connUrl, connected: true, name: connName, color: connColor };
-        res.json({ success: true, message: 'Bağlantı başarılı' });
+        res.json({ success: true, messageCode: 'CONNECTION_SUCCESS' });
     } catch (error: any) {
         esClient = null;
         connectionInfo = { id: null, url: '', connected: false, name: '', color: '' };
@@ -347,7 +347,6 @@ app.post('/api/disconnect', (req, res) => {
     res.json({ success: true });
 });
 
-// Cluster bilgisi
 app.get('/api/cluster/health', requireConnection, async (req, res) => {
     try {
         const health = await esClient!.cluster.health();
@@ -377,7 +376,6 @@ app.get('/api/cluster/stats', requireConnection, async (req, res) => {
     }
 });
 
-// Node'lar
 app.get('/api/nodes', requireConnection, async (req, res) => {
     try {
         const nodes = await esClient!.nodes.stats();
@@ -537,7 +535,7 @@ app.post('/api/tasks/:taskId/cancel', requireConnection, async (req, res) => {
     try {
         const { taskId } = req.params;
         const result = await esClient!.tasks.cancel({
-            task_id: taskId
+            task_id: Array.isArray(taskId) ? taskId[0] : taskId
         });
         res.json(result);
     } catch (error: any) {
@@ -545,13 +543,10 @@ app.post('/api/tasks/:taskId/cancel', requireConnection, async (req, res) => {
     }
 });
 
-// Index listesi
 app.get('/api/indices', requireConnection, async (req, res) => {
     try {
-        // Index bilgilerini al
         const indicesResponse = await esClient!.cat.indices({ format: 'json', h: 'index,health,status,docs.count,store.size' });
 
-        // Alias bilgilerini al
         const aliasesResponse = await esClient!.cat.aliases({ format: 'json', h: 'alias,index' });
 
         const settingsResponse = await esClient!.indices.getSettings({});
@@ -566,7 +561,6 @@ app.get('/api/indices', requireConnection, async (req, res) => {
             }
         });
 
-        // Sistem indexlerini filtrele ve alias + creation_date bilgisini ekle
         const indices = (indicesResponse as any[])
             .filter((idx: any) => !idx.index.startsWith('.'))
             .map((idx: any) => {
@@ -589,7 +583,6 @@ app.get('/api/indices', requireConnection, async (req, res) => {
     }
 });
 
-// Index mapping bilgisi
 app.get('/api/indices/:index/mapping', requireConnection, async (req, res) => {
     try {
         const { index } = req.params;
@@ -600,7 +593,6 @@ app.get('/api/indices/:index/mapping', requireConnection, async (req, res) => {
     }
 });
 
-// Index settings bilgisi
 app.get('/api/indices/:index/settings', requireConnection, async (req, res) => {
     try {
         const { index } = req.params;
@@ -611,7 +603,6 @@ app.get('/api/indices/:index/settings', requireConnection, async (req, res) => {
     }
 });
 
-// Index istatistikleri
 app.get('/api/indices/:index/stats', requireConnection, async (req, res) => {
     try {
         const { index } = req.params;
@@ -622,12 +613,11 @@ app.get('/api/indices/:index/stats', requireConnection, async (req, res) => {
     }
 });
 
-// Index silme
 app.delete('/api/indices/:index', requireConnection, async (req, res) => {
     try {
         const { index } = req.params;
         await esClient!.indices.delete({ index });
-        res.json({ success: true, message: `Index "${index}" silindi` });
+        res.json({ success: true, messageCode: 'INDEX_DELETED', index });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
@@ -638,7 +628,7 @@ app.post('/api/indices/:index/open', requireConnection, async (req, res) => {
     try {
         const { index } = req.params;
         await esClient!.indices.open({ index });
-        res.json({ success: true, message: `Index "${index}" opened` });
+        res.json({ success: true, messageCode: 'INDEX_OPENED', index });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
@@ -649,7 +639,7 @@ app.post('/api/indices/:index/close', requireConnection, async (req, res) => {
     try {
         const { index } = req.params;
         await esClient!.indices.close({ index });
-        res.json({ success: true, message: `Index "${index}" closed` });
+        res.json({ success: true, messageCode: 'INDEX_CLOSED', index });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
@@ -688,7 +678,7 @@ app.post('/api/indices', requireConnection, async (req, res) => {
             body
         });
 
-        res.json({ success: true, message: `Index "${indexName}" oluşturuldu` });
+        res.json({ success: true, messageCode: 'INDEX_CREATED', index: indexName });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
@@ -860,7 +850,6 @@ app.put('/api/indices/:index/doc', requireConnection, async (req, res) => {
     }
 });
 
-// Alias ekleme
 app.post('/api/indices/:index/alias', requireConnection, async (req, res) => {
     try {
         const { index } = req.params;
@@ -877,13 +866,12 @@ app.post('/api/indices/:index/alias', requireConnection, async (req, res) => {
             name: alias
         });
 
-        res.json({ success: true, message: `Alias "${alias}" eklendi` });
+        res.json({ success: true, messageCode: 'ALIAS_ADDED', index, alias });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// Alias silme
 app.delete('/api/indices/:index/alias/:alias', requireConnection, async (req, res) => {
     try {
         const { index, alias } = req.params;
@@ -939,7 +927,6 @@ app.get('/api/queries', async (req, res) => {
     }
 });
 
-// Tek sorgu getir
 app.get('/api/queries/:id', async (req, res) => {
     try {
         const query = await getQueryById(parseInt(req.params.id));
@@ -952,7 +939,6 @@ app.get('/api/queries/:id', async (req, res) => {
     }
 });
 
-// Yeni sorgu ekle
 app.post('/api/queries', async (req, res) => {
     try {
         const { name, method, path, body } = req.body;
@@ -981,7 +967,6 @@ app.put('/api/queries/:id', async (req, res) => {
     }
 });
 
-// Sorgu sil
 app.delete('/api/queries/:id', async (req, res) => {
     try {
         const success = await deleteQuery(parseInt(req.params.id));
@@ -996,7 +981,6 @@ app.delete('/api/queries/:id', async (req, res) => {
 
 // ==================== SAVED SEARCH QUERIES API ====================
 
-// Tüm search sorguları listele
 app.get('/api/search-queries', async (req, res) => {
     try {
         const queries = await getAllSearchQueries();
@@ -1006,7 +990,6 @@ app.get('/api/search-queries', async (req, res) => {
     }
 });
 
-// Yeni search sorgusu kaydet
 app.post('/api/search-queries', async (req, res) => {
     try {
         const { name, index_pattern, query, sort_field, sort_order, ui_state } = req.body;
@@ -1020,7 +1003,6 @@ app.post('/api/search-queries', async (req, res) => {
     }
 });
 
-// Search sorgusu sil
 app.delete('/api/search-queries/:id', async (req, res) => {
     try {
         const success = await deleteSearchQuery(parseInt(req.params.id));
@@ -1041,10 +1023,9 @@ app.get('/api/connections/:connectionId/indices', async (req, res) => {
         const client = await getClientForConnection(connectionId);
 
         if (!client) {
-            return res.status(400).json({ error: 'Bağlantı kurulamadı' });
+            return res.status(400).json({ errorCode: 'CONNECTION_FAILED' });
         }
 
-        // Index'leri al
         const indicesResponse = await client.cat.indices({ format: 'json', h: 'index,health,status,docs.count,store.size' });
 
         const aliasesResponse = await client.cat.aliases({ format: 'json', h: 'alias,index' });
@@ -1082,7 +1063,7 @@ app.get('/api/connections/:connectionId/indices/:index/mapping', async (req, res
         const client = await getClientForConnection(connectionId);
 
         if (!client) {
-            return res.status(400).json({ error: 'Bağlantı kurulamadı' });
+            return res.status(400).json({ errorCode: 'CONNECTION_FAILED' });
         }
 
         const mapping = await client.indices.getMapping({ index });
@@ -1160,7 +1141,7 @@ app.post('/api/copy-document', async (req, res) => {
 
         res.json({
             success: true,
-            message: `Döküman başarıyla kopyalandı`,
+            messageCode: 'DOCUMENT_COPIED',
             result: result.result,
             targetIndex,
             documentId
@@ -1185,7 +1166,6 @@ app.post('/api/copy-documents', async (req, res) => {
     }
 
     try {
-        // Kaynak client
         let sourceClient: Client | null;
         if (sourceConnectionId) {
             sourceClient = await getClientForConnection(sourceConnectionId);
@@ -1197,7 +1177,6 @@ app.post('/api/copy-documents', async (req, res) => {
             return res.status(400).json({ errorCode: 'SOURCE_CONNECTION_NOT_FOUND' });
         }
 
-        // Hedef client
         const targetClient = await getClientForConnection(targetConnectionId);
         if (!targetClient) {
             return res.status(400).json({ errorCode: 'TARGET_CONNECTION_FAILED' });
@@ -1251,7 +1230,7 @@ app.post('/api/copy-documents', async (req, res) => {
 
         res.json({
             success: true,
-            message: `${successCount} döküman kopyalandı${errorCount > 0 ? `, ${errorCount} hata` : ''}`,
+            messageCode: 'DOCUMENTS_COPIED',
             copied: successCount,
             errors: errorCount
         });

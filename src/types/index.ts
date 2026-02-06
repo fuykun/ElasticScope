@@ -216,9 +216,9 @@ export interface CopyDocumentsInput {
 
 export interface CopyResult {
     success: boolean;
-    message: string;
+    messageCode?: string;
     result?: string;
-    targetIndex: string;
+    targetIndex?: string;
     documentId?: string;
     copied?: number;
     errors?: number;

@@ -169,7 +169,6 @@ const JsonNode: React.FC<JsonNodeProps> = ({
             <div className={`json-line ${isPinned ? 'json-pinned' : ''}`}>
                 {/* Indent */}
                 <span className="json-indent" style={{ width: `${depth * 20}px` }} />
-                {/* Toggle alanı için boş placeholder - hizalama için */}
                 <span className="json-toggle">&nbsp;</span>
                 {keyName !== null && (
                     <>

@@ -850,7 +850,6 @@ export const searchDocuments = (
         body: JSON.stringify({ index, query, from, size, sort }),
     });
 
-// Aggregation için tip tanımları
 export interface AggregationBucket {
     key: string;
     doc_count: number;
@@ -931,11 +930,9 @@ export const executeRestRequest = (input: RestRequestInput) =>
 export const getSavedQueries = () =>
     apiRequest<SavedQuery[]>('/queries');
 
-// Tek sorgu getir
 export const getSavedQuery = (id: number) =>
     apiRequest<SavedQuery>(`/queries/${id}`);
 
-// Yeni sorgu kaydet
 export const createSavedQuery = (input: CreateQueryInput) =>
     apiRequest<SavedQuery>('/queries', {
         method: 'POST',
@@ -948,7 +945,6 @@ export const updateSavedQuery = (id: number, input: Partial<CreateQueryInput>) =
         body: JSON.stringify(input),
     });
 
-// Sorgu sil
 export const deleteSavedQuery = (id: number) =>
     apiRequest<{ success: boolean }>(`/queries/${id}`, {
         method: 'DELETE',

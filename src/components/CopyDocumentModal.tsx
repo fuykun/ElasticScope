@@ -203,7 +203,7 @@ export const CopyDocumentModal = ({
     const [copyMapping, setCopyMapping] = useState(true);
     const [loading, setLoading] = useState(false);
     const [loadingIndices, setLoadingIndices] = useState(false);
-    const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
+    const [result, setResult] = useState<{ success: boolean; messageCode?: string; index?: string; alias?: string; copied?: number; errors?: number } | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     const [checkingMapping, setCheckingMapping] = useState(false);
@@ -337,7 +337,7 @@ export const CopyDocumentModal = ({
                     createIndexIfNotExists: createNewIndex,
                     copyMapping
                 });
-                setResult({ success: res.success, message: res.message });
+                setResult({ success: res.success, messageCode: res.messageCode });
             } else {
                 const res = await copyDocuments({
                     sourceConnectionId: currentConnectionId,
@@ -347,7 +347,7 @@ export const CopyDocumentModal = ({
                     createIndexIfNotExists: createNewIndex,
                     copyMapping
                 });
-                setResult({ success: res.success, message: res.message });
+                setResult({ success: res.success, messageCode: res.messageCode, copied: res.copied, errors: res.errors });
             }
         } catch (err: any) {
             setError(err.message);
@@ -504,7 +504,15 @@ export const CopyDocumentModal = ({
                 {result && (
                     <div className={`copy-result ${result.success ? 'success' : 'error'}`}>
                         {result.success ? <CheckCircle size={14} /> : <AlertTriangle size={14} />}
-                        <span>{result.message}</span>
+                        <span>{result.messageCode ? t(`serverErrors.${result.messageCode === 'DOCUMENTS_COPIED' && result.errors && result.errors > 0
+                            ? 'DOCUMENTS_COPIED_WITH_ERRORS'
+                            : result.messageCode
+                            }`, {
+                            index: result.index,
+                            alias: result.alias,
+                            copied: result.copied,
+                            errors: result.errors
+                        }) : ''}</span>
                     </div>
                 )}
 

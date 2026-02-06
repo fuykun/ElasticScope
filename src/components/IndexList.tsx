@@ -7,22 +7,13 @@ import { CreateIndexModal } from './CreateIndexModal';
 import { SkeletonLoader } from './SkeletonLoader';
 import { formatRelativeDate, formatDate } from '../utils/formatters';
 
-// Akıllı tarih pattern tespiti - birden fazla yaygın format desteklenir
-// Her pattern: [regex, matchFn] — matchFn index adı alır, prefix döndürür (veya null)
 const DATE_PATTERNS: Array<{ regex: RegExp; extract: (name: string, match: RegExpMatchArray) => string | null }> = [
-    // _YYYYMMDD veya _YYYYMMDD_NNN (ör: logs_20260206, logs_20260206_001)
     { regex: /_(\d{8})(?:_(\d{1,9}))?$/, extract: (name, match) => name.substring(0, match.index!) || null },
-    // _YYYYMMDDHHmm veya _YYYYMMDDHHmmss (ör: boyner_202602061003, index_20260206103045)
     { regex: /_(\d{10,14})$/, extract: (name, match) => name.substring(0, match.index!) || null },
-    // -YYYY.MM.DD veya _YYYY.MM.DD (ör: logstash-2026.02.06, metrics_2026.02.06)
     { regex: /[-_](\d{4}\.\d{2}\.\d{2})(?:[-_](\d+))?$/, extract: (name, match) => name.substring(0, match.index!) || null },
-    // -YYYY-MM-DD veya _YYYY-MM-DD (ör: app-logs-2026-02-06)
     { regex: /[-_](\d{4}-\d{2}-\d{2})(?:[-_](\d+))?$/, extract: (name, match) => name.substring(0, match.index!) || null },
-    // -YYYYMMDD veya -YYYYMMDD-NNN (ör: app-logs-20260206)
     { regex: /-(\d{8})(?:-(\d{1,9}))?$/, extract: (name, match) => name.substring(0, match.index!) || null },
-    // -YYYYMMDDHHmm (ör: app-logs-202602061003)
     { regex: /-(\d{10,14})$/, extract: (name, match) => name.substring(0, match.index!) || null },
-    // _vN veya -vN sürüm numaralı indexler (ör: products_v1, products_v2)
     { regex: /[-_]v(\d{1,4})$/, extract: (name, match) => name.substring(0, match.index!) || null },
 ];
 
@@ -64,7 +55,6 @@ function groupIndices(indices: IndexInfo[]): GroupedResult {
     }
 
     const groups: IndexGroup[] = [];
-    // Minimum 2 index olmalı ki grup olsun, yoksa ungrouped'a düşer
     for (const [prefix, idxList] of prefixMap) {
         if (idxList.length >= 2) {
             groups.push({ prefix, indices: idxList });
@@ -80,7 +70,6 @@ function groupIndices(indices: IndexInfo[]): GroupedResult {
 }
 
 function getDisplayName(indexName: string, prefix: string): string {
-    // Prefix'i çıkarıp kalan kısmı göster (baştaki _ da temizle)
     return indexName.substring(prefix.length).replace(/^_/, '');
 }
 
@@ -169,7 +158,6 @@ export const IndexList: React.FC<IndexListProps> = ({
 
     const groupedData = useMemo(() => groupIndices(filteredIndices), [filteredIndices]);
 
-    // Seçili index'in grubunu otomatik aç
     useEffect(() => {
         if (selectedIndex && viewMode === 'grouped') {
             const prefix = extractGroupPrefix(selectedIndex);

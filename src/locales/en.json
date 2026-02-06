@@ -29,7 +29,17 @@
         "TARGET_INDEX_NOT_FOUND": "Target index not found: {{details}}",
         "TARGET_CONNECTION_INDEX_DOCUMENTS_REQUIRED": "Target connection, index and documents are required",
         "INTERNAL_ERROR": "Internal server error",
-        "UNKNOWN_ERROR": "An unknown error occurred"
+        "UNKNOWN_ERROR": "An unknown error occurred",
+        "CONNECTION_SUCCESS": "Connection successful",
+        "INDEX_DELETED": "Index \"{{index}}\" deleted",
+        "INDEX_OPENED": "Index \"{{index}}\" opened",
+        "INDEX_CLOSED": "Index \"{{index}}\" closed",
+        "INDEX_CREATED": "Index \"{{index}}\" created",
+        "ALIAS_ADDED": "Alias \"{{alias}}\" added to index \"{{index}}\"",
+        "ALIAS_DELETED": "Alias \"{{alias}}\" removed from index \"{{index}}\"",
+        "DOCUMENT_COPIED": "Document copied successfully",
+        "DOCUMENTS_COPIED": "{{copied}} document(s) copied",
+        "DOCUMENTS_COPIED_WITH_ERRORS": "{{copied}} document(s) copied ({{errors}} error(s))"
     },
     "common": {
         "search": "Search",

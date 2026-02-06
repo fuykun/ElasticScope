@@ -139,7 +139,6 @@ export const ConnectionFormModal: React.FC<ConnectionFormModalProps> = ({
                 try {
                     await deleteSavedConnection(createdConnectionId);
                 } catch (deleteErr) {
-                    console.error('Başarısız bağlantı silinirken hata:', deleteErr);
                 }
             }
             setError(err.message || t('connection.connectionFailed'));

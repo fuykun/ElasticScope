@@ -29,7 +29,17 @@
         "TARGET_INDEX_NOT_FOUND": "Hedef index bulunamadı: {{details}}",
         "TARGET_CONNECTION_INDEX_DOCUMENTS_REQUIRED": "Hedef bağlantı, index ve dökümanlar gerekli",
         "INTERNAL_ERROR": "Sunucu hatası",
-        "UNKNOWN_ERROR": "Bilinmeyen bir hata oluştu"
+        "UNKNOWN_ERROR": "Bilinmeyen bir hata oluştu",
+        "CONNECTION_SUCCESS": "Bağlantı başarılı",
+        "INDEX_DELETED": "Index \"{{index}}\" silindi",
+        "INDEX_OPENED": "Index \"{{index}}\" açıldı",
+        "INDEX_CLOSED": "Index \"{{index}}\" kapatıldı",
+        "INDEX_CREATED": "Index \"{{index}}\" oluşturuldu",
+        "ALIAS_ADDED": "Alias \"{{alias}}\" index \"{{index}}\"'e eklendi",
+        "ALIAS_DELETED": "Alias \"{{alias}}\" index \"{{index}}\"'ten kaldırıldı",
+        "DOCUMENT_COPIED": "Döküman başarıyla kopyalandı",
+        "DOCUMENTS_COPIED": "{{copied}} döküman kopyalandı",
+        "DOCUMENTS_COPIED_WITH_ERRORS": "{{copied}} döküman kopyalandı ({{errors}} hata)"
     },
     "common": {
         "search": "Ara",

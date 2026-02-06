@@ -117,8 +117,8 @@ export const IndexPage: React.FC<IndexPageProps> = ({
     // Column selector
     const [columnDropdownOpen, setColumnDropdownOpen] = useState(false);
     const [availableFields, setAvailableFields] = useState<string[]>([]);
-    const [searchableFields, setSearchableFields] = useState<string[]>([]); // Aranabilir alanlar (primitive)
-    const [sortableFields, setSortableFields] = useState<string[]>([]); // Sortable alanlar (text hariç)
+    const [searchableFields, setSearchableFields] = useState<string[]>([]);
+    const [sortableFields, setSortableFields] = useState<string[]>([]);
     const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
     const [columnSearch, setColumnSearch] = useState('');
     const columnDropdownRef = React.useRef<HTMLDivElement>(null);
