@@ -201,10 +201,12 @@
         .badges {
             display: flex;
             justify-content: center;
-            gap: 12px;
+            align-items: center;
+            gap: 16px;
             margin-bottom: 40px;
             filter: saturate(0.8);
             transition: filter 0.3s;
+            flex-wrap: wrap;
         }
 
         .badges:hover {
@@ -739,9 +741,17 @@
     <header>
         <div class="container">
             <div class="badges">
-                <img src="https://img.shields.io/github/v/release/fuykun/ElasticScope?style=flat-square&color=0ea5e9&labelColor=1e293b"
-                    alt="Release">
-                <img src="https://img.shields.io/github/stars/fuykun/ElasticScope?style=social" alt="Stars">
+                <a href="https://www.producthunt.com/products/elasticscope?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-elasticscope"
+                    target="_blank" rel="noopener noreferrer" style="display: flex;">
+                    <img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1076316&theme=dark"
+                        alt="ElasticScope - Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" />
+                </a>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <img src="https://img.shields.io/github/v/release/fuykun/ElasticScope?style=flat-square&color=0ea5e9&labelColor=1e293b"
+                        alt="Release" style="height: 28px;">
+                    <img src="https://img.shields.io/github/stars/fuykun/ElasticScope?style=social" alt="Stars"
+                        style="height: 28px;">
+                </div>
             </div>
 
             <h1>The <span class="hero-accent">Professional</span> GUI for<br>Elasticsearch</h1>
@@ -873,6 +883,7 @@
                         <button class="tab-btn active" onclick="openTab(event, 'npm')">📦 NPM / Source</button>
                         <button class="tab-btn" onclick="openTab(event, 'docker-hub')">🐳 Docker Hub</button>
                         <button class="tab-btn" onclick="openTab(event, 'docker-build')">🏗️ Docker Build</button>
+                        <button class="tab-btn" onclick="openTab(event, 'docker-compose')">⚓ Docker Compose</button>
                     </div>
 
                     <!-- NPM Tab -->
@@ -968,6 +979,41 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Docker Compose Tab -->
+                    <div id="docker-compose" class="tab-content">
+                        <h3>Run with Compose</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                            The easiest way to start the full stack, including a demo Elasticsearch cluster.
+                        </p>
+                        <div class="code-preview">
+                            <div class="code-header">
+                                <span class="lang-tag">bash</span>
+                                <button class="copy-btn" onclick="copyCode(this)">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                                        </path>
+                                    </svg>
+                                    Copy
+                                </button>
+                            </div>
+                            <div class="code-content">
+                                <span class="code-line"><span class="comment"># Clone & Enter</span></span>
+                                <span class="code-line"><span class="command">git</span> clone
+                                    https://github.com/fuykun/ElasticScope.git</span>
+                                <span class="code-line"><span class="command">cd</span> ElasticScope</span>
+                                <span class="code-line"></span>
+                                <span class="code-line"><span class="comment"># Option 1: App Only</span></span>
+                                <span class="code-line"><span class="command">docker</span> compose up -d</span>
+                                <span class="code-line"></span>
+                                <span class="code-line"><span class="comment"># Option 2: Full Stack (App + Demo Elastic
+                                        + Seed Data)</span></span>
+                                <span class="code-line"><span class="command">docker</span> compose --profile with-es up
+                                    -d</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -1023,14 +1069,12 @@
                             <li><a href="https://github.com/fuykun/ElasticScope/blob/main/README.md">Documentation</a>
                             </li>
                             <li><a href="https://github.com/fuykun/ElasticScope/issues">Issue Tracker</a></li>
-                            <li><a href="#">Roadmap</a></li>
                         </ul>
                     </div>
                     <div class="footer-col">
                         <h5>Community</h5>
                         <ul>
                             <li><a href="https://github.com/fuykun/ElasticScope">GitHub</a></li>
-                            <li><a href="#">Discussions</a></li>
                             <li><a href="https://github.com/fuykun/ElasticScope/blob/main/LICENSE">License</a></li>
                         </ul>
                     </div>
@@ -1039,10 +1083,6 @@
 
             <div class="footer-bottom">
                 <span>© 2026 ElasticScope. Licensed under MIT.</span>
-                <span style="display: flex; gap: 20px;">
-                    <a href="#" style="color: var(--text-secondary); text-decoration: none;">Privacy</a>
-                    <a href="#" style="color: var(--text-secondary); text-decoration: none;">Terms</a>
-                </span>
             </div>
         </div>
     </footer>
