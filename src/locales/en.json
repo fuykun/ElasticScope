@@ -458,6 +458,8 @@
         "noQuery": "No query generated yet",
         "search": "Search",
         "and": "and",
+        "enableCondition": "Enable condition",
+        "disableCondition": "Disable condition",
         "operators": {
             "equals": "equals",
             "notEquals": "not equals",

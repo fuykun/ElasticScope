@@ -12,6 +12,8 @@ import {
     RotateCcw,
     Layers,
     Filter,
+    Eye,
+    EyeOff,
 } from 'lucide-react';
 
 // Field metadata extracted from mapping
@@ -58,6 +60,7 @@ export interface QueryCondition {
     operator: OperatorType;
     value: string;
     value2?: string; // for 'between' operator
+    enabled: boolean; // enable/disable state (default: true)
 }
 
 // Condition group (AND/OR)
@@ -296,6 +299,7 @@ const buildElasticsearchQuery = (group: QueryGroup, fields: FieldInfo[]): object
 
     // Process conditions
     for (const condition of group.conditions) {
+        if (!(condition.enabled ?? true)) continue; // Skip disabled conditions (default: enabled)
         if (!condition.field) continue;
 
         const fieldInfo = fields.find(f => f.name === condition.field || f.fields?.keyword?.name === condition.field);
@@ -431,6 +435,7 @@ const createEmptyCondition = (): QueryCondition => ({
     field: '',
     operator: 'equals',
     value: '',
+    enabled: true,
 });
 
 export const QueryBuilder: React.FC<QueryBuilderProps> = ({
@@ -594,8 +599,19 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
         const selectedOperator = ALL_OPERATORS.find(op => op.value === condition.operator);
 
         return (
-            <div key={condition.id} className="qb-condition">
+            <div key={condition.id} className={`qb-condition ${!(condition.enabled ?? true) ? 'qb-condition-disabled' : ''}`}>
                 <div className="qb-condition-row">
+                    <button
+                        className={`qb-toggle-btn ${(condition.enabled ?? true) ? 'enabled' : 'disabled'}`}
+                        onClick={() => updateCondition(groupId, condition.id, {
+                            enabled: !(condition.enabled ?? true)
+                        })}
+                        title={(condition.enabled ?? true) ? t('queryBuilder.disableCondition') : t('queryBuilder.enableCondition')}
+                        aria-label={(condition.enabled ?? true) ? t('queryBuilder.disableCondition') : t('queryBuilder.enableCondition')}
+                    >
+                        {(condition.enabled ?? true) ? <Eye size={16} /> : <EyeOff size={16} />}
+                    </button>
+
                     <SearchableSelect
                         value={condition.field}
                         onChange={(field) => {

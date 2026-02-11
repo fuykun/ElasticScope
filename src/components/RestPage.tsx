@@ -829,6 +829,7 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                                     data={activeTab.response}
                                     defaultExpanded={true}
                                     showSearchBar={true}
+                                    enableCopy={true}
                                 />
                             </div>
                         )}

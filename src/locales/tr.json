@@ -458,6 +458,8 @@
         "noQuery": "Henüz sorgu oluşturulmadı",
         "search": "Ara",
         "and": "ve",
+        "enableCondition": "Koşulu aktif et",
+        "disableCondition": "Koşulu pasif et",
         "operators": {
             "equals": "eşittir",
             "notEquals": "eşit değil",
