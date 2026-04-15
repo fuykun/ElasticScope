@@ -584,11 +584,75 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
         };
     }, [handleMouseMove, handleMouseUp]);
 
+    // Derive the active index from the current path for pill highlighting
+    const activeIndexInPath = (() => {
+        if (!activeTab?.path) return null;
+        const path = activeTab.path.startsWith('/') ? activeTab.path : '/' + activeTab.path;
+        const parts = path.split('/').filter(Boolean);
+        if (parts.length > 0 && !parts[0].startsWith('_')) {
+            return parts[0];
+        }
+        return null;
+    })();
+
     return (
         <div className="rest-page">
 
-            <div className="rest-page-header">
-                <h3><Maximize2 size={18} /> REST Console</h3>
+            <div className="rest-tabs-bar">
+                <div className="rest-console-brand">
+                    <Maximize2 size={14} />
+                    <span>REST Console</span>
+                </div>
+
+                <div className="rest-tabs-list">
+                    {tabs.map(tab => (
+                        <div
+                            key={tab.id}
+                            className={`rest-tab ${activeTabId === tab.id ? 'active' : ''}`}
+                            onClick={() => setActiveTabId(tab.id)}
+                            onDoubleClick={(e) => handleStartEdit(e, tab)}
+                            style={{ paddingRight: editingTabId === tab.id ? '8px' : '36px' }}
+                        >
+                            {editingTabId === tab.id ? (
+                                <input
+                                    ref={editInputRef}
+                                    type="text"
+                                    className="rest-tab-edit-input"
+                                    value={editingName}
+                                    onChange={(e) => setEditingName(e.target.value)}
+                                    onKeyDown={handleEditKeyDown}
+                                    onBlur={handleSaveEdit}
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                            ) : (
+                                <>
+                                    {tab.method && (
+                                        <span className={`rest-tab-method method-${tab.method.toLowerCase()}`}
+                                            style={{
+                                                color: tab.method === 'GET' ? 'var(--success)' :
+                                                    tab.method === 'POST' ? 'var(--accent)' :
+                                                        tab.method === 'DELETE' ? 'var(--danger)' : '#fbbf24'
+                                            }}>
+                                            {tab.method}
+                                        </span>
+                                    )}
+                                    <span className="rest-tab-name" title={tab.name}>{tab.name}</span>
+                                    <div
+                                        className="rest-tab-close"
+                                        onClick={(e) => handleCloseTab(e, tab.id)}
+                                    >
+                                        <X size={12} />
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    ))}
+                    <div className="rest-new-tab" onClick={handleNewTab} title="New Tab">
+                        <Plus size={18} />
+                    </div>
+                </div>
+
+                <div className="rest-tabs-spacer" />
 
                 <div className="rest-header-actions">
                     <div className="rest-queries-dropdown">
@@ -652,61 +716,12 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                 </div>
             </div>
 
-            <div className="rest-tabs-bar">
-                {tabs.map(tab => (
-                    <div
-                        key={tab.id}
-                        className={`rest-tab ${activeTabId === tab.id ? 'active' : ''}`}
-                        onClick={() => setActiveTabId(tab.id)}
-                        onDoubleClick={(e) => handleStartEdit(e, tab)}
-                        style={{ paddingRight: editingTabId === tab.id ? '8px' : '36px' }}
-                    >
-                        {editingTabId === tab.id ? (
-                            <input
-                                ref={editInputRef}
-                                type="text"
-                                className="rest-tab-edit-input"
-                                value={editingName}
-                                onChange={(e) => setEditingName(e.target.value)}
-                                onKeyDown={handleEditKeyDown}
-                                onBlur={handleSaveEdit}
-                                onClick={(e) => e.stopPropagation()}
-                            />
-                        ) : (
-                            <>
-                                {tab.method && (
-                                    <span className={`rest-tab-method method-${tab.method.toLowerCase()}`}
-                                        style={{
-                                            color: tab.method === 'GET' ? 'var(--success)' :
-                                                tab.method === 'POST' ? 'var(--accent)' :
-                                                    tab.method === 'DELETE' ? 'var(--danger)' : '#fbbf24'
-                                        }}>
-                                        {tab.method}
-                                    </span>
-                                )}
-                                <span className="rest-tab-name" title={tab.name}>{tab.name}</span>
-                                <div
-                                    className="rest-tab-close"
-                                    onClick={(e) => handleCloseTab(e, tab.id)}
-                                >
-                                    <X size={12} />
-                                </div>
-                            </>
-                        )}
-                    </div>
-                ))}
-                <div className="rest-new-tab" onClick={handleNewTab} title="New Tab">
-                    <Plus size={18} />
-                </div>
-            </div>
-
             <div className="rest-page-toolbar">
-                <MethodSelector
-                    value={activeTab.method}
-                    onChange={(method) => updateActiveTab({ method })}
-                />
-
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div className="rest-toolbar-row">
+                    <MethodSelector
+                        value={activeTab.method}
+                        onChange={(method) => updateActiveTab({ method })}
+                    />
                     <input
                         type="text"
                         value={activeTab.path}
@@ -714,30 +729,6 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                         className="rest-path-input"
                         placeholder="/index/_search"
                     />
-
-                    {indices.length > 0 && (
-                        <div className="rest-index-pills">
-                            {indices.map(idx => (
-                                <div
-                                    key={idx.index}
-                                    className="rest-index-pill"
-                                    onClick={() => handlePillClick(idx.index)}
-                                    title={idx.aliases && idx.aliases.length > 0 ? `Aliases: ${idx.aliases.join(', ')}` : undefined}
-                                >
-                                    <Tag size={10} />
-                                    <span>{idx.index}</span>
-                                    {idx.aliases && idx.aliases.length > 0 && (
-                                        <span className="rest-index-pill-alias">
-                                            ({idx.aliases[0]}{idx.aliases.length > 1 ? ` +${idx.aliases.length - 1}` : ''})
-                                        </span>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                <div style={{ alignSelf: 'flex-start' }}>
                     <button
                         className="btn btn-primary"
                         onClick={handleExecute}
@@ -751,6 +742,27 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                         {t('restModal.send')}
                     </button>
                 </div>
+
+                {indices.length > 0 && (
+                    <div className="rest-index-pills">
+                        {indices.map(idx => (
+                            <div
+                                key={idx.index}
+                                className={`rest-index-pill${activeIndexInPath === idx.index ? ' active' : ''}`}
+                                onClick={() => handlePillClick(idx.index)}
+                                title={idx.aliases && idx.aliases.length > 0 ? `Aliases: ${idx.aliases.join(', ')}` : undefined}
+                            >
+                                <Tag size={10} />
+                                <span>{idx.index}</span>
+                                {idx.aliases && idx.aliases.length > 0 && (
+                                    <span className="rest-index-pill-alias">
+                                        ({idx.aliases[0]}{idx.aliases.length > 1 ? ` +${idx.aliases.length - 1}` : ''})
+                                    </span>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Preset Queries */}
