@@ -1,0 +1,73 @@
+import React, { useState, useRef } from 'react';
+import CodeMirror from '@uiw/react-codemirror';
+import { json } from '@codemirror/lang-json';
+import { oneDark } from '@codemirror/theme-one-dark';
+import { foldGutter, foldAll, unfoldAll } from '@codemirror/language';
+import { EditorView } from '@codemirror/view';
+import { EditorState } from '@codemirror/state';
+import { CheckCircle, Copy, ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
+import type { EditorView as EditorViewType } from '@codemirror/view';
+
+interface JsonCodeViewerProps {
+    data: any;
+    enableCopy?: boolean;
+    height?: string;
+}
+
+export const JsonCodeViewer: React.FC<JsonCodeViewerProps> = ({
+    data,
+    enableCopy = false,
+    height = '100%',
+}) => {
+    const viewRef = useRef<EditorViewType | null>(null);
+    const [copyDone, setCopyDone] = useState(false);
+
+    const collapseAll = () => { if (viewRef.current) foldAll(viewRef.current); };
+    const expandAll = () => { if (viewRef.current) unfoldAll(viewRef.current); };
+
+    const copy = () => {
+        navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
+            setCopyDone(true);
+            setTimeout(() => setCopyDone(false), 1500);
+        });
+    };
+
+    return (
+        <div className="json-code-viewer" style={{ height }}>
+            <CodeMirror
+                className="rest-codemirror"
+                value={JSON.stringify(data, null, 2)}
+                height="100%"
+                theme={oneDark}
+                extensions={[
+                    json(),
+                    foldGutter(),
+                    EditorState.readOnly.of(true),
+                    EditorView.lineWrapping,
+                ]}
+                onCreateEditor={(view) => { viewRef.current = view; }}
+                basicSetup={{
+                    lineNumbers: false,
+                    highlightActiveLineGutter: false,
+                    foldGutter: false,
+                    highlightActiveLine: false,
+                    searchKeymap: false,
+                }}
+                editable={false}
+            />
+            <div className="json-code-viewer-actions">
+                <button className="json-code-viewer-btn" onClick={collapseAll} title="Collapse all">
+                    <ChevronsDownUp size={13} />
+                </button>
+                <button className="json-code-viewer-btn" onClick={expandAll} title="Expand all">
+                    <ChevronsUpDown size={13} />
+                </button>
+                {enableCopy && (
+                    <button className="json-code-viewer-btn" onClick={copy} title="Copy JSON">
+                        {copyDone ? <CheckCircle size={13} /> : <Copy size={13} />}
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+};

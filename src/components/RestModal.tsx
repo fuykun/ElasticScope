@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Play, Loader, Clock, AlertCircle, CheckCircle, Save, FolderOpen, Trash2, ChevronDown } from 'lucide-react';
 import { executeRestRequest, getSavedQueries, createSavedQuery, deleteSavedQuery, SavedQuery } from '../api/elasticsearchClient';
-import { JsonViewer } from './JsonViewer';
+import { JsonCodeViewer } from './JsonCodeViewer';
 import { MethodSelector } from './MethodSelector';
 import { restModalWidthStorage, restModalHeightStorage, restPanelWidthStorage } from '../utils/storage';
 import {
@@ -451,11 +451,7 @@ export const RestModal: React.FC<RestModalProps> = ({
                             )}
                             {response && (
                                 <div className="rest-response-viewer">
-                                    <JsonViewer
-                                        data={response}
-                                        defaultExpanded={true}
-                                        showSearchBar={true}
-                                    />
+                                    <JsonCodeViewer data={response} enableCopy={true} />
                                 </div>
                             )}
                             {!loading && !error && !response && (

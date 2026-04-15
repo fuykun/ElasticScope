@@ -51,7 +51,7 @@ import {
 } from '../api/elasticsearchClient';
 import { Modal } from './Modal';
 import { DocumentViewer } from './DocumentViewer';
-import { JsonViewer } from './JsonViewer';
+import { JsonCodeViewer } from './JsonCodeViewer';
 import { CopyDocumentModal } from './CopyDocumentModal';
 import { QueryBuilder, extractFieldsFromMappingWithTypes, FieldInfo, QueryGroup, createEmptyGroup } from './QueryBuilder';
 import {
@@ -1715,10 +1715,10 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                         ) : (
                             <>
                                 {indexInfoTab === 'settings' && settingsData && (
-                                    <JsonViewer data={settingsData} defaultExpanded={true} expandAllByDefault={true} showSearchBar={true} enableCopy={true} />
+                                    <JsonCodeViewer data={settingsData} enableCopy={true} />
                                 )}
                                 {indexInfoTab === 'mappings' && mappingsData && (
-                                    <JsonViewer data={mappingsData} defaultExpanded={true} expandAllByDefault={true} showSearchBar={true} enableCopy={true} />
+                                    <JsonCodeViewer data={mappingsData} enableCopy={true} />
                                 )}
                             </>
                         )}
@@ -1914,32 +1914,21 @@ export const IndexPage: React.FC<IndexPageProps> = ({
             >
                 <div className="view-query-modal">
                     <div className="view-query-content">
-                        <JsonViewer
+                        <JsonCodeViewer
                             data={(() => {
                                 const fullQuery: Record<string, any> = {};
-
-                                // Add query part
                                 if (currentQuery) {
                                     fullQuery.query = currentQuery;
                                 } else {
                                     fullQuery.query = { match_all: {} };
                                 }
-
-                                // Add sort if active
                                 if (sortField) {
                                     fullQuery.sort = [{ [sortField]: { order: sortOrder } }];
                                 }
-
-                                // Add pagination
                                 fullQuery.from = page * pageSize;
                                 fullQuery.size = pageSize;
-
                                 return fullQuery;
                             })()}
-                            defaultExpanded={true}
-                            expandAllByDefault={true}
-                            showSearchBar={false}
-                            editable={false}
                             enableCopy={true}
                         />
                     </div>

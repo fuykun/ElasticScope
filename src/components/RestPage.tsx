@@ -3,13 +3,14 @@ import { useTranslation } from 'react-i18next';
 import {
     Play, Loader, Clock, AlertCircle, CheckCircle, Save, FolderOpen,
     Trash2, ChevronDown, Plus, X, Maximize2, Tag, Search, Hash, FileJson, Settings,
-    BarChart3, RefreshCw, Zap, FlaskConical, Copy
+    BarChart3, RefreshCw, Zap, FlaskConical, Copy, ChevronsDownUp, ChevronsUpDown
 } from 'lucide-react';
 import CodeMirror from '@uiw/react-codemirror';
-import { json } from '@codemirror/lang-json';
+import { json, jsonParseLinter } from '@codemirror/lang-json';
+import { linter, lintGutter } from '@codemirror/lint';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { foldGutter, foldAll, unfoldAll } from '@codemirror/language';
-import { EditorView } from '@codemirror/view';
+import { EditorView, keymap } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
 import type { EditorView as EditorViewType } from '@codemirror/view';
 import {
@@ -141,7 +142,6 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
     const [loadingQueries, setLoadingQueries] = useState(false);
 
     // CodeMirror editor view refs (for fold/unfold commands)
-    const editorViewRef = useRef<EditorViewType | null>(null);
     const responseViewRef = useRef<EditorViewType | null>(null);
     const [copyDone, setCopyDone] = useState(false);
 
@@ -531,14 +531,6 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
         }
     };
 
-    const collapseAll = () => {
-        if (editorViewRef.current) foldAll(editorViewRef.current);
-    };
-
-    const expandAll = () => {
-        if (editorViewRef.current) unfoldAll(editorViewRef.current);
-    };
-
     const collapseAllResponse = () => {
         if (responseViewRef.current) foldAll(responseViewRef.current);
     };
@@ -789,32 +781,14 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                 >
                     <div className="rest-panel-header">
                         <span>Request Body</span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <button
-                                className="btn btn-ghost btn-sm"
-                                onClick={collapseAll}
-                                title="Collapse all"
-                                disabled={activeTab.method === 'GET' || !activeTab.body.trim()}
-                            >
-                                {t('restModal.collapseAll')}
-                            </button>
-                            <button
-                                className="btn btn-ghost btn-sm"
-                                onClick={expandAll}
-                                title="Expand all"
-                                disabled={activeTab.method === 'GET' || !activeTab.body.trim()}
-                            >
-                                {t('restModal.expandAll')}
-                            </button>
-                            <button
-                                className="btn btn-ghost btn-sm"
-                                onClick={formatJson}
-                                title={t('restModal.formatJson')}
-                                disabled={activeTab.method === 'GET'}
-                            >
-                                {t('restModal.format')}
-                            </button>
-                        </div>
+                        <button
+                            className="btn btn-ghost btn-sm"
+                            onClick={formatJson}
+                            title={t('restModal.formatJson')}
+                            disabled={activeTab.method === 'GET'}
+                        >
+                            {t('restModal.format')}
+                        </button>
                     </div>
                     {activeTab.method === 'GET' ? (
                         <div className="rest-editor rest-editor-disabled">
@@ -828,21 +802,22 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                             theme={oneDark}
                             extensions={[
                                 json(),
+                                linter(jsonParseLinter()),
+                                lintGutter(),
                                 foldGutter(),
                                 EditorView.lineWrapping,
-                                EditorView.domEventHandlers({
-                                    keydown: (e) => {
-                                        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                                            e.preventDefault();
-                                            handleExecute();
-                                            return true;
-                                        }
-                                        return false;
-                                    }
-                                })
+                                keymap.of([
+                                    {
+                                        key: 'Mod-Enter',
+                                        run: () => { handleExecute(); return true; }
+                                    },
+                                    {
+                                        key: 'Shift-Alt-f',
+                                        run: () => { formatJson(); return true; }
+                                    },
+                                ]),
                             ]}
                             onChange={(value) => updateActiveTab({ body: value })}
-                            onCreateEditor={(view) => { editorViewRef.current = view; }}
                             placeholder={t('restModal.bodyPlaceholder')}
                             basicSetup={{
                                 lineNumbers: false,
@@ -885,31 +860,6 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                                 <span>Response</span>
                             )}
                         </div>
-                        {activeTab.response && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <button
-                                    className="btn btn-ghost btn-sm"
-                                    onClick={collapseAllResponse}
-                                    title="Collapse all"
-                                >
-                                    {t('restModal.collapseAll')}
-                                </button>
-                                <button
-                                    className="btn btn-ghost btn-sm"
-                                    onClick={expandAllResponse}
-                                    title="Expand all"
-                                >
-                                    {t('restModal.expandAll')}
-                                </button>
-                                <button
-                                    className="btn btn-ghost btn-sm"
-                                    onClick={copyResponse}
-                                    title="Copy response"
-                                >
-                                    {copyDone ? <CheckCircle size={13} /> : <Copy size={13} />}
-                                </button>
-                            </div>
-                        )}
                     </div>
                     <div className="rest-response-content">
                         {activeTab.loading && (
@@ -925,27 +875,40 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                             </div>
                         )}
                         {activeTab.response && (
-                            <CodeMirror
-                                className="rest-codemirror"
-                                value={JSON.stringify(activeTab.response, null, 2)}
-                                height="100%"
-                                theme={oneDark}
-                                extensions={[
-                                    json(),
-                                    foldGutter(),
-                                    EditorState.readOnly.of(true),
-                                    EditorView.lineWrapping,
-                                ]}
-                                onCreateEditor={(view) => { responseViewRef.current = view; }}
-                                basicSetup={{
-                                    lineNumbers: false,
-                                    highlightActiveLineGutter: false,
-                                    foldGutter: false,
-                                    highlightActiveLine: false,
-                                    searchKeymap: false,
-                                }}
-                                editable={false}
-                            />
+                            <div className="json-code-viewer" style={{ height: '100%' }}>
+                                <CodeMirror
+                                    className="rest-codemirror"
+                                    value={JSON.stringify(activeTab.response, null, 2)}
+                                    height="100%"
+                                    theme={oneDark}
+                                    extensions={[
+                                        json(),
+                                        foldGutter(),
+                                        EditorState.readOnly.of(true),
+                                        EditorView.lineWrapping,
+                                    ]}
+                                    onCreateEditor={(view) => { responseViewRef.current = view; }}
+                                    basicSetup={{
+                                        lineNumbers: false,
+                                        highlightActiveLineGutter: false,
+                                        foldGutter: false,
+                                        highlightActiveLine: false,
+                                        searchKeymap: false,
+                                    }}
+                                    editable={false}
+                                />
+                                <div className="json-code-viewer-actions">
+                                    <button className="json-code-viewer-btn" onClick={collapseAllResponse} title="Collapse all">
+                                        <ChevronsDownUp size={13} />
+                                    </button>
+                                    <button className="json-code-viewer-btn" onClick={expandAllResponse} title="Expand all">
+                                        <ChevronsUpDown size={13} />
+                                    </button>
+                                    <button className="json-code-viewer-btn" onClick={copyResponse} title="Copy response">
+                                        {copyDone ? <CheckCircle size={13} /> : <Copy size={13} />}
+                                    </button>
+                                </div>
+                            </div>
                         )}
                         {!activeTab.loading && !activeTab.error && !activeTab.response && (
                             <div className="rest-placeholder">
