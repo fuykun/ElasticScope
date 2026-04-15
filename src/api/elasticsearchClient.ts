@@ -52,7 +52,18 @@ async function apiRequest<T>(
         ...options,
     });
 
-    const data = await response.json();
+    let data: any;
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+        data = await response.json();
+    } else {
+        // Non-JSON response (e.g. HTML error page from Express)
+        const text = await response.text();
+        if (!response.ok) {
+            throw new Error(`Server error ${response.status}: ${text.slice(0, 200)}`);
+        }
+        return text as any;
+    }
 
     if (!response.ok) {
         // If server sends errorCode, throw it directly for i18n translation
@@ -834,6 +845,18 @@ export const closeIndex = (index: string) =>
 
 export const createIndex = (input: CreateIndexInput) =>
     apiRequest<{ success: boolean; message: string }>('/indices', {
+        method: 'POST',
+        body: JSON.stringify(input),
+    });
+
+export const reindex = (input: {
+    sourceIndex: string;
+    targetIndex: string;
+    createNew?: boolean;
+    settings?: Record<string, any>;
+    mappings?: Record<string, any>;
+}) =>
+    apiRequest<{ success: boolean; taskId: string }>('/reindex', {
         method: 'POST',
         body: JSON.stringify(input),
     });

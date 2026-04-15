@@ -31,6 +31,7 @@ import {
     Save,
     FolderOpen,
     AlertCircle,
+    GitMerge,
 } from 'lucide-react';
 import {
     getIndices,
@@ -53,6 +54,7 @@ import { Modal } from './Modal';
 import { DocumentViewer } from './DocumentViewer';
 import { JsonCodeViewer } from './JsonCodeViewer';
 import { CopyDocumentModal } from './CopyDocumentModal';
+import { ReindexModal } from './ReindexModal';
 import { QueryBuilder, extractFieldsFromMappingWithTypes, FieldInfo, QueryGroup, createEmptyGroup } from './QueryBuilder';
 import {
     getIndexPrefix,
@@ -144,6 +146,9 @@ export const IndexPage: React.FC<IndexPageProps> = ({
 
     // Open/Close index
     const [openCloseLoading, setOpenCloseLoading] = useState(false);
+
+    // Reindex modal
+    const [showReindexModal, setShowReindexModal] = useState(false);
 
     // Copy Document Modal
     const [showCopyModal, setShowCopyModal] = useState(false);
@@ -999,6 +1004,16 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                                                 : t('indexPage.closeIndex')}
                                         </span>
                                     </button>
+                                    <button
+                                        className="index-action-item"
+                                        onClick={() => {
+                                            setShowReindexModal(true);
+                                            setIndexActionsOpen(false);
+                                        }}
+                                    >
+                                        <GitMerge size={14} />
+                                        <span>{t('indexPage.reindex')}</span>
+                                    </button>
                                     <div className="index-action-divider" />
                                     <button
                                         className="index-action-item danger"
@@ -1599,6 +1614,22 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                     />
                 </div>
             </div>
+
+            {/* Reindex Modal */}
+            <Modal
+                isOpen={showReindexModal}
+                onClose={() => setShowReindexModal(false)}
+                title={t('reindex.title')}
+                size="lg"
+            >
+                <ReindexModal
+                    sourceIndex={indexName}
+                    onSuccess={() => {
+                        setShowReindexModal(false);
+                    }}
+                    onCancel={() => setShowReindexModal(false)}
+                />
+            </Modal>
 
             {/* Delete Modal */}
             <Modal

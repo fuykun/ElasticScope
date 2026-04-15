@@ -35,6 +35,7 @@
         "INDEX_OPENED": "Index \"{{index}}\" opened",
         "INDEX_CLOSED": "Index \"{{index}}\" closed",
         "INDEX_CREATED": "Index \"{{index}}\" created",
+        "SOURCE_TARGET_INDEX_REQUIRED": "Source and target index are required",
         "ALIAS_ADDED": "Alias \"{{alias}}\" added to index \"{{index}}\"",
         "ALIAS_DELETED": "Alias \"{{alias}}\" removed from index \"{{index}}\"",
         "DOCUMENT_COPIED": "Document copied successfully",
@@ -177,8 +178,32 @@
         "grouped": "Group by prefix",
         "flat": "Flat list"
     },
+    "reindex": {
+        "title": "Reindex",
+        "source": "Source Index",
+        "existingIndex": "Existing Index",
+        "newIndex": "New Index",
+        "targetIndex": "Target Index",
+        "newIndexName": "New Index Name",
+        "loadingSourceInfo": "Loading source index info...",
+        "selectTargetIndex": "Please select a target index",
+        "reindexError": "Reindex failed",
+        "invalidSettings": "Invalid JSON in Settings",
+        "invalidMappings": "Invalid JSON in Mappings",
+        "startReindex": "Start Reindex",
+        "reindexing": "Reindexing...",
+        "validation": {
+            "nameRequired": "Index name is required",
+            "noStartWithDot": "Index name cannot start with a dot",
+            "noStartWithDashUnderscore": "Index name cannot start with - or _",
+            "mustBeLowercase": "Index name must be lowercase",
+            "invalidCharacters": "Index name contains invalid characters",
+            "indexExists": "An index with this name already exists"
+        }
+    },
     "indexPage": {
         "index": "Index",
+        "reindex": "Reindex",
         "deleteIndex": "Delete Index",
         "openIndex": "Open Index",
         "closeIndex": "Close Index",

@@ -684,6 +684,61 @@ app.post('/api/indices', requireConnection, async (req, res) => {
     }
 });
 
+// Reindex endpoint
+app.post('/api/reindex', requireConnection, async (req, res) => {
+    const { sourceIndex, targetIndex, createNew, settings, mappings } = req.body;
+
+    if (!sourceIndex || !targetIndex) {
+        return res.status(400).json({ errorCode: 'SOURCE_TARGET_INDEX_REQUIRED' });
+    }
+
+    const sourceValidation = validateIndexName(sourceIndex);
+    if (!sourceValidation.valid) {
+        return res.status(400).json({ errorCode: sourceValidation.error });
+    }
+
+    const targetValidation = validateIndexName(targetIndex);
+    if (!targetValidation.valid) {
+        return res.status(400).json({ errorCode: targetValidation.error });
+    }
+
+    try {
+        if (createNew) {
+            const body: any = {};
+
+            if (settings) {
+                const cleanSettings = { ...settings };
+                delete cleanSettings.uuid;
+                delete cleanSettings.version;
+                delete cleanSettings.creation_date;
+                delete cleanSettings.provided_name;
+                delete cleanSettings.routing;
+                delete cleanSettings.resize;
+                body.settings = cleanSettings;
+            }
+
+            if (mappings) {
+                body.mappings = mappings;
+            }
+
+            await esClient!.indices.create({ index: targetIndex, body });
+        }
+
+        const result = await esClient!.reindex({
+            body: {
+                source: { index: sourceIndex },
+                dest: { index: targetIndex },
+            },
+            wait_for_completion: false,
+        } as any);
+
+        const taskId = (result as any).task ?? (result as any).body?.task ?? null;
+        res.json({ success: true, taskId });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Aggregation endpoint for facets
 app.post('/api/aggregations', requireConnection, async (req, res) => {
     const { index, fields, dateField, query } = req.body;

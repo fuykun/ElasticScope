@@ -35,6 +35,7 @@
         "INDEX_OPENED": "Index \"{{index}}\" açıldı",
         "INDEX_CLOSED": "Index \"{{index}}\" kapatıldı",
         "INDEX_CREATED": "Index \"{{index}}\" oluşturuldu",
+        "SOURCE_TARGET_INDEX_REQUIRED": "Kaynak ve hedef index gerekli",
         "ALIAS_ADDED": "Alias \"{{alias}}\" index \"{{index}}\"'e eklendi",
         "ALIAS_DELETED": "Alias \"{{alias}}\" index \"{{index}}\"'ten kaldırıldı",
         "DOCUMENT_COPIED": "Döküman başarıyla kopyalandı",
@@ -177,8 +178,32 @@
         "grouped": "Prefix'e göre grupla",
         "flat": "Düz liste"
     },
+    "reindex": {
+        "title": "Reindex",
+        "source": "Kaynak Index",
+        "existingIndex": "Mevcut Index",
+        "newIndex": "Yeni Index",
+        "targetIndex": "Hedef Index",
+        "newIndexName": "Yeni Index Adı",
+        "loadingSourceInfo": "Kaynak index bilgisi yükleniyor...",
+        "selectTargetIndex": "Lütfen hedef index seçin",
+        "reindexError": "Reindex başarısız",
+        "invalidSettings": "Settings geçersiz JSON içeriyor",
+        "invalidMappings": "Mappings geçersiz JSON içeriyor",
+        "startReindex": "Reindex Başlat",
+        "reindexing": "Reindex yapılıyor...",
+        "validation": {
+            "nameRequired": "Index adı gerekli",
+            "noStartWithDot": "Index adı nokta ile başlayamaz",
+            "noStartWithDashUnderscore": "Index adı - veya _ ile başlayamaz",
+            "mustBeLowercase": "Index adı küçük harf olmalı",
+            "invalidCharacters": "Index adı geçersiz karakterler içeriyor",
+            "indexExists": "Bu isimde bir index zaten mevcut"
+        }
+    },
     "indexPage": {
         "index": "Index",
+        "reindex": "Reindex",
         "deleteIndex": "Index'i Sil",
         "openIndex": "Index'i Aç",
         "closeIndex": "Index'i Kapat",

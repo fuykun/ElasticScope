@@ -91,6 +91,10 @@
   overflow: visible;
 }
 
+.modal-body:has(.create-index-form .reindex-json-editor) {
+  overflow-y: auto;
+}
+
 .json-modal-content {
   height: 100%;
   display: flex;
