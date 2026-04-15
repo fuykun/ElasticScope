@@ -39,6 +39,19 @@
   color: var(--text-primary);
 }
 
+.footer-linkedin-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.footer-linkedin-link:hover {
+  color: #0a66c2;
+}
+
 .footer-star-link {
   color: var(--text-tertiary);
 }
@@ -156,6 +169,15 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
+}
+
+.header-right .btn,
+.header-right .language-trigger,
+.header-right .connection-selector-trigger {
+  height: 36px;
+  font-size: var(--font-sm);
+  padding: 0 var(--spacing-md);
+  box-sizing: border-box;
 }
 
 /* ==================== MAIN LAYOUT ==================== */

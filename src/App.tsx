@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, GitCompare, Github, Star, Code, BarChart3 } from 'lucide-react';
+import { Search, GitCompare, Github, Star, Code, BarChart3, Linkedin } from 'lucide-react';
 import { ConnectionSelector } from './components/ConnectionSelector';
 import { ConnectionFormModal } from './components/ConnectionFormModal';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
@@ -358,6 +358,16 @@ function App() {
                 >
                     <Star size={14} />
                     Star on GitHub
+                </a>
+                <span className="footer-separator">•</span>
+                <a
+                    href="https://www.linkedin.com/in/fuykun/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="footer-linkedin-link"
+                >
+                    <Linkedin size={14} />
+                    LinkedIn
                 </a>
             </footer>
         </div>

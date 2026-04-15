@@ -67,9 +67,11 @@
   color: var(--text-secondary);
 }
 
-.index-filter {
+.index-list .index-filter {
   margin: 8px;
   padding: 7px 10px;
+  width: calc(100% - 16px);
+  box-sizing: border-box;
   background: var(--bg-primary);
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -78,13 +80,13 @@
   transition: all 0.15s ease;
 }
 
-.index-filter:focus {
+.index-list .index-filter:focus {
   outline: none;
   border-color: var(--accent);
   background: var(--bg-tertiary);
 }
 
-.index-filter::placeholder {
+.index-list .index-filter::placeholder {
   color: var(--text-muted);
 }
 
