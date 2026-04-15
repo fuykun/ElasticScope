@@ -65,7 +65,7 @@ export const ConnectionFormModal: React.FC<ConnectionFormModalProps> = ({
             setName(editConnection.name);
             setUrl(editConnection.url);
             setUsername(editConnection.username || '');
-            setPassword('');
+            setPassword(editConnection.password || '');
             setColor(editConnection.color);
         }
     }, [editConnection]);

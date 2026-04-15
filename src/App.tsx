@@ -12,7 +12,7 @@ import { RestPage } from './components/RestPage';
 import { ClusterMonitor } from './components/ClusterMonitor';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { ComparisonModal } from './components/ComparisonModal';
-import { getConnectionStatus, SavedConnection } from './api/elasticsearchClient';
+import { getConnectionStatus, getSavedConnection, SavedConnection } from './api/elasticsearchClient';
 import { useResizable } from './hooks/useResizable';
 import { sidebarWidthStorage } from './utils/storage';
 import { MIN_SIDEBAR_WIDTH, MAX_SIDEBAR_WIDTH } from './constants';
@@ -246,8 +246,13 @@ function App() {
                             setEditingConnection(null);
                             setIsModalOpen(true);
                         }}
-                        onEdit={(connection) => {
-                            setEditingConnection(connection);
+                        onEdit={async (connection) => {
+                            try {
+                                const full = await getSavedConnection(connection.id);
+                                setEditingConnection(full);
+                            } catch {
+                                setEditingConnection(connection);
+                            }
                             setIsModalOpen(true);
                         }}
                     />

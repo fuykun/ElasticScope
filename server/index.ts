@@ -235,7 +235,7 @@ app.get('/api/connections/:id', async (req, res) => {
         if (!connection) {
             return res.status(404).json({ errorCode: 'CONNECTION_NOT_FOUND' });
         }
-        res.json({ ...connection, password: connection.password ? '••••••••' : null });
+        res.json({ ...connection, password: connection.password ? decryptPassword(connection.password) : null });
     } catch (error: any) {
         res.status(500).json({ errorCode: 'INTERNAL_ERROR', details: error.message });
     }
