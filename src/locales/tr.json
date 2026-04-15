@@ -402,6 +402,8 @@
         "queryNamePlaceholder": "Örn: Tüm ürünleri getir",
         "formatJson": "JSON Formatla",
         "format": "Formatla",
+        "collapseAll": "Daralt",
+        "expandAll": "Genişlet",
         "sending": "İstek gönderiliyor...",
         "placeholder": "Ctrl+Enter veya Gönder butonuna basın",
         "bodyPlaceholder": "JSON istek gövdesi...",

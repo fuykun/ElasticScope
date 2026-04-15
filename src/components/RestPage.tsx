@@ -3,13 +3,19 @@ import { useTranslation } from 'react-i18next';
 import {
     Play, Loader, Clock, AlertCircle, CheckCircle, Save, FolderOpen,
     Trash2, ChevronDown, Plus, X, Maximize2, Tag, Search, Hash, FileJson, Settings,
-    BarChart3, RefreshCw, Zap, FlaskConical, Eye, Pencil
+    BarChart3, RefreshCw, Zap, FlaskConical, Copy
 } from 'lucide-react';
+import CodeMirror from '@uiw/react-codemirror';
+import { json } from '@codemirror/lang-json';
+import { oneDark } from '@codemirror/theme-one-dark';
+import { foldGutter, foldAll, unfoldAll } from '@codemirror/language';
+import { EditorView } from '@codemirror/view';
+import { EditorState } from '@codemirror/state';
+import type { EditorView as EditorViewType } from '@codemirror/view';
 import {
     executeRestRequest, getSavedQueries, createSavedQuery, deleteSavedQuery, SavedQuery,
     getIndices, IndexInfo
 } from '../api/elasticsearchClient';
-import { JsonViewer } from './JsonViewer';
 import { MethodSelector } from './MethodSelector';
 import { restPanelWidthStorage } from '../utils/storage';
 import { DEFAULT_SEARCH_BODY, PRESET_QUERIES, PresetQuery } from '../constants';
@@ -134,9 +140,10 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
     const [showQueriesDropdown, setShowQueriesDropdown] = useState(false);
     const [loadingQueries, setLoadingQueries] = useState(false);
 
-    // Body view mode: 'edit' = textarea, 'preview' = collapsible JsonViewer
-    const [bodyViewMode, setBodyViewMode] = useState<'edit' | 'preview'>('edit');
-    const [bodyParseError, setBodyParseError] = useState<string | null>(null);
+    // CodeMirror editor view refs (for fold/unfold commands)
+    const editorViewRef = useRef<EditorViewType | null>(null);
+    const responseViewRef = useRef<EditorViewType | null>(null);
+    const [copyDone, setCopyDone] = useState(false);
 
     // Panel Resize state
     const [panelWidthPercent, setPanelWidthPercent] = useState(() => restPanelWidthStorage.get());
@@ -261,16 +268,6 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
     // -------------------------------------------------------------------------
     // HELPERS & HANDLERS
     // -------------------------------------------------------------------------
-
-    // Reset body view mode when switching tabs
-    const prevActiveTabIdRef = useRef<string>('');
-    useEffect(() => {
-        if (activeTabId && activeTabId !== prevActiveTabIdRef.current) {
-            prevActiveTabIdRef.current = activeTabId;
-            setBodyViewMode('edit');
-            setBodyParseError(null);
-        }
-    }, [activeTabId]);
 
     // Derived active tab
     const activeTab = tabs.find(t => t.id === activeTabId) || tabs[0];
@@ -534,19 +531,29 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
         }
     };
 
-    const switchToPreview = () => {
-        try {
-            JSON.parse(activeTab.body);
-            setBodyParseError(null);
-            setBodyViewMode('preview');
-        } catch (e) {
-            setBodyParseError(t('common.invalidJson'));
-        }
+    const collapseAll = () => {
+        if (editorViewRef.current) foldAll(editorViewRef.current);
     };
 
-    const switchToEdit = () => {
-        setBodyParseError(null);
-        setBodyViewMode('edit');
+    const expandAll = () => {
+        if (editorViewRef.current) unfoldAll(editorViewRef.current);
+    };
+
+    const collapseAllResponse = () => {
+        if (responseViewRef.current) foldAll(responseViewRef.current);
+    };
+
+    const expandAllResponse = () => {
+        if (responseViewRef.current) unfoldAll(responseViewRef.current);
+    };
+
+
+    const copyResponse = () => {
+        if (!activeTab.response) return;
+        navigator.clipboard.writeText(JSON.stringify(activeTab.response, null, 2)).then(() => {
+            setCopyDone(true);
+            setTimeout(() => setCopyDone(false), 1500);
+        });
     };
 
     // Resizing Logic
@@ -584,13 +591,6 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
             document.removeEventListener('mouseup', handleMouseUp);
         };
     }, [handleMouseMove, handleMouseUp]);
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-            e.preventDefault();
-            handleExecute();
-        }
-    };
 
     return (
         <div className="rest-page">
@@ -790,63 +790,67 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                     <div className="rest-panel-header">
                         <span>Request Body</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            {bodyParseError && (
-                                <span className="rest-body-parse-error">
-                                    <AlertCircle size={12} />
-                                    {bodyParseError}
-                                </span>
-                            )}
-                            {bodyViewMode === 'edit' ? (
-                                <>
-                                    <button
-                                        className="btn btn-ghost btn-sm"
-                                        onClick={formatJson}
-                                        title={t('restModal.formatJson')}
-                                        disabled={activeTab.method === 'GET'}
-                                    >
-                                        {t('restModal.format')}
-                                    </button>
-                                    <button
-                                        className="btn btn-ghost btn-sm"
-                                        onClick={switchToPreview}
-                                        title="Preview (collapsible)"
-                                        disabled={activeTab.method === 'GET' || !activeTab.body.trim()}
-                                    >
-                                        <Eye size={13} />
-                                    </button>
-                                </>
-                            ) : (
-                                <button
-                                    className="btn btn-ghost btn-sm"
-                                    onClick={switchToEdit}
-                                    title="Edit"
-                                >
-                                    <Pencil size={13} />
-                                </button>
-                            )}
+                            <button
+                                className="btn btn-ghost btn-sm"
+                                onClick={collapseAll}
+                                title="Collapse all"
+                                disabled={activeTab.method === 'GET' || !activeTab.body.trim()}
+                            >
+                                {t('restModal.collapseAll')}
+                            </button>
+                            <button
+                                className="btn btn-ghost btn-sm"
+                                onClick={expandAll}
+                                title="Expand all"
+                                disabled={activeTab.method === 'GET' || !activeTab.body.trim()}
+                            >
+                                {t('restModal.expandAll')}
+                            </button>
+                            <button
+                                className="btn btn-ghost btn-sm"
+                                onClick={formatJson}
+                                title={t('restModal.formatJson')}
+                                disabled={activeTab.method === 'GET'}
+                            >
+                                {t('restModal.format')}
+                            </button>
                         </div>
                     </div>
-                    {bodyViewMode === 'edit' || activeTab.method === 'GET' ? (
-                        <textarea
-                            className="rest-editor"
-                            value={activeTab.method === 'GET' ? '' : activeTab.body}
-                            onChange={(e) => {
-                                updateActiveTab({ body: e.target.value });
-                                setBodyParseError(null);
-                            }}
-                            onKeyDown={handleKeyDown}
-                            placeholder={activeTab.method === 'GET' ? t('restModal.noBodyForGet') : t('restModal.bodyPlaceholder')}
-                            spellCheck={false}
-                            disabled={activeTab.method === 'GET'}
-                        />
-                    ) : (
-                        <div className="rest-body-preview">
-                            <JsonViewer
-                                data={JSON.parse(activeTab.body)}
-                                defaultExpanded={true}
-                                enableCopy={false}
-                            />
+                    {activeTab.method === 'GET' ? (
+                        <div className="rest-editor rest-editor-disabled">
+                            {t('restModal.noBodyForGet')}
                         </div>
+                    ) : (
+                        <CodeMirror
+                            className="rest-codemirror"
+                            value={activeTab.body}
+                            height="100%"
+                            theme={oneDark}
+                            extensions={[
+                                json(),
+                                foldGutter(),
+                                EditorView.lineWrapping,
+                                EditorView.domEventHandlers({
+                                    keydown: (e) => {
+                                        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleExecute();
+                                            return true;
+                                        }
+                                        return false;
+                                    }
+                                })
+                            ]}
+                            onChange={(value) => updateActiveTab({ body: value })}
+                            onCreateEditor={(view) => { editorViewRef.current = view; }}
+                            placeholder={t('restModal.bodyPlaceholder')}
+                            basicSetup={{
+                                lineNumbers: false,
+                                highlightActiveLineGutter: false,
+                                foldGutter: false,
+                                highlightActiveLine: false,
+                            }}
+                        />
                     )}
                 </div>
 
@@ -860,7 +864,6 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                     style={{ width: `${100 - panelWidthPercent}%` }}
                 >
                     <div className="rest-panel-header">
-                        <span>Response</span>
                         <div className="rest-response-info">
                             {activeTab.statusCode !== null && (
                                 <span className={`rest-status ${activeTab.statusCode >= 200 && activeTab.statusCode < 300 ? 'success' : 'error'}`}>
@@ -878,7 +881,35 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                                     {activeTab.executionTime}ms
                                 </span>
                             )}
+                            {!activeTab.statusCode && !activeTab.executionTime && (
+                                <span>Response</span>
+                            )}
                         </div>
+                        {activeTab.response && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <button
+                                    className="btn btn-ghost btn-sm"
+                                    onClick={collapseAllResponse}
+                                    title="Collapse all"
+                                >
+                                    {t('restModal.collapseAll')}
+                                </button>
+                                <button
+                                    className="btn btn-ghost btn-sm"
+                                    onClick={expandAllResponse}
+                                    title="Expand all"
+                                >
+                                    {t('restModal.expandAll')}
+                                </button>
+                                <button
+                                    className="btn btn-ghost btn-sm"
+                                    onClick={copyResponse}
+                                    title="Copy response"
+                                >
+                                    {copyDone ? <CheckCircle size={13} /> : <Copy size={13} />}
+                                </button>
+                            </div>
+                        )}
                     </div>
                     <div className="rest-response-content">
                         {activeTab.loading && (
@@ -894,14 +925,27 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                             </div>
                         )}
                         {activeTab.response && (
-                            <div className="rest-response-viewer">
-                                <JsonViewer
-                                    data={activeTab.response}
-                                    defaultExpanded={true}
-                                    showSearchBar={true}
-                                    enableCopy={true}
-                                />
-                            </div>
+                            <CodeMirror
+                                className="rest-codemirror"
+                                value={JSON.stringify(activeTab.response, null, 2)}
+                                height="100%"
+                                theme={oneDark}
+                                extensions={[
+                                    json(),
+                                    foldGutter(),
+                                    EditorState.readOnly.of(true),
+                                    EditorView.lineWrapping,
+                                ]}
+                                onCreateEditor={(view) => { responseViewRef.current = view; }}
+                                basicSetup={{
+                                    lineNumbers: false,
+                                    highlightActiveLineGutter: false,
+                                    foldGutter: false,
+                                    highlightActiveLine: false,
+                                    searchKeymap: false,
+                                }}
+                                editable={false}
+                            />
                         )}
                         {!activeTab.loading && !activeTab.error && !activeTab.response && (
                             <div className="rest-placeholder">

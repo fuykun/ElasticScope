@@ -402,6 +402,8 @@
         "queryNamePlaceholder": "e.g. Get all products",
         "formatJson": "Format JSON",
         "format": "Format",
+        "collapseAll": "Collapse",
+        "expandAll": "Expand",
         "sending": "Sending request...",
         "placeholder": "Press Ctrl+Enter or Send button",
         "bodyPlaceholder": "JSON request body...",

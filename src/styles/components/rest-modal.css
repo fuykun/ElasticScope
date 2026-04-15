@@ -189,8 +189,10 @@
 
 .rest-response-content {
     flex: 1;
-    overflow: auto;
+    overflow: hidden;
     background: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
 }
 
 .rest-response-viewer {
