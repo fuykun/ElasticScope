@@ -1,3 +1,140 @@
+/* ==================== DOC JSON EDITOR ==================== */
+.doc-json-editor {
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+  max-height: 600px;
+}
+
+.doc-json-editor.fluid {
+  min-height: unset;
+  max-height: unset;
+}
+
+.doc-json-editor-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  color: var(--text-muted);
+}
+
+/* Pin bar */
+.doc-json-pin-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 6px 10px;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.doc-json-pin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px 2px 5px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 10px;
+  font-size: 11px;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.doc-json-pin-badge.force {
+  background: rgba(99, 102, 241, 0.07);
+  border-color: rgba(99, 102, 241, 0.2);
+  color: var(--text-secondary);
+}
+
+.doc-json-pin-remove {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 1px;
+  cursor: pointer;
+  color: var(--accent);
+  opacity: 0.6;
+  transition: opacity 0.1s ease;
+}
+
+.doc-json-pin-remove:hover {
+  opacity: 1;
+}
+
+/* Add pin */
+.doc-json-add-pin {
+  position: relative;
+}
+
+.doc-json-add-pin-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--bg-secondary);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.doc-json-add-pin-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.doc-json-add-pin-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px;
+  z-index: 50;
+  min-width: 140px;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.doc-json-add-pin-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 5px 8px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+
+.doc-json-add-pin-option:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+/* Editor body */
+.doc-json-editor-body {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+
 /* ==================== DOCUMENT VIEWER ==================== */
 .documents-grid {
   display: flex;
@@ -286,7 +423,7 @@
 .fullscreen-content {
   width: 90vw;
   max-width: 1200px;
-  height: 85vh;
+  max-height: 85vh;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -305,7 +442,6 @@
 }
 
 .fullscreen-body {
-  flex: 1;
   overflow-y: auto;
   padding: var(--spacing-md);
 }

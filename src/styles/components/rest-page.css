@@ -438,7 +438,9 @@
   transition: opacity 0.15s ease;
 }
 
-.json-code-viewer:hover .json-code-viewer-actions {
+.json-code-viewer:hover .json-code-viewer-actions,
+.doc-json-editor:hover .json-code-viewer-actions,
+.doc-json-editor .json-code-viewer-actions:has(.json-code-viewer-btn-save) {
   opacity: 1;
 }
 
@@ -459,6 +461,26 @@
 .json-code-viewer-btn:hover {
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
+}
+
+.json-code-viewer-btn-save {
+  color: var(--success) !important;
+}
+
+.json-code-viewer-btn-save:hover {
+  background: rgba(34, 197, 94, 0.12) !important;
+}
+
+.json-code-viewer-btn-cancel:hover {
+  background: rgba(239, 68, 68, 0.12) !important;
+  color: var(--danger) !important;
+}
+
+.doc-json-parse-error {
+  font-size: 11px;
+  color: var(--danger);
+  padding: 0 4px;
+  white-space: nowrap;
 }
 
 /* CodeMirror editor in request body */

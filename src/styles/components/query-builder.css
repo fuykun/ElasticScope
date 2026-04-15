@@ -534,17 +534,19 @@
   cursor: not-allowed;
 }
 
-.qb-preview-code {
-  margin: 0;
-  padding: 12px;
-  font-family: "JetBrains Mono", "Fira Code", monospace;
-  font-size: 11px;
-  line-height: 1.5;
-  color: var(--text-primary);
-  max-height: 200px;
+.qb-preview-codemirror {
+  max-height: 220px;
+  overflow: hidden;
+}
+
+.qb-preview-codemirror .cm-editor {
+  max-height: 220px;
   overflow: auto;
-  white-space: pre-wrap;
-  word-break: break-all;
+}
+
+.qb-preview-codemirror .cm-scroller {
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-size: 12px;
 }
 
 /* ==================== SEARCH BUTTON ==================== */

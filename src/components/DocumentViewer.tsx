@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Copy, Trash2, ChevronDown, ChevronRight, X, Check, Maximize2, GitCompare, Upload, RefreshCw, ArrowUp, ArrowDown } from 'lucide-react';
 import { SearchHit } from '../types';
 import { deleteDocument, saveDocument, getDocument } from '../api/elasticsearchClient';
-import { JsonViewer } from './JsonViewer';
+import { DocJsonEditor } from './DocJsonEditor';
 import { SkeletonLoader } from './SkeletonLoader';
 
 interface DocumentViewerProps {
@@ -386,15 +386,12 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
                                                             {saveError}
                                                         </div>
                                                     )}
-                                                    <JsonViewer
+                                                    <DocJsonEditor
                                                         data={doc._source}
-                                                        defaultExpanded={false}
-                                                        showSearchBar={true}
+                                                        forcePinnedFields={selectedColumns}
                                                         editable={true}
                                                         onSave={(newData) => handleSave(doc._id, newData)}
                                                         onCancel={handleCancelEdit}
-                                                        enablePinning={true}
-                                                        forcePinnedFields={selectedColumns}
                                                         loading={refreshingDoc === doc._id}
                                                     />
                                                 </div>
@@ -533,15 +530,12 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
                                             {saveError}
                                         </div>
                                     )}
-                                    <JsonViewer
+                                    <DocJsonEditor
                                         data={doc._source}
-                                        defaultExpanded={false}
-                                        showSearchBar={true}
+                                        forcePinnedFields={selectedColumns}
                                         editable={true}
                                         onSave={(newData) => handleSave(doc._id, newData)}
                                         onCancel={handleCancelEdit}
-                                        enablePinning={true}
-                                        forcePinnedFields={selectedColumns}
                                         loading={refreshingDoc === doc._id}
                                     />
                                 </div>
@@ -601,16 +595,14 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
                                     {saveError}
                                 </div>
                             )}
-                            <JsonViewer
+                            <DocJsonEditor
                                 data={fullscreenDocument._source}
-                                defaultExpanded={false}
-                                showSearchBar={true}
+                                forcePinnedFields={selectedColumns}
                                 editable={true}
                                 onSave={(newData) => handleSave(fullscreenDocument._id, newData)}
                                 onCancel={handleCancelEdit}
-                                enablePinning={true}
-                                forcePinnedFields={selectedColumns}
                                 loading={refreshingDoc === fullscreenDocument._id}
+                                fluid={true}
                             />
                         </div>
                     </div>

@@ -1,4 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import CodeMirror from '@uiw/react-codemirror';
+import { json } from '@codemirror/lang-json';
+import { oneDark } from '@codemirror/theme-one-dark';
+import { foldGutter } from '@codemirror/language';
+import { EditorView } from '@codemirror/view';
+import { EditorState } from '@codemirror/state';
 import { useTranslation } from 'react-i18next';
 import {
     Plus,
@@ -839,11 +845,28 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
                                     <Copy size={12} />
                                 </button>
                             </div>
-                            <pre className="qb-preview-code">
-                                {generatedQuery
+                            <CodeMirror
+                                className="qb-preview-codemirror"
+                                value={generatedQuery
                                     ? JSON.stringify(generatedQuery, null, 2)
-                                    : t('queryBuilder.noQuery')}
-                            </pre>
+                                    : ''}
+                                height="auto"
+                                theme={oneDark}
+                                extensions={[
+                                    json(),
+                                    foldGutter(),
+                                    EditorState.readOnly.of(true),
+                                    EditorView.lineWrapping,
+                                ]}
+                                basicSetup={{
+                                    lineNumbers: false,
+                                    highlightActiveLineGutter: false,
+                                    foldGutter: false,
+                                    highlightActiveLine: false,
+                                    searchKeymap: false,
+                                }}
+                                editable={false}
+                            />
                         </div>
                     )}
                 </div>
