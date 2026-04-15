@@ -820,10 +820,8 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                             onChange={(value) => updateActiveTab({ body: value })}
                             placeholder={t('restModal.bodyPlaceholder')}
                             basicSetup={{
-                                lineNumbers: false,
-                                highlightActiveLineGutter: false,
                                 foldGutter: false,
-                                highlightActiveLine: false,
+                                searchKeymap: false,
                             }}
                         />
                     )}
@@ -889,10 +887,9 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                                     ]}
                                     onCreateEditor={(view) => { responseViewRef.current = view; }}
                                     basicSetup={{
-                                        lineNumbers: false,
-                                        highlightActiveLineGutter: false,
                                         foldGutter: false,
                                         highlightActiveLine: false,
+                                        highlightActiveLineGutter: false,
                                         searchKeymap: false,
                                     }}
                                     editable={false}

@@ -47,10 +47,9 @@ export const JsonCodeViewer: React.FC<JsonCodeViewerProps> = ({
                 ]}
                 onCreateEditor={(view) => { viewRef.current = view; }}
                 basicSetup={{
-                    lineNumbers: false,
-                    highlightActiveLineGutter: false,
                     foldGutter: false,
                     highlightActiveLine: false,
+                    highlightActiveLineGutter: false,
                     searchKeymap: false,
                 }}
                 editable={false}
