@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
     Play, Loader, Clock, AlertCircle, CheckCircle, Save, FolderOpen,
     Trash2, ChevronDown, Plus, X, Maximize2, Tag, Search, Hash, FileJson, Settings,
-    BarChart3, RefreshCw, Zap, FlaskConical
+    BarChart3, RefreshCw, Zap, FlaskConical, Eye, Pencil
 } from 'lucide-react';
 import {
     executeRestRequest, getSavedQueries, createSavedQuery, deleteSavedQuery, SavedQuery,
@@ -134,6 +134,10 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
     const [showQueriesDropdown, setShowQueriesDropdown] = useState(false);
     const [loadingQueries, setLoadingQueries] = useState(false);
 
+    // Body view mode: 'edit' = textarea, 'preview' = collapsible JsonViewer
+    const [bodyViewMode, setBodyViewMode] = useState<'edit' | 'preview'>('edit');
+    const [bodyParseError, setBodyParseError] = useState<string | null>(null);
+
     // Panel Resize state
     const [panelWidthPercent, setPanelWidthPercent] = useState(() => restPanelWidthStorage.get());
     const isResizingPanel = useRef(false);
@@ -257,6 +261,16 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
     // -------------------------------------------------------------------------
     // HELPERS & HANDLERS
     // -------------------------------------------------------------------------
+
+    // Reset body view mode when switching tabs
+    const prevActiveTabIdRef = useRef<string>('');
+    useEffect(() => {
+        if (activeTabId && activeTabId !== prevActiveTabIdRef.current) {
+            prevActiveTabIdRef.current = activeTabId;
+            setBodyViewMode('edit');
+            setBodyParseError(null);
+        }
+    }, [activeTabId]);
 
     // Derived active tab
     const activeTab = tabs.find(t => t.id === activeTabId) || tabs[0];
@@ -520,6 +534,21 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
         }
     };
 
+    const switchToPreview = () => {
+        try {
+            JSON.parse(activeTab.body);
+            setBodyParseError(null);
+            setBodyViewMode('preview');
+        } catch (e) {
+            setBodyParseError(t('common.invalidJson'));
+        }
+    };
+
+    const switchToEdit = () => {
+        setBodyParseError(null);
+        setBodyViewMode('edit');
+    };
+
     // Resizing Logic
     const handlePanelResizeStart = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -760,24 +789,65 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                 >
                     <div className="rest-panel-header">
                         <span>Request Body</span>
-                        <button
-                            className="btn btn-ghost btn-sm"
-                            onClick={formatJson}
-                            title={t('restModal.formatJson')}
-                            disabled={activeTab.method === 'GET'}
-                        >
-                            {t('restModal.format')}
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            {bodyParseError && (
+                                <span className="rest-body-parse-error">
+                                    <AlertCircle size={12} />
+                                    {bodyParseError}
+                                </span>
+                            )}
+                            {bodyViewMode === 'edit' ? (
+                                <>
+                                    <button
+                                        className="btn btn-ghost btn-sm"
+                                        onClick={formatJson}
+                                        title={t('restModal.formatJson')}
+                                        disabled={activeTab.method === 'GET'}
+                                    >
+                                        {t('restModal.format')}
+                                    </button>
+                                    <button
+                                        className="btn btn-ghost btn-sm"
+                                        onClick={switchToPreview}
+                                        title="Preview (collapsible)"
+                                        disabled={activeTab.method === 'GET' || !activeTab.body.trim()}
+                                    >
+                                        <Eye size={13} />
+                                    </button>
+                                </>
+                            ) : (
+                                <button
+                                    className="btn btn-ghost btn-sm"
+                                    onClick={switchToEdit}
+                                    title="Edit"
+                                >
+                                    <Pencil size={13} />
+                                </button>
+                            )}
+                        </div>
                     </div>
-                    <textarea
-                        className="rest-editor"
-                        value={activeTab.method === 'GET' ? '' : activeTab.body}
-                        onChange={(e) => updateActiveTab({ body: e.target.value })}
-                        onKeyDown={handleKeyDown}
-                        placeholder={activeTab.method === 'GET' ? t('restModal.noBodyForGet') : t('restModal.bodyPlaceholder')}
-                        spellCheck={false}
-                        disabled={activeTab.method === 'GET'}
-                    />
+                    {bodyViewMode === 'edit' || activeTab.method === 'GET' ? (
+                        <textarea
+                            className="rest-editor"
+                            value={activeTab.method === 'GET' ? '' : activeTab.body}
+                            onChange={(e) => {
+                                updateActiveTab({ body: e.target.value });
+                                setBodyParseError(null);
+                            }}
+                            onKeyDown={handleKeyDown}
+                            placeholder={activeTab.method === 'GET' ? t('restModal.noBodyForGet') : t('restModal.bodyPlaceholder')}
+                            spellCheck={false}
+                            disabled={activeTab.method === 'GET'}
+                        />
+                    ) : (
+                        <div className="rest-body-preview">
+                            <JsonViewer
+                                data={JSON.parse(activeTab.body)}
+                                defaultExpanded={true}
+                                enableCopy={false}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 <div
