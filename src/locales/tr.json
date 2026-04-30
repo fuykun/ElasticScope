@@ -108,6 +108,8 @@
         "usernamePlaceholder": "elastic",
         "password": "Şifre",
         "passwordPlaceholder": "••••••••",
+        "showPassword": "Parolayı göster",
+        "hidePassword": "Parolayı gizle",
         "color": "Renk",
         "saveAndConnect": "Kaydet ve Bağlan",
         "saving": "Kaydediliyor...",

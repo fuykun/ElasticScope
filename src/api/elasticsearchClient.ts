@@ -113,6 +113,7 @@ export interface ExportedConnection {
     name: string;
     url: string;
     username?: string;
+    password?: string;
     color: string;
 }
 
@@ -141,6 +142,7 @@ export const exportConnectionsData = async (): Promise<ConnectionsExportData> =>
             name: conn.name,
             url: conn.url,
             username: conn.username || undefined,
+            password: conn.password || undefined,
             color: conn.color,
         })),
     };
@@ -173,6 +175,7 @@ export const importConnectionsData = async (
                 name: conn.name,
                 url: conn.url,
                 username: conn.username,
+                password: conn.password,
                 color: conn.color,
             });
             result.imported++;

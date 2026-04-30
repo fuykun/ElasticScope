@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Save, Loader2 } from 'lucide-react';
+import { Save, Loader2, Eye, EyeOff } from 'lucide-react';
 import {
     createSavedConnection,
     updateSavedConnection,
@@ -55,6 +55,7 @@ export const ConnectionFormModal: React.FC<ConnectionFormModalProps> = ({
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [color, setColor] = useState(COLORS[0]);
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
@@ -196,14 +197,26 @@ export const ConnectionFormModal: React.FC<ConnectionFormModalProps> = ({
 
                 <div className="form-group">
                     <label htmlFor="conn-password">{t('connection.password')}</label>
-                    <input
-                        id="conn-password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder={t('connection.passwordPlaceholder')}
-                        disabled={loading}
-                    />
+                    <div className="input-with-toggle">
+                        <input
+                            id="conn-password"
+                            type={showPassword ? 'text' : 'password'}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder={t('connection.passwordPlaceholder')}
+                            disabled={loading}
+                        />
+                        <button
+                            type="button"
+                            className="input-toggle-btn"
+                            onClick={() => setShowPassword((v) => !v)}
+                            tabIndex={-1}
+                            disabled={loading}
+                            aria-label={showPassword ? t('connection.hidePassword') : t('connection.showPassword')}
+                        >
+                            {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                        </button>
+                    </div>
                 </div>
             </div>
 

@@ -108,6 +108,8 @@
         "usernamePlaceholder": "elastic",
         "password": "Password",
         "passwordPlaceholder": "••••••••",
+        "showPassword": "Show password",
+        "hidePassword": "Hide password",
         "color": "Color",
         "saveAndConnect": "Save and Connect",
         "saving": "Saving...",
