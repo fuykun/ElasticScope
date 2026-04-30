@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import CodeMirror from '@uiw/react-codemirror';
 import { json, jsonParseLinter } from '@codemirror/lang-json';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { foldGutter, foldAll, unfoldAll } from '@codemirror/language';
+import { foldGutter, unfoldAll } from '@codemirror/language';
+import { foldAllExceptRoot } from '../utils/codemirrorFold';
 import { linter, lintGutter } from '@codemirror/lint';
 import { EditorView, keymap } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
@@ -212,7 +213,7 @@ export const DocJsonEditor: React.FC<DocJsonEditorProps> = ({
                         <>
                             <button
                                 className="json-code-viewer-btn"
-                                onClick={() => viewRef.current && foldAll(viewRef.current)}
+                                onClick={() => viewRef.current && foldAllExceptRoot(viewRef.current)}
                                 title="Collapse all"
                             >
                                 <ChevronsDownUp size={13} />

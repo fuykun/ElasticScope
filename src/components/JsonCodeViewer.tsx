@@ -2,11 +2,12 @@ import React, { useState, useRef } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { foldGutter, foldAll, unfoldAll } from '@codemirror/language';
+import { foldGutter, unfoldAll } from '@codemirror/language';
 import { EditorView } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
 import { CheckCircle, Copy, ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
 import type { EditorView as EditorViewType } from '@codemirror/view';
+import { foldAllExceptRoot } from '../utils/codemirrorFold';
 
 interface JsonCodeViewerProps {
     data: any;
@@ -22,7 +23,7 @@ export const JsonCodeViewer: React.FC<JsonCodeViewerProps> = ({
     const viewRef = useRef<EditorViewType | null>(null);
     const [copyDone, setCopyDone] = useState(false);
 
-    const collapseAll = () => { if (viewRef.current) foldAll(viewRef.current); };
+    const collapseAll = () => { if (viewRef.current) foldAllExceptRoot(viewRef.current); };
     const expandAll = () => { if (viewRef.current) unfoldAll(viewRef.current); };
 
     const copy = () => {

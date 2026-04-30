@@ -9,7 +9,8 @@ import CodeMirror from '@uiw/react-codemirror';
 import { json, jsonParseLinter } from '@codemirror/lang-json';
 import { linter, lintGutter } from '@codemirror/lint';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { foldGutter, foldAll, unfoldAll } from '@codemirror/language';
+import { foldGutter, unfoldAll } from '@codemirror/language';
+import { foldAllExceptRoot } from '../utils/codemirrorFold';
 import { EditorView, keymap } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
 import type { EditorView as EditorViewType } from '@codemirror/view';
@@ -532,7 +533,7 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
     };
 
     const collapseAllResponse = () => {
-        if (responseViewRef.current) foldAll(responseViewRef.current);
+        if (responseViewRef.current) foldAllExceptRoot(responseViewRef.current);
     };
 
     const expandAllResponse = () => {
