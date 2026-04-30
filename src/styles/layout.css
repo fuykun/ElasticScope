@@ -52,6 +52,19 @@
   color: #0a66c2;
 }
 
+.footer-coffee-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.footer-coffee-link:hover {
+  color: #ffdd00;
+}
+
 .footer-star-link {
   color: var(--text-tertiary);
 }

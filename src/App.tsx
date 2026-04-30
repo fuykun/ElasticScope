@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, GitCompare, Github, Star, Code, BarChart3, Linkedin } from 'lucide-react';
+import { Search, GitCompare, Github, Star, Code, BarChart3, Linkedin, Coffee } from 'lucide-react';
 import { ConnectionSelector } from './components/ConnectionSelector';
 import { ConnectionFormModal } from './components/ConnectionFormModal';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
@@ -376,6 +376,16 @@ function App() {
                 >
                     <Linkedin size={14} />
                     LinkedIn
+                </a>
+                <span className="footer-separator">•</span>
+                <a
+                    href="https://buymeacoffee.com/fuykun"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="footer-coffee-link"
+                >
+                    <Coffee size={14} />
+                    Buy me a coffee
                 </a>
             </footer>
         </div>

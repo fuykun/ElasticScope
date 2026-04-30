@@ -33,8 +33,8 @@ jobs:
 
       - name: Check build artifacts
         run: |
-          if [ ! -d "dist" ]; then
-            echo "Build failed: dist directory not found"
+          if [ ! -d ".next" ]; then
+            echo "Build failed: .next directory not found"
             exit 1
           fi
           echo "✅ Build successful"
@@ -43,5 +43,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
-          path: dist/
+          path: .next/
           retention-days: 7
