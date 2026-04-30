@@ -57,7 +57,5 @@ data/*.db
 Thumbs.db
 .DS_Store
 
-# DB
-data/connections.db
 .kiro/
 .next/
