@@ -72,6 +72,12 @@ import { pageSizeStorage } from '../utils/storage';
 import { formatDate, formatDocCount } from '../utils/formatters';
 import { DateFilter, DateFilterValue } from './DateFilter';
 import { translateError } from '../utils/errorHandler';
+import CodeMirror from '@uiw/react-codemirror';
+import { json, jsonParseLinter } from '@codemirror/lang-json';
+import { linter, lintGutter } from '@codemirror/lint';
+import { oneDark } from '@codemirror/theme-one-dark';
+import { foldGutter } from '@codemirror/language';
+import { EditorView } from '@codemirror/view';
 
 interface IndexPageProps {
     indexName: string;
@@ -1885,13 +1891,20 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                         <label className="add-doc-label">
                             {t('indexPage.documentBody')} (JSON)
                         </label>
-                        <textarea
+                        <CodeMirror
+                            className="add-doc-codemirror"
                             value={newDocBody}
-                            onChange={(e) => setNewDocBody(e.target.value)}
-                            className="add-doc-textarea"
-                            placeholder='{"field": "value"}'
-                            rows={15}
-                            spellCheck={false}
+                            height="300px"
+                            theme={oneDark}
+                            extensions={[
+                                json(),
+                                linter(jsonParseLinter()),
+                                lintGutter(),
+                                foldGutter(),
+                                EditorView.lineWrapping,
+                            ]}
+                            onChange={(value) => setNewDocBody(value)}
+                            basicSetup={{ foldGutter: false }}
                         />
                     </div>
 

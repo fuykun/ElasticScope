@@ -385,7 +385,10 @@ const IndexItem: React.FC<IndexItemProps> = ({ idx, selected, onClick, getHealth
                 <div className="index-top-row">
                     <span className="index-name">{displayName || idx.index}</span>
                     {idx.aliases?.length > 0 && (
-                        <span className="alias-count" title={idx.aliases.join(', ')}>
+                        <span
+                            className="alias-count"
+                            title={idx.aliases.join(', ')}
+                        >
                             <Tag size={9} />
                             {idx.aliases.length}
                         </span>

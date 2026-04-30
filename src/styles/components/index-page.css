@@ -1115,29 +1115,21 @@
   color: var(--text-tertiary);
 }
 
-.add-doc-textarea {
-  width: 100%;
-  padding: 12px 14px;
-  font-size: 13px;
-  font-family: var(--font-mono);
+.add-doc-codemirror {
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  resize: vertical;
-  min-height: 200px;
-  transition: all 0.2s;
-  line-height: 1.5;
+  overflow: hidden;
+  font-size: 13px;
 }
 
-.add-doc-textarea:focus {
+.add-doc-codemirror .cm-editor {
+  border-radius: 8px;
+}
+
+.add-doc-codemirror .cm-editor.cm-focused {
   outline: none;
-  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-}
-
-.add-doc-textarea::placeholder {
-  color: var(--text-tertiary);
+  border-color: var(--primary);
 }
 
 .add-doc-error {
