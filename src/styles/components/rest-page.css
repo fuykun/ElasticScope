@@ -445,6 +445,7 @@
 .json-code-viewer {
   display: flex;
   flex-direction: column;
+  min-height: 0;
   overflow: hidden;
   position: relative;
 }
@@ -514,6 +515,7 @@
 /* CodeMirror editor in request body */
 .rest-codemirror {
   flex: 1;
+  min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -522,6 +524,7 @@
 
 .rest-codemirror .cm-editor {
   flex: 1;
+  min-height: 0;
   height: 100%;
   outline: none;
 }
@@ -529,6 +532,7 @@
 .rest-codemirror .cm-scroller {
   font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
   line-height: 1.5;
+  min-height: 0;
   overflow: auto;
 }
 
@@ -547,6 +551,113 @@
 
 .rest-codemirror .cm-foldGutter span:hover {
   color: var(--accent);
+}
+
+/* CodeMirror built-in search panel */
+.rest-codemirror .cm-panels {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  z-index: 2;
+}
+
+.rest-codemirror .cm-panels-top {
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+}
+
+.rest-codemirror .cm-panel.cm-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--bg-secondary);
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.rest-codemirror .cm-panel.cm-search br {
+  display: none;
+}
+
+.rest-codemirror .cm-panel.cm-search input.cm-textfield {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-primary);
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  min-width: 180px;
+  margin: 0;
+}
+
+.rest-codemirror .cm-panel.cm-search input.cm-textfield:focus {
+  border-color: var(--accent);
+}
+
+.rest-codemirror .cm-panel.cm-search button {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-primary);
+  padding: 3px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  text-transform: none;
+  margin: 0;
+}
+
+.rest-codemirror .cm-panel.cm-search button:hover {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.06));
+  border-color: var(--accent);
+}
+
+.rest-codemirror .cm-panel.cm-search label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.rest-codemirror .cm-panel.cm-search label input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.rest-codemirror .cm-panel.cm-search button[name="close"] {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  padding: 2px 6px;
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--text-muted);
+}
+
+.rest-codemirror .cm-panel.cm-search button[name="close"]:hover {
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+}
+
+.rest-codemirror .cm-searchMatch {
+  background: rgba(255, 200, 0, 0.25);
+  outline: 1px solid rgba(255, 200, 0, 0.5);
+}
+
+.rest-codemirror .cm-searchMatch-selected {
+  background: rgba(255, 150, 0, 0.5);
+  outline: 1px solid rgba(255, 150, 0, 0.9);
 }
 
 /* Custom response search bar */

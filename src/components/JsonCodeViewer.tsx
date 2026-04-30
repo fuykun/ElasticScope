@@ -3,9 +3,10 @@ import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { foldGutter, unfoldAll } from '@codemirror/language';
-import { EditorView } from '@codemirror/view';
+import { EditorView, keymap } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
-import { CheckCircle, Copy, ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
+import { search, searchKeymap, openSearchPanel } from '@codemirror/search';
+import { CheckCircle, Copy, ChevronsDownUp, ChevronsUpDown, Search } from 'lucide-react';
 import type { EditorView as EditorViewType } from '@codemirror/view';
 import { foldAllExceptRoot } from '../utils/codemirrorFold';
 
@@ -25,6 +26,12 @@ export const JsonCodeViewer: React.FC<JsonCodeViewerProps> = ({
 
     const collapseAll = () => { if (viewRef.current) foldAllExceptRoot(viewRef.current); };
     const expandAll = () => { if (viewRef.current) unfoldAll(viewRef.current); };
+    const openSearch = () => {
+        if (viewRef.current) {
+            viewRef.current.focus();
+            openSearchPanel(viewRef.current);
+        }
+    };
 
     const copy = () => {
         navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
@@ -43,6 +50,8 @@ export const JsonCodeViewer: React.FC<JsonCodeViewerProps> = ({
                 extensions={[
                     json(),
                     foldGutter(),
+                    search({ top: true }),
+                    keymap.of(searchKeymap),
                     EditorState.readOnly.of(true),
                     EditorView.lineWrapping,
                 ]}
@@ -53,9 +62,11 @@ export const JsonCodeViewer: React.FC<JsonCodeViewerProps> = ({
                     highlightActiveLineGutter: false,
                     searchKeymap: false,
                 }}
-                editable={false}
             />
             <div className="json-code-viewer-actions">
+                <button className="json-code-viewer-btn" onClick={openSearch} title="Search (Ctrl+F)">
+                    <Search size={13} />
+                </button>
                 <button className="json-code-viewer-btn" onClick={collapseAll} title="Collapse all">
                     <ChevronsDownUp size={13} />
                 </button>

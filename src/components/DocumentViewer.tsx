@@ -602,7 +602,6 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
                                 onSave={(newData) => handleSave(fullscreenDocument._id, newData)}
                                 onCancel={handleCancelEdit}
                                 loading={refreshingDoc === fullscreenDocument._id}
-                                fluid={true}
                             />
                         </div>
                     </div>

@@ -8,7 +8,8 @@ import { foldAllExceptRoot } from '../utils/codemirrorFold';
 import { linter, lintGutter } from '@codemirror/lint';
 import { EditorView, keymap } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
-import { Pin, Plus, X, Pencil, ChevronsDownUp, ChevronsUpDown, Copy, CheckCircle } from 'lucide-react';
+import { search, searchKeymap, openSearchPanel } from '@codemirror/search';
+import { Pin, Plus, X, Pencil, ChevronsDownUp, ChevronsUpDown, Copy, CheckCircle, Search } from 'lucide-react';
 import type { EditorView as EditorViewType } from '@codemirror/view';
 
 const PINNED_FIELDS_KEY = 'es_viewer_pinned_fields';
@@ -183,6 +184,8 @@ export const DocJsonEditor: React.FC<DocJsonEditorProps> = ({
                     extensions={[
                         json(),
                         foldGutter(),
+                        search({ top: true }),
+                        keymap.of(searchKeymap),
                         EditorView.lineWrapping,
                         ...(isEditing
                             ? [
@@ -211,6 +214,18 @@ export const DocJsonEditor: React.FC<DocJsonEditorProps> = ({
                 <div className="json-code-viewer-actions">
                     {!isEditing && (
                         <>
+                            <button
+                                className="json-code-viewer-btn"
+                                onClick={() => {
+                                    if (viewRef.current) {
+                                        viewRef.current.focus();
+                                        openSearchPanel(viewRef.current);
+                                    }
+                                }}
+                                title="Search (Ctrl+F)"
+                            >
+                                <Search size={13} />
+                            </button>
                             <button
                                 className="json-code-viewer-btn"
                                 onClick={() => viewRef.current && foldAllExceptRoot(viewRef.current)}

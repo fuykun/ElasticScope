@@ -4,6 +4,7 @@
   flex-direction: column;
   min-height: 200px;
   max-height: 600px;
+  overflow: hidden;
 }
 
 .doc-json-editor.fluid {
@@ -129,9 +130,16 @@
 
 /* Editor body */
 .doc-json-editor-body {
+  display: flex;
+  flex-direction: column;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
   position: relative;
+}
+
+.doc-json-editor-body .rest-codemirror {
+  height: 100%;
 }
 
 
@@ -444,8 +452,16 @@
 .fullscreen-body {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
   padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+}
+
+.fullscreen-body .doc-json-editor {
+  flex: 1;
+  min-height: 0;
+  max-height: unset;
 }
 
 /* ==================== TABLE VIEW ==================== */

@@ -13,6 +13,7 @@ import { foldGutter, unfoldAll } from '@codemirror/language';
 import { foldAllExceptRoot } from '../utils/codemirrorFold';
 import { EditorView, keymap } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
+import { search as cmSearch, searchKeymap, openSearchPanel } from '@codemirror/search';
 import type { EditorView as EditorViewType } from '@codemirror/view';
 import {
     executeRestRequest, getSavedQueries, createSavedQuery, deleteSavedQuery, SavedQuery,
@@ -540,6 +541,13 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
         if (responseViewRef.current) unfoldAll(responseViewRef.current);
     };
 
+    const openSearchResponse = () => {
+        if (responseViewRef.current) {
+            responseViewRef.current.focus();
+            openSearchPanel(responseViewRef.current);
+        }
+    };
+
 
     const copyResponse = () => {
         if (!activeTab.response) return;
@@ -895,6 +903,8 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                                     extensions={[
                                         json(),
                                         foldGutter(),
+                                        cmSearch({ top: true }),
+                                        keymap.of(searchKeymap),
                                         EditorState.readOnly.of(true),
                                         EditorView.lineWrapping,
                                     ]}
@@ -905,9 +915,11 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                                         highlightActiveLineGutter: false,
                                         searchKeymap: false,
                                     }}
-                                    editable={false}
                                 />
                                 <div className="json-code-viewer-actions">
+                                    <button className="json-code-viewer-btn" onClick={openSearchResponse} title="Search (Ctrl+F)">
+                                        <Search size={13} />
+                                    </button>
                                     <button className="json-code-viewer-btn" onClick={collapseAllResponse} title="Collapse all">
                                         <ChevronsDownUp size={13} />
                                     </button>
