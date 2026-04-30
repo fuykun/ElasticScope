@@ -442,6 +442,8 @@
 }
 
 .fullscreen-body {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: var(--spacing-md);
 }
@@ -618,8 +620,16 @@
   padding: 16px;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
-  max-height: 400px;
-  overflow-y: auto;
+  height: 400px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.doc-table-expanded-content .doc-json-editor {
+  flex: 1;
+  min-height: 0;
+  max-height: unset;
 }
 
 .doc-table-delete-row td {

@@ -402,6 +402,759 @@
                     "userId": "user-123"
                 }
             ]
+        },
+        {
+            "name": "orders",
+            "settings": {
+                "number_of_shards": 1,
+                "number_of_replicas": 0
+            },
+            "mappings": {
+                "properties": {
+                    "order_number": {
+                        "type": "keyword"
+                    },
+                    "status": {
+                        "type": "keyword"
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    },
+                    "completed_at": {
+                        "type": "date"
+                    },
+                    "currency": {
+                        "type": "keyword"
+                    },
+                    "subtotal": {
+                        "type": "float"
+                    },
+                    "tax_rate": {
+                        "type": "float"
+                    },
+                    "tax_amount": {
+                        "type": "float"
+                    },
+                    "discount_amount": {
+                        "type": "float"
+                    },
+                    "shipping_cost": {
+                        "type": "float"
+                    },
+                    "total_amount": {
+                        "type": "float"
+                    },
+                    "notes": {
+                        "type": "text"
+                    },
+                    "priority": {
+                        "type": "keyword"
+                    },
+                    "customer": {
+                        "properties": {
+                            "id": {
+                                "type": "keyword"
+                            },
+                            "full_name": {
+                                "type": "text"
+                            },
+                            "email": {
+                                "type": "keyword"
+                            },
+                            "phone": {
+                                "type": "keyword"
+                            },
+                            "type": {
+                                "type": "keyword"
+                            },
+                            "loyalty_points": {
+                                "type": "integer"
+                            },
+                            "is_verified": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "shipping_address": {
+                        "properties": {
+                            "street": {
+                                "type": "text"
+                            },
+                            "city": {
+                                "type": "keyword"
+                            },
+                            "state": {
+                                "type": "keyword"
+                            },
+                            "country": {
+                                "type": "keyword"
+                            },
+                            "zip": {
+                                "type": "keyword"
+                            },
+                            "location": {
+                                "type": "geo_point"
+                            }
+                        }
+                    },
+                    "billing_address": {
+                        "properties": {
+                            "street": {
+                                "type": "text"
+                            },
+                            "city": {
+                                "type": "keyword"
+                            },
+                            "state": {
+                                "type": "keyword"
+                            },
+                            "country": {
+                                "type": "keyword"
+                            },
+                            "zip": {
+                                "type": "keyword"
+                            }
+                        }
+                    },
+                    "items": {
+                        "type": "nested",
+                        "properties": {
+                            "product_id": {
+                                "type": "keyword"
+                            },
+                            "name": {
+                                "type": "text"
+                            },
+                            "sku": {
+                                "type": "keyword"
+                            },
+                            "quantity": {
+                                "type": "integer"
+                            },
+                            "unit_price": {
+                                "type": "float"
+                            },
+                            "discount_percent": {
+                                "type": "float"
+                            },
+                            "line_total": {
+                                "type": "float"
+                            },
+                            "category": {
+                                "type": "keyword"
+                            },
+                            "brand": {
+                                "type": "keyword"
+                            },
+                            "weight_kg": {
+                                "type": "float"
+                            }
+                        }
+                    },
+                    "payment": {
+                        "properties": {
+                            "method": {
+                                "type": "keyword"
+                            },
+                            "status": {
+                                "type": "keyword"
+                            },
+                            "transaction_id": {
+                                "type": "keyword"
+                            },
+                            "amount": {
+                                "type": "float"
+                            },
+                            "gateway": {
+                                "type": "keyword"
+                            },
+                            "last_four": {
+                                "type": "keyword"
+                            },
+                            "installments": {
+                                "type": "integer"
+                            },
+                            "paid_at": {
+                                "type": "date"
+                            }
+                        }
+                    },
+                    "shipment": {
+                        "properties": {
+                            "carrier": {
+                                "type": "keyword"
+                            },
+                            "tracking_number": {
+                                "type": "keyword"
+                            },
+                            "method": {
+                                "type": "keyword"
+                            },
+                            "estimated_delivery": {
+                                "type": "date"
+                            },
+                            "actual_delivery": {
+                                "type": "date"
+                            },
+                            "is_express": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "return_info": {
+                        "properties": {
+                            "has_return": {
+                                "type": "boolean"
+                            },
+                            "reason": {
+                                "type": "keyword"
+                            },
+                            "requested_at": {
+                                "type": "date"
+                            },
+                            "refund_amount": {
+                                "type": "float"
+                            },
+                            "refund_status": {
+                                "type": "keyword"
+                            }
+                        }
+                    },
+                    "metadata": {
+                        "properties": {
+                            "source": {
+                                "type": "keyword"
+                            },
+                            "campaign": {
+                                "type": "keyword"
+                            },
+                            "referrer": {
+                                "type": "keyword"
+                            },
+                            "ip_address": {
+                                "type": "ip"
+                            },
+                            "user_agent": {
+                                "type": "text"
+                            },
+                            "is_gift": {
+                                "type": "boolean"
+                            },
+                            "gift_message": {
+                                "type": "text"
+                            }
+                        }
+                    }
+                }
+            },
+            "documents": [
+                {
+                    "order_number": "ORD-2024-001",
+                    "status": "delivered",
+                    "created_at": "2024-03-01T08:15:00Z",
+                    "updated_at": "2024-03-05T14:30:00Z",
+                    "completed_at": "2024-03-05T14:30:00Z",
+                    "currency": "USD",
+                    "subtotal": 1329.98,
+                    "tax_rate": 0.08,
+                    "tax_amount": 106.40,
+                    "discount_amount": 50.00,
+                    "shipping_cost": 9.99,
+                    "total_amount": 1396.37,
+                    "notes": "Please leave at the front door",
+                    "priority": "normal",
+                    "customer": {
+                        "id": "CUST-1001",
+                        "full_name": "John Doe",
+                        "email": "john.doe@example.com",
+                        "phone": "+1-555-0100",
+                        "type": "vip",
+                        "loyalty_points": 2450,
+                        "is_verified": true
+                    },
+                    "shipping_address": {
+                        "street": "123 Main St, Apt 4B",
+                        "city": "New York",
+                        "state": "NY",
+                        "country": "USA",
+                        "zip": "10001",
+                        "location": {
+                            "lat": 40.7128,
+                            "lon": -74.0060
+                        }
+                    },
+                    "billing_address": {
+                        "street": "123 Main St, Apt 4B",
+                        "city": "New York",
+                        "state": "NY",
+                        "country": "USA",
+                        "zip": "10001"
+                    },
+                    "items": [
+                        {
+                            "product_id": "PROD-001",
+                            "name": "iPhone 15 Pro",
+                            "sku": "APPL-IP15P-256-BLK",
+                            "quantity": 1,
+                            "unit_price": 999.99,
+                            "discount_percent": 0,
+                            "line_total": 999.99,
+                            "category": "Electronics",
+                            "brand": "Apple",
+                            "weight_kg": 0.187
+                        },
+                        {
+                            "product_id": "PROD-004",
+                            "name": "Sony WH-1000XM5",
+                            "sku": "SONY-WH1000XM5-BLK",
+                            "quantity": 1,
+                            "unit_price": 349.99,
+                            "discount_percent": 5,
+                            "line_total": 329.99,
+                            "category": "Electronics",
+                            "brand": "Sony",
+                            "weight_kg": 0.250
+                        }
+                    ],
+                    "payment": {
+                        "method": "credit_card",
+                        "status": "captured",
+                        "transaction_id": "TXN-20240301-ABC123",
+                        "amount": 1396.37,
+                        "gateway": "Stripe",
+                        "last_four": "4242",
+                        "installments": 1,
+                        "paid_at": "2024-03-01T08:16:45Z"
+                    },
+                    "shipment": {
+                        "carrier": "FedEx",
+                        "tracking_number": "794644823726",
+                        "method": "ground",
+                        "estimated_delivery": "2024-03-06T00:00:00Z",
+                        "actual_delivery": "2024-03-05T14:30:00Z",
+                        "is_express": false
+                    },
+                    "return_info": {
+                        "has_return": false,
+                        "reason": null,
+                        "requested_at": null,
+                        "refund_amount": 0,
+                        "refund_status": null
+                    },
+                    "metadata": {
+                        "source": "web",
+                        "campaign": "spring-sale-2024",
+                        "referrer": "google",
+                        "ip_address": "203.0.113.10",
+                        "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+                        "is_gift": false,
+                        "gift_message": null
+                    }
+                },
+                {
+                    "order_number": "ORD-2024-002",
+                    "status": "processing",
+                    "created_at": "2024-03-10T11:45:00Z",
+                    "updated_at": "2024-03-10T12:00:00Z",
+                    "completed_at": null,
+                    "currency": "EUR",
+                    "subtotal": 2499.99,
+                    "tax_rate": 0.19,
+                    "tax_amount": 474.99,
+                    "discount_amount": 0,
+                    "shipping_cost": 0,
+                    "total_amount": 2974.98,
+                    "notes": "",
+                    "priority": "high",
+                    "customer": {
+                        "id": "CUST-1002",
+                        "full_name": "Hans Mueller",
+                        "email": "hans.mueller@example.com",
+                        "phone": "+49-30-12345678",
+                        "type": "member",
+                        "loyalty_points": 800,
+                        "is_verified": true
+                    },
+                    "shipping_address": {
+                        "street": "Unter den Linden 77",
+                        "city": "Berlin",
+                        "state": "Berlin",
+                        "country": "Germany",
+                        "zip": "10117",
+                        "location": {
+                            "lat": 52.5200,
+                            "lon": 13.4050
+                        }
+                    },
+                    "billing_address": {
+                        "street": "Unter den Linden 77",
+                        "city": "Berlin",
+                        "state": "Berlin",
+                        "country": "Germany",
+                        "zip": "10117"
+                    },
+                    "items": [
+                        {
+                            "product_id": "PROD-008",
+                            "name": "Canon EOS R6 Mark II",
+                            "sku": "CANON-EOSR6M2-BODY",
+                            "quantity": 1,
+                            "unit_price": 2499.99,
+                            "discount_percent": 0,
+                            "line_total": 2499.99,
+                            "category": "Electronics",
+                            "brand": "Canon",
+                            "weight_kg": 0.670
+                        }
+                    ],
+                    "payment": {
+                        "method": "bank_transfer",
+                        "status": "pending",
+                        "transaction_id": "TXN-20240310-DEF456",
+                        "amount": 2974.98,
+                        "gateway": "SEPA",
+                        "last_four": null,
+                        "installments": 1,
+                        "paid_at": null
+                    },
+                    "shipment": {
+                        "carrier": "DHL",
+                        "tracking_number": null,
+                        "method": "express",
+                        "estimated_delivery": "2024-03-14T00:00:00Z",
+                        "actual_delivery": null,
+                        "is_express": true
+                    },
+                    "return_info": {
+                        "has_return": false,
+                        "reason": null,
+                        "requested_at": null,
+                        "refund_amount": 0,
+                        "refund_status": null
+                    },
+                    "metadata": {
+                        "source": "mobile_app",
+                        "campaign": null,
+                        "referrer": "direct",
+                        "ip_address": "198.51.100.42",
+                        "user_agent": "ElasticShop/3.2.1 (Android 14; Pixel 8)",
+                        "is_gift": false,
+                        "gift_message": null
+                    }
+                },
+                {
+                    "order_number": "ORD-2024-003",
+                    "status": "returned",
+                    "created_at": "2024-02-14T09:00:00Z",
+                    "updated_at": "2024-02-28T10:15:00Z",
+                    "completed_at": "2024-02-18T16:00:00Z",
+                    "currency": "GBP",
+                    "subtotal": 269.97,
+                    "tax_rate": 0.20,
+                    "tax_amount": 54.00,
+                    "discount_amount": 27.00,
+                    "shipping_cost": 4.99,
+                    "total_amount": 301.96,
+                    "notes": "Valentine's Day gift order",
+                    "priority": "normal",
+                    "customer": {
+                        "id": "CUST-1003",
+                        "full_name": "Jane Smith",
+                        "email": "jane.smith@example.com",
+                        "phone": "+44-20-79460000",
+                        "type": "member",
+                        "loyalty_points": 340,
+                        "is_verified": true
+                    },
+                    "shipping_address": {
+                        "street": "10 Downing Street",
+                        "city": "London",
+                        "state": "England",
+                        "country": "UK",
+                        "zip": "SW1A 2AA",
+                        "location": {
+                            "lat": 51.5034,
+                            "lon": -0.1276
+                        }
+                    },
+                    "billing_address": {
+                        "street": "10 Downing Street",
+                        "city": "London",
+                        "state": "England",
+                        "country": "UK",
+                        "zip": "SW1A 2AA"
+                    },
+                    "items": [
+                        {
+                            "product_id": "PROD-005",
+                            "name": "Nike Air Max 90",
+                            "sku": "NIKE-AM90-42-WHT",
+                            "quantity": 1,
+                            "unit_price": 129.99,
+                            "discount_percent": 10,
+                            "line_total": 116.99,
+                            "category": "Footwear",
+                            "brand": "Nike",
+                            "weight_kg": 0.320
+                        },
+                        {
+                            "product_id": "PROD-007",
+                            "name": "Levi's 501 Original Jeans",
+                            "sku": "LEVIS-501-32x32-BLU",
+                            "quantity": 2,
+                            "unit_price": 79.99,
+                            "discount_percent": 0,
+                            "line_total": 159.98,
+                            "category": "Clothing",
+                            "brand": "Levi's",
+                            "weight_kg": 0.560
+                        }
+                    ],
+                    "payment": {
+                        "method": "paypal",
+                        "status": "refunded",
+                        "transaction_id": "TXN-20240214-GHI789",
+                        "amount": 301.96,
+                        "gateway": "PayPal",
+                        "last_four": null,
+                        "installments": 1,
+                        "paid_at": "2024-02-14T09:02:10Z"
+                    },
+                    "shipment": {
+                        "carrier": "Royal Mail",
+                        "tracking_number": "TT123456789GB",
+                        "method": "standard",
+                        "estimated_delivery": "2024-02-17T00:00:00Z",
+                        "actual_delivery": "2024-02-18T16:00:00Z",
+                        "is_express": false
+                    },
+                    "return_info": {
+                        "has_return": true,
+                        "reason": "wrong_size",
+                        "requested_at": "2024-02-20T11:00:00Z",
+                        "refund_amount": 301.96,
+                        "refund_status": "completed"
+                    },
+                    "metadata": {
+                        "source": "web",
+                        "campaign": "valentines-2024",
+                        "referrer": "instagram",
+                        "ip_address": "192.0.2.77",
+                        "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)",
+                        "is_gift": true,
+                        "gift_message": "Happy Valentine's Day my love! ❤️"
+                    }
+                },
+                {
+                    "order_number": "ORD-2024-004",
+                    "status": "shipped",
+                    "created_at": "2024-03-18T14:20:00Z",
+                    "updated_at": "2024-03-19T09:00:00Z",
+                    "completed_at": null,
+                    "currency": "TRY",
+                    "subtotal": 4599.98,
+                    "tax_rate": 0.20,
+                    "tax_amount": 920.00,
+                    "discount_amount": 460.00,
+                    "shipping_cost": 0,
+                    "total_amount": 5059.98,
+                    "notes": "",
+                    "priority": "normal",
+                    "customer": {
+                        "id": "CUST-1004",
+                        "full_name": "Ahmet Yılmaz",
+                        "email": "ahmet.yilmaz@example.com",
+                        "phone": "+90-212-5550000",
+                        "type": "vip",
+                        "loyalty_points": 5120,
+                        "is_verified": true
+                    },
+                    "shipping_address": {
+                        "street": "Bağdat Caddesi No:42",
+                        "city": "Istanbul",
+                        "state": "Istanbul",
+                        "country": "Turkey",
+                        "zip": "34710",
+                        "location": {
+                            "lat": 41.0082,
+                            "lon": 28.9784
+                        }
+                    },
+                    "billing_address": {
+                        "street": "Bağdat Caddesi No:42",
+                        "city": "Istanbul",
+                        "state": "Istanbul",
+                        "country": "Turkey",
+                        "zip": "34710"
+                    },
+                    "items": [
+                        {
+                            "product_id": "PROD-003",
+                            "name": "MacBook Pro 14\"",
+                            "sku": "APPL-MBP14-M3P-1TB-SLV",
+                            "quantity": 1,
+                            "unit_price": 1999.99,
+                            "discount_percent": 10,
+                            "line_total": 1799.99,
+                            "category": "Electronics",
+                            "brand": "Apple",
+                            "weight_kg": 1.610
+                        },
+                        {
+                            "product_id": "PROD-002",
+                            "name": "Samsung Galaxy S24 Ultra",
+                            "sku": "SAMS-GS24U-256-BLK",
+                            "quantity": 1,
+                            "unit_price": 1199.99,
+                            "discount_percent": 10,
+                            "line_total": 1079.99,
+                            "category": "Electronics",
+                            "brand": "Samsung",
+                            "weight_kg": 0.232
+                        },
+                        {
+                            "product_id": "PROD-009",
+                            "name": "Dyson V15 Detect",
+                            "sku": "DYSON-V15D-YLW",
+                            "quantity": 1,
+                            "unit_price": 749.99,
+                            "discount_percent": 10,
+                            "line_total": 674.99,
+                            "category": "Home",
+                            "brand": "Dyson",
+                            "weight_kg": 3.100
+                        }
+                    ],
+                    "payment": {
+                        "method": "credit_card",
+                        "status": "captured",
+                        "transaction_id": "TXN-20240318-JKL012",
+                        "amount": 5059.98,
+                        "gateway": "iyzico",
+                        "last_four": "1234",
+                        "installments": 12,
+                        "paid_at": "2024-03-18T14:21:30Z"
+                    },
+                    "shipment": {
+                        "carrier": "Aras Kargo",
+                        "tracking_number": "ARS-987654321",
+                        "method": "standard",
+                        "estimated_delivery": "2024-03-21T00:00:00Z",
+                        "actual_delivery": null,
+                        "is_express": false
+                    },
+                    "return_info": {
+                        "has_return": false,
+                        "reason": null,
+                        "requested_at": null,
+                        "refund_amount": 0,
+                        "refund_status": null
+                    },
+                    "metadata": {
+                        "source": "web",
+                        "campaign": "tech-days-2024",
+                        "referrer": "email",
+                        "ip_address": "185.220.101.5",
+                        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                        "is_gift": false,
+                        "gift_message": null
+                    }
+                },
+                {
+                    "order_number": "ORD-2024-005",
+                    "status": "cancelled",
+                    "created_at": "2024-03-05T17:30:00Z",
+                    "updated_at": "2024-03-05T18:00:00Z",
+                    "completed_at": null,
+                    "currency": "USD",
+                    "subtotal": 299.99,
+                    "tax_rate": 0.07,
+                    "tax_amount": 21.00,
+                    "discount_amount": 0,
+                    "shipping_cost": 14.99,
+                    "total_amount": 335.98,
+                    "notes": "Customer requested cancellation",
+                    "priority": "low",
+                    "customer": {
+                        "id": "CUST-1005",
+                        "full_name": "Maria Garcia",
+                        "email": "maria.garcia@example.com",
+                        "phone": "+34-91-5550101",
+                        "type": "guest",
+                        "loyalty_points": 0,
+                        "is_verified": false
+                    },
+                    "shipping_address": {
+                        "street": "Calle Gran Vía 28",
+                        "city": "Madrid",
+                        "state": "Community of Madrid",
+                        "country": "Spain",
+                        "zip": "28013",
+                        "location": {
+                            "lat": 40.4168,
+                            "lon": -3.7038
+                        }
+                    },
+                    "billing_address": {
+                        "street": "Calle Gran Vía 28",
+                        "city": "Madrid",
+                        "state": "Community of Madrid",
+                        "country": "Spain",
+                        "zip": "28013"
+                    },
+                    "items": [
+                        {
+                            "product_id": "PROD-010",
+                            "name": "IKEA MALM Bed Frame",
+                            "sku": "IKEA-MALM-DBL-WHT",
+                            "quantity": 1,
+                            "unit_price": 299.99,
+                            "discount_percent": 0,
+                            "line_total": 299.99,
+                            "category": "Furniture",
+                            "brand": "IKEA",
+                            "weight_kg": 42.500
+                        }
+                    ],
+                    "payment": {
+                        "method": "credit_card",
+                        "status": "voided",
+                        "transaction_id": "TXN-20240305-MNO345",
+                        "amount": 335.98,
+                        "gateway": "Stripe",
+                        "last_four": "9876",
+                        "installments": 1,
+                        "paid_at": null
+                    },
+                    "shipment": {
+                        "carrier": null,
+                        "tracking_number": null,
+                        "method": "standard",
+                        "estimated_delivery": null,
+                        "actual_delivery": null,
+                        "is_express": false
+                    },
+                    "return_info": {
+                        "has_return": false,
+                        "reason": null,
+                        "requested_at": null,
+                        "refund_amount": 0,
+                        "refund_status": null
+                    },
+                    "metadata": {
+                        "source": "web",
+                        "campaign": null,
+                        "referrer": "direct",
+                        "ip_address": "91.108.4.100",
+                        "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
+                        "is_gift": false,
+                        "gift_message": null
+                    }
+                }
+            ]
         }
     ]
 }
