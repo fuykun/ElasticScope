@@ -215,6 +215,22 @@ const getClientForConnection = async (connectionId: number): Promise<Client | nu
 
 // ==================== SAVED CONNECTIONS API ====================
 
+app.get('/api/connections/export', async (req, res) => {
+    try {
+        const connections = await getAllConnections();
+        const exportConnections = connections.map(c => ({
+            name: c.name,
+            url: c.url,
+            username: c.username || undefined,
+            password: c.password ? decryptPassword(c.password) : undefined,
+            color: c.color,
+        }));
+        res.json(exportConnections);
+    } catch (error: any) {
+        res.status(500).json({ errorCode: 'INTERNAL_ERROR', details: error.message });
+    }
+});
+
 app.get('/api/connections', async (req, res) => {
     try {
         const connections = await getAllConnections();

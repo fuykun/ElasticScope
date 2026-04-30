@@ -133,18 +133,12 @@ export interface ImportResult {
 
 // Export connections to JSON format
 export const exportConnectionsData = async (): Promise<ConnectionsExportData> => {
-    const connections = await getSavedConnections();
+    const connections = await apiRequest<ExportedConnection[]>('/connections/export');
 
     return {
         version: '1.0',
         exportedAt: new Date().toISOString(),
-        connections: connections.map(conn => ({
-            name: conn.name,
-            url: conn.url,
-            username: conn.username || undefined,
-            password: conn.password || undefined,
-            color: conn.color,
-        })),
+        connections,
     };
 };
 
