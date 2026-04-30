@@ -39,7 +39,7 @@ export type {
     ConnectionStatus,
 };
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = '/api';
 
 async function apiRequest<T>(
     endpoint: string,
@@ -57,7 +57,7 @@ async function apiRequest<T>(
     if (contentType.includes('application/json')) {
         data = await response.json();
     } else {
-        // Non-JSON response (e.g. HTML error page from Express)
+        // Non-JSON response, such as a framework-generated HTML error page.
         const text = await response.text();
         if (!response.ok) {
             throw new Error(`Server error ${response.status}: ${text.slice(0, 200)}`);

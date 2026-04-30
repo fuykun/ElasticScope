@@ -7,7 +7,7 @@ import { useEffect, RefObject } from 'react';
  * @param enabled - Optional flag to enable/disable the hook (default: true)
  */
 export const useClickOutside = (
-    ref: RefObject<HTMLElement>,
+    ref: RefObject<HTMLElement | null>,
     callback: () => void,
     enabled: boolean = true
 ) => {
@@ -34,7 +34,7 @@ export const useClickOutside = (
  * @param enabled - Optional flag to enable/disable the hook (default: true)
  */
 export const useClickOutsideMultiple = (
-    refs: RefObject<HTMLElement>[],
+    refs: RefObject<HTMLElement | null>[],
     callback: () => void,
     enabled: boolean = true
 ) => {

@@ -56,8 +56,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: elasticscope-dev
     ports:
-      - "5173:5173"  # Vite dev server
-      - "3001:3001"  # Backend API
+      - "3001:3001"  # Next.js app and API
     volumes:
       - .:/app
       - /app/node_modules

@@ -54,7 +54,7 @@ export const ReindexModal: React.FC<ReindexModalProps> = ({
     const [targetDropdownOpen, setTargetDropdownOpen] = useState(false);
     const targetDropdownRef = useRef<HTMLDivElement>(null);
     useClickOutside(
-        targetDropdownRef as React.RefObject<HTMLElement>,
+        targetDropdownRef as React.RefObject<HTMLElement | null>,
         () => setTargetDropdownOpen(false),
         targetDropdownOpen,
     );

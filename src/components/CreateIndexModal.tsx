@@ -34,7 +34,7 @@ export const CreateIndexModal: React.FC<CreateIndexModalProps> = ({
     const [sourceSearch, setSourceSearch] = useState('');
     const [sourceDropdownOpen, setSourceDropdownOpen] = useState(false);
     const sourceDropdownRef = useRef<HTMLDivElement>(null);
-    useClickOutside(sourceDropdownRef as React.RefObject<HTMLElement>, () => setSourceDropdownOpen(false), sourceDropdownOpen);
+    useClickOutside(sourceDropdownRef as React.RefObject<HTMLElement | null>, () => setSourceDropdownOpen(false), sourceDropdownOpen);
 
     const filteredIndices = useMemo(() => {
         if (!sourceSearch.trim()) return indices;

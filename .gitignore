@@ -60,3 +60,4 @@ Thumbs.db
 # DB
 data/connections.db
 .kiro/
+.next/

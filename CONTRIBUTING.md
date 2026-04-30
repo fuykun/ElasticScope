@@ -53,25 +53,23 @@ cd ElasticScope
 # Install dependencies
 npm install
 
-# Start development server
+# Start Next.js development server
 npm run dev
-
-# Start backend server
-npm run server
 ```
 
 ### Project Structure
 
 ```
 ElasticScope/
-├── src/              # Frontend React application
+├── src/              # Next.js app and React UI
+│   ├── app/          # Next.js App Router pages and API routes
 │   ├── components/   # React components
-│   ├── api/          # API clients
+│   ├── api/          # Browser API clients
 │   ├── hooks/        # Custom React hooks
 │   ├── styles/       # CSS styles
 │   ├── types/        # TypeScript types
 │   └── utils/        # Utility functions
-├── server/           # Backend Express server
+├── server/           # Node-only API and database logic
 └── data/             # Sample data
 ```
 

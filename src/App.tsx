@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, GitCompare, Github, Star, Code, BarChart3, Linkedin } from 'lucide-react';
@@ -16,7 +18,8 @@ import { getConnectionStatus, getSavedConnection, SavedConnection } from './api/
 import { useResizable } from './hooks/useResizable';
 import { sidebarWidthStorage } from './utils/storage';
 import { MIN_SIDEBAR_WIDTH, MAX_SIDEBAR_WIDTH } from './constants';
-import './styles/index.css';
+
+const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? 'dev';
 
 function App() {
     const { t } = useTranslation();
@@ -343,7 +346,7 @@ function App() {
             )}
 
             <footer className="app-footer">
-                <span>ElasticScope v{__APP_VERSION__}</span>
+                <span>ElasticScope v{APP_VERSION}</span>
                 <span className="footer-separator">•</span>
                 <a
                     href="https://github.com/fuykun/ElasticScope"

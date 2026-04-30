@@ -9,7 +9,7 @@ interface DropdownReturn<T extends HTMLElement = HTMLDivElement> {
     open: () => void;
     close: () => void;
     toggle: () => void;
-    ref: React.RefObject<T>;
+    ref: React.RefObject<T | null>;
 }
 
 /**
@@ -59,8 +59,8 @@ interface MultiDropdownReturn {
     open: (id: string) => void;
     close: () => void;
     toggle: (id: string) => void;
-    refs: Map<string, React.RefObject<HTMLDivElement>>;
-    getRef: (id: string) => React.RefObject<HTMLDivElement>;
+    refs: Map<string, React.RefObject<HTMLDivElement | null>>;
+    getRef: (id: string) => React.RefObject<HTMLDivElement | null>;
 }
 
 /**
@@ -68,7 +68,7 @@ interface MultiDropdownReturn {
  */
 export function useMultiDropdown(dropdownIds: string[]): MultiDropdownReturn {
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-    const refs = useRef(new Map<string, React.RefObject<HTMLDivElement>>());
+    const refs = useRef(new Map<string, React.RefObject<HTMLDivElement | null>>());
 
     // Initialize refs
     dropdownIds.forEach(id => {
@@ -84,7 +84,7 @@ export function useMultiDropdown(dropdownIds: string[]): MultiDropdownReturn {
         setOpenDropdown(prev => prev === id ? null : id);
     }, []);
 
-    const getRef = useCallback((id: string): React.RefObject<HTMLDivElement> => {
+    const getRef = useCallback((id: string): React.RefObject<HTMLDivElement | null> => {
         if (!refs.current.has(id)) {
             refs.current.set(id, { current: null });
         }

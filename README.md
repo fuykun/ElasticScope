@@ -23,9 +23,9 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react" alt="React 18" />
+  <img src="https://img.shields.io/badge/React-Latest-61DAFB?style=flat-square&logo=react" alt="React" />
+  <img src="https://img.shields.io/badge/Next.js-Latest-000000?style=flat-square&logo=nextdotjs" alt="Next.js" />
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Vite-7-646CFF?style=flat-square&logo=vite" alt="Vite" />
   <img src="https://img.shields.io/badge/Elasticsearch-8.x-005571?style=flat-square&logo=elasticsearch" alt="Elasticsearch" />
   <img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker" alt="Docker" />
   <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License" />
@@ -160,10 +160,10 @@ cd elasticscope
 npm install
 
 # Start the application
-npm run dev:all
+npm run dev
 ```
 
-The application will be available at `http://localhost:5173`
+The application will be available at `http://localhost:3001`
 
 ### Docker
 
@@ -302,8 +302,7 @@ npm run start:prod
 
 | Variable       | Description          | Default                     |
 | -------------- | -------------------- | --------------------------- |
-| `PORT`         | Backend server port  | `3001`                      |
-| `VITE_API_URL` | API URL for frontend | `http://localhost:3001/api` |
+| `PORT`         | Next.js server port  | `3001`                      |
 
 ### Database Configuration
 
@@ -351,9 +350,8 @@ ElasticScope supports:
 
 | Layer     | Technology                              |
 | --------- | --------------------------------------- |
-| Frontend  | React 18, TypeScript, Vite              |
-| Backend   | Express.js, Node.js                     |
-| Database  | SQLite, PostgreSQL, MySQL (via Knex.js) |
+| App/API   | Next.js, React, TypeScript, Node.js     |
+| Database  | SQLite, PostgreSQL, MySQL               |
 | ES Client | @elastic/elasticsearch                  |
 | UI Icons  | Lucide React                            |
 | Diff View | react-diff-viewer-continued             |
@@ -362,17 +360,18 @@ ElasticScope supports:
 
 ```
 elasticscope/
-├── src/                     # Frontend source
-│   ├── api/                 # API client functions
+├── src/                     # Next.js app and React UI
+│   ├── app/                 # App Router pages and API route entrypoints
+│   ├── api/                 # Browser API client functions
 │   ├── components/          # React components
 │   ├── constants/           # Application constants
 │   ├── hooks/               # Custom React hooks
 │   ├── styles/              # CSS styles
 │   ├── types/               # TypeScript types
 │   └── utils/               # Utility functions
-├── server/                  # Backend source
-│   ├── index.ts             # Express server (API proxy)
-│   └── database.ts          # SQLite database
+├── server/                  # Node-only API and database logic
+│   ├── api/                 # Next API implementation
+│   └── database/            # SQLite/PostgreSQL/MySQL adapters
 ├── public/                  # Static assets
 ├── data/                    # SQLite database files
 └── docs/                    # Documentation
@@ -406,12 +405,6 @@ npm install
 
 # Start development server
 npm run dev
-
-# In another terminal, start the backend
-npm run server
-
-# Run type checking
-npm run typecheck
 
 # Build for production
 npm run build
@@ -452,7 +445,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Elasticsearch](https://www.elastic.co/elasticsearch/) - The powerful search engine
 - [React](https://reactjs.org/) - UI framework
 - [Lucide](https://lucide.dev/) - Beautiful icons
-- [Vite](https://vitejs.dev/) - Lightning fast build tool
+- [Next.js](https://nextjs.org/) - React framework and API runtime
 
 ---
 

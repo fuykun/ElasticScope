@@ -5,17 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-# Development (frontend + backend together)
-npm run dev:all
-
-# Frontend only (Vite dev server on :5173)
+# Development (Next.js app and API on :3001)
 npm run dev
-
-# Backend only (Express server on :3001)
-npm run server
-
-# Type check
-npm run typecheck
 
 # Production build
 npm run build
@@ -27,24 +18,25 @@ npm run start
 npm run start:prod
 ```
 
-In development, Vite proxies `/api` requests to the Express backend at `http://localhost:3001`, so `VITE_API_URL` is only needed for production builds.
+In development and production, Next.js serves both the UI and `/api/*` routes from `http://localhost:3001`.
 
 ## Architecture
 
-ElasticScope is a full-stack TypeScript app: a **Vite/React frontend** (`src/`) and an **Express backend** (`server/`), both in the same repo.
+ElasticScope is a full-stack TypeScript app built with **Next.js App Router**. The React UI lives under `src/`, and API logic is exposed through Next route handlers.
 
 ### Request flow
 
 ```
-Browser → Vite dev proxy (/api) → Express (server/index.ts) → Elasticsearch cluster
+Browser → Next.js UI/API (/api) → Elasticsearch cluster
 ```
 
-The backend acts as an authenticated proxy. It holds the active Elasticsearch `Client` instance in memory (a module-level variable in `server/index.ts`). All frontend Elasticsearch operations go through `/api/*` endpoints rather than talking to ES directly, which also eliminates CORS issues.
+The API layer acts as an authenticated proxy. It holds the active Elasticsearch `Client` instance in process memory inside `server/api/handler.ts`. All frontend Elasticsearch operations go through same-origin `/api/*` endpoints rather than talking to ES directly, which also eliminates CORS issues.
 
 ### Frontend (`src/`)
 
 - **`src/App.tsx`** — root component. Manages active connection state, current view (`dashboard | index | rest | monitor`), sidebar width, and the document comparison queue (max 2 docs). Navigation is URL-search-param based (`?index=...&view=...`).
-- **`src/api/elasticsearchClient.ts`** — all API calls. A thin wrapper around `fetch` that hits the Express backend. Throws errors with `errorCode` strings for i18n translation.
+- **`src/app/`** — Next.js App Router entrypoints, including the client-only SPA wrapper and catch-all API route.
+- **`src/api/elasticsearchClient.ts`** — all API calls. A thin wrapper around same-origin `fetch('/api/...')`. Throws errors with `errorCode` strings for i18n translation.
 - **`src/types/index.ts`** — all shared TypeScript types.
 - **`src/utils/storage.ts`** — typed `localStorage` accessors (sidebar width, page size, pinned fields, column config, REST tabs, etc.). Use `createStorageItem`, `createNumericStorageItem`, or `createStringArrayStorageItem` to add new persisted settings.
 - **`src/utils/columnStorage.ts`** — per-index column visibility/order config stored in localStorage.
@@ -52,9 +44,10 @@ The backend acts as an authenticated proxy. It holds the active Elasticsearch `C
 - **`src/constants/index.ts`** — app-wide constants (e.g. `MIN_SIDEBAR_WIDTH`, `MAX_SIDEBAR_WIDTH`).
 - **`src/hooks/`** — `useResizable` (drag-to-resize panels), `useClickOutside`, `useDropdown`.
 
-### Backend (`server/`)
+### API (`src/app/api` + `server/`)
 
-- **`server/index.ts`** — Express app. Holds active ES client instance. Key route groups:
+- **`src/app/api/[...path]/route.ts`** — Next.js route handler entrypoint for `/api/*`.
+- **`server/api/handler.ts`** — Node-only API implementation. Holds active ES client instance. Key route groups:
   - `/api/connections` — CRUD for saved connections (stored in local DB)
   - `/api/connect` / `/api/disconnect` — activates/deactivates the ES client
   - `/api/indices`, `/api/search`, `/api/aggregations` — ES operations
@@ -77,8 +70,8 @@ All user-visible strings must use `t('...')`. Add keys to both `src/locales/en.j
 
 ### Security note
 
-The REST Console proxy blocks a hardcoded list of destructive Elasticsearch paths (`DANGEROUS_PATHS` and `DANGEROUS_PATH_PATTERNS` at the top of `server/index.ts`). When adding new proxy routes, check whether they need to be added to this list.
+The REST Console proxy blocks a hardcoded list of destructive Elasticsearch paths (`DANGEROUS_PATHS` and `DANGEROUS_PATH_PATTERNS` in `server/api/handler.ts`). When adding new proxy routes, check whether they need to be added to this list.
 
-### `__APP_VERSION__`
+### `NEXT_PUBLIC_APP_VERSION`
 
-Injected at build time by Vite from `package.json`. Available globally in frontend code without an import.
+Injected by `next.config.mjs` from `package.json`. Available in frontend code through `process.env.NEXT_PUBLIC_APP_VERSION`.

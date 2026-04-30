@@ -1,5 +1,5 @@
 # Dockerfile for ElasticScope - Development
-# Hot reload enabled for both frontend and backend
+# Hot reload enabled for the single Next.js app
 
 FROM node:20-alpine
 
@@ -24,9 +24,9 @@ RUN mkdir -p /app/data
 ENV NODE_ENV=development
 ENV PORT=3001
 
-# Expose ports
-EXPOSE 5173 3001
+# Expose Next.js port
+EXPOSE 3001
 
 # Start development server
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["npm", "run", "dev:all"]
+CMD ["npm", "run", "dev"]

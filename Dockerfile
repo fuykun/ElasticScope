@@ -2,9 +2,9 @@
 # Multi-stage build for production
 
 # ============================================
-# Stage 1: Build frontend
+# Stage 1: Build Next.js app
 # ============================================
-FROM node:20-slim AS frontend-builder
+FROM node:20-slim AS app-builder
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ RUN npm ci
 # Copy source code
 COPY . ./
 
-# Build frontend
+# Build Next.js application
 RUN npm run build
 
 # ============================================
@@ -40,16 +40,15 @@ RUN groupadd -g 1001 elasticscope && \
 # Copy package files
 COPY package*.json ./
 
-# Install production dependencies + tsx (needed for running TS)
+# Install production dependencies
 RUN npm ci --omit=dev && \
-    npm install tsx && \
     npm cache clean --force
 
-# Copy backend source
-COPY server ./server
-
-# Copy built frontend from builder stage
-COPY --from=frontend-builder /app/dist ./dist
+# Copy built Next.js app and server-side modules
+COPY --from=app-builder /app/.next ./.next
+COPY --from=app-builder /app/public ./public
+COPY --from=app-builder /app/next.config.mjs ./next.config.mjs
+COPY --from=app-builder /app/server ./server
 
 # Create data directory for SQLite
 RUN mkdir -p /app/data && chown -R elasticscope:elasticscope /app/data
@@ -71,4 +70,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Start the application
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["npx", "tsx", "server/index.ts"]
+CMD ["npm", "run", "start"]

@@ -10,8 +10,11 @@ const resources = {
     tr: { translation: tr }
 };
 
+const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
+
 // Update HTML lang attribute when language changes
 const updateHtmlLang = (lng: string) => {
+    if (!isBrowser) return;
     document.documentElement.lang = lng;
 };
 
@@ -26,8 +29,8 @@ i18n
             escapeValue: false
         },
         detection: {
-            order: ['localStorage', 'navigator', 'htmlTag'],
-            caches: ['localStorage'],
+            order: isBrowser ? ['localStorage', 'navigator', 'htmlTag'] : [],
+            caches: isBrowser ? ['localStorage'] : [],
             lookupLocalStorage: 'elasticscope-language'
         }
     });
