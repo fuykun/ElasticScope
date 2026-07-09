@@ -473,6 +473,11 @@
   opacity: 1;
 }
 
+/* Hide the floating toolbar while CodeMirror's own search panel is open, they occupy the same corner */
+.json-code-viewer:has(.cm-panels) .json-code-viewer-actions {
+  display: none;
+}
+
 .json-code-viewer-btn {
   display: flex;
   align-items: center;
@@ -570,15 +575,21 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
+  gap: 4px 6px;
+  padding: 6px 30px 6px 8px;
   background: var(--bg-secondary);
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-primary);
+  position: relative;
 }
 
+/* Real line breaks group the panel into rows instead of wrapping arbitrarily:
+   row 1 = find field + nav buttons, row 2 = match options, row 3 = replace */
 .rest-codemirror .cm-panel.cm-search br {
-  display: none;
+  display: block;
+  flex-basis: 100%;
+  height: 0;
+  margin: 0;
 }
 
 .rest-codemirror .cm-panel.cm-search input.cm-textfield {
@@ -586,11 +597,13 @@
   border: 1px solid var(--border);
   border-radius: 4px;
   color: var(--text-primary);
-  padding: 4px 8px;
-  font-size: 12px;
+  padding: 3px 8px;
+  font-size: 11px;
   font-family: inherit;
   outline: none;
-  min-width: 180px;
+  width: 160px;
+  flex: 1 1 160px;
+  max-width: 220px;
   margin: 0;
 }
 
@@ -602,51 +615,110 @@
   background: var(--bg-tertiary);
   border: 1px solid var(--border);
   border-radius: 4px;
-  color: var(--text-primary);
-  padding: 3px 10px;
-  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 3px 8px;
+  font-size: 11px;
   font-family: inherit;
   cursor: pointer;
   text-transform: none;
   margin: 0;
+  flex-shrink: 0;
 }
 
 .rest-codemirror .cm-panel.cm-search button:hover {
   background: var(--bg-hover, rgba(255, 255, 255, 0.06));
   border-color: var(--accent);
+  color: var(--text-primary);
 }
 
 .rest-codemirror .cm-panel.cm-search label {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: var(--text-secondary);
+  gap: 3px;
+  font-size: 11px;
+  color: var(--text-muted);
   cursor: pointer;
   user-select: none;
+  flex-shrink: 0;
 }
 
 .rest-codemirror .cm-panel.cm-search label input[type="checkbox"] {
   margin: 0;
   cursor: pointer;
   accent-color: var(--accent);
+  width: 12px;
+  height: 12px;
+}
+
+/* Replace row: hidden by default, revealed via the dedicated replace toggle button */
+.rest-codemirror .cm-panel.cm-search input[name="replace"],
+.rest-codemirror .cm-panel.cm-search button[name="replace"],
+.rest-codemirror .cm-panel.cm-search button[name="replaceAll"] {
+  display: none;
+}
+
+.cm-search-show-replace .rest-codemirror .cm-panel.cm-search input[name="replace"],
+.cm-search-show-replace .rest-codemirror .cm-panel.cm-search button[name="replace"],
+.cm-search-show-replace .rest-codemirror .cm-panel.cm-search button[name="replaceAll"] {
+  display: inline-flex;
+}
+
+.cm-search-show-replace .rest-codemirror .cm-panel.cm-search input[name="replace"] {
+  margin-top: 4px;
+}
+
+/* Toggle button that shows/hides the replace row, sits next to the panel's close (x) button */
+.cm-search-replace-toggle {
+  display: none;
+  position: absolute;
+  top: 5px;
+  right: 30px;
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 3px;
+  color: var(--text-muted);
+  cursor: pointer;
+  z-index: 3;
+}
+
+.json-code-viewer:has(.cm-panels) .cm-search-replace-toggle {
+  display: flex;
+}
+
+.cm-search-replace-toggle:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.cm-search-replace-toggle.active {
+  color: var(--accent);
 }
 
 .rest-codemirror .cm-panel.cm-search button[name="close"] {
   position: absolute;
-  top: 4px;
+  top: 5px;
   right: 6px;
-  padding: 2px 6px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
   background: transparent;
   border: none;
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1;
   color: var(--text-muted);
 }
 
 .rest-codemirror .cm-panel.cm-search button[name="close"]:hover {
   color: var(--text-primary);
-  background: transparent;
+  background: rgba(255, 255, 255, 0.08);
   border: none;
 }
 

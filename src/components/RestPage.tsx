@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
     Play, Loader, Clock, AlertCircle, CheckCircle, Save, FolderOpen,
     Trash2, ChevronDown, Plus, X, Maximize2, Tag, Search, Hash, FileJson, Settings,
-    BarChart3, RefreshCw, Zap, FlaskConical, Copy, ChevronsDownUp, ChevronsUpDown
+    BarChart3, RefreshCw, Zap, FlaskConical, Copy, ChevronsDownUp, ChevronsUpDown, Replace
 } from 'lucide-react';
 import CodeMirror from '@uiw/react-codemirror';
 import { json, jsonParseLinter } from '@codemirror/lang-json';
@@ -148,6 +148,7 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
     const requestViewRef = useRef<EditorViewType | null>(null);
     const [copyDone, setCopyDone] = useState(false);
     const [requestCopyDone, setRequestCopyDone] = useState(false);
+    const [requestReplaceOpen, setRequestReplaceOpen] = useState(false);
 
     // Panel Resize state
     const [panelWidthPercent, setPanelWidthPercent] = useState(() => restPanelWidthStorage.get());
@@ -841,7 +842,7 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                             {t('restModal.noBodyForGet')}
                         </div>
                     ) : (
-                        <div className="json-code-viewer" style={{ height: '100%' }}>
+                        <div className={`json-code-viewer ${requestReplaceOpen ? 'cm-search-show-replace' : ''}`} style={{ height: '100%' }}>
                             <CodeMirror
                                 className="rest-codemirror"
                                 value={activeTab.body}
@@ -888,6 +889,13 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                                     {requestCopyDone ? <CheckCircle size={13} /> : <Copy size={13} />}
                                 </button>
                             </div>
+                            <button
+                                className={`cm-search-replace-toggle ${requestReplaceOpen ? 'active' : ''}`}
+                                onClick={() => setRequestReplaceOpen((open) => !open)}
+                                title="Toggle replace"
+                            >
+                                <Replace size={13} />
+                            </button>
                         </div>
                     )}
                 </div>
