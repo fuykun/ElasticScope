@@ -215,7 +215,7 @@
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   min-width: 180px;
-  z-index: 100;
+  z-index: 1000;
   overflow: hidden;
 }
 
