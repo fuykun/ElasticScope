@@ -467,6 +467,16 @@
   color: var(--accent);
 }
 
+.qb-searchable-select-option.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.qb-searchable-select-option.disabled:hover {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
 .qb-searchable-select-option .option-label {
   flex: 1;
   overflow: hidden;
@@ -481,6 +491,11 @@
   color: var(--text-muted);
   border-radius: var(--radius-sm);
   margin-left: 8px;
+}
+
+.qb-searchable-select-option .option-type-disabled {
+  background: var(--danger-alpha, rgba(220, 38, 38, 0.12));
+  color: var(--danger, #dc2626);
 }
 
 .qb-searchable-select-no-results {

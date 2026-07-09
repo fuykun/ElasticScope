@@ -29,6 +29,7 @@ export interface FieldInfo {
     isNested: boolean;
     nestedPath?: string;
     isArray?: boolean;
+    indexed?: boolean; // false when mapping sets index: false
     fields?: Record<string, FieldInfo>; // sub-fields like .keyword
 }
 
@@ -111,7 +112,7 @@ const ALL_OPERATORS: Operator[] = [
 interface SearchableSelectProps {
     value: string;
     onChange: (value: string) => void;
-    options: { value: string; label: string; type?: string }[];
+    options: { value: string; label: string; type?: string; disabled?: boolean; disabledReason?: string }[];
     placeholder?: string;
     className?: string;
     disabled?: boolean;
@@ -235,11 +236,17 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
                                 <button
                                     key={opt.value}
                                     type="button"
-                                    className={`qb-searchable-select-option ${opt.value === value ? 'selected' : ''}`}
-                                    onClick={() => handleSelect(opt.value)}
+                                    className={`qb-searchable-select-option ${opt.value === value ? 'selected' : ''} ${opt.disabled ? 'disabled' : ''}`}
+                                    onClick={() => !opt.disabled && handleSelect(opt.value)}
+                                    disabled={opt.disabled}
+                                    title={opt.disabled ? opt.disabledReason : undefined}
                                 >
                                     <span className="option-label">{opt.label}</span>
-                                    {opt.type && <span className="option-type">{opt.type}</span>}
+                                    {opt.disabled ? (
+                                        <span className="option-type option-type-disabled">{opt.disabledReason}</span>
+                                    ) : (
+                                        opt.type && <span className="option-type">{opt.type}</span>
+                                    )}
                                     {opt.value === value && <Check size={12} />}
                                 </button>
                             ))
@@ -272,6 +279,7 @@ export const extractFieldsFromMappingWithTypes = (
                 type: value.type || 'object',
                 isNested: isNested,
                 nestedPath: nestedPath,
+                indexed: value.index !== false,
             };
 
             // Check for .keyword sub-field
@@ -466,6 +474,8 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
         value: f.name,
         label: f.name,
         type: f.type,
+        disabled: f.indexed === false,
+        disabledReason: 'index:false',
     }));
 
     // Get operators for a field type
