@@ -145,7 +145,9 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
 
     // CodeMirror editor view refs (for fold/unfold commands)
     const responseViewRef = useRef<EditorViewType | null>(null);
+    const requestViewRef = useRef<EditorViewType | null>(null);
     const [copyDone, setCopyDone] = useState(false);
+    const [requestCopyDone, setRequestCopyDone] = useState(false);
 
     // Panel Resize state
     const [panelWidthPercent, setPanelWidthPercent] = useState(() => restPanelWidthStorage.get());
@@ -548,6 +550,29 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
         }
     };
 
+    const collapseAllRequest = () => {
+        if (requestViewRef.current) foldAllExceptRoot(requestViewRef.current);
+    };
+
+    const expandAllRequest = () => {
+        if (requestViewRef.current) unfoldAll(requestViewRef.current);
+    };
+
+    const openSearchRequest = () => {
+        if (requestViewRef.current) {
+            requestViewRef.current.focus();
+            openSearchPanel(requestViewRef.current);
+        }
+    };
+
+    const copyRequest = () => {
+        if (!activeTab.body) return;
+        navigator.clipboard.writeText(activeTab.body).then(() => {
+            setRequestCopyDone(true);
+            setTimeout(() => setRequestCopyDone(false), 1500);
+        });
+    };
+
 
     const copyResponse = () => {
         if (!activeTab.response) return;
@@ -816,35 +841,54 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
                             {t('restModal.noBodyForGet')}
                         </div>
                     ) : (
-                        <CodeMirror
-                            className="rest-codemirror"
-                            value={activeTab.body}
-                            height="100%"
-                            theme={oneDark}
-                            extensions={[
-                                json(),
-                                linter(jsonParseLinter()),
-                                lintGutter(),
-                                foldGutter(),
-                                EditorView.lineWrapping,
-                                keymap.of([
-                                    {
-                                        key: 'Mod-Enter',
-                                        run: () => { handleExecute(); return true; }
-                                    },
-                                    {
-                                        key: 'Shift-Alt-f',
-                                        run: () => { formatJson(); return true; }
-                                    },
-                                ]),
-                            ]}
-                            onChange={(value) => updateActiveTab({ body: value })}
-                            placeholder={t('restModal.bodyPlaceholder')}
-                            basicSetup={{
-                                foldGutter: false,
-                                searchKeymap: false,
-                            }}
-                        />
+                        <div className="json-code-viewer" style={{ height: '100%' }}>
+                            <CodeMirror
+                                className="rest-codemirror"
+                                value={activeTab.body}
+                                height="100%"
+                                theme={oneDark}
+                                extensions={[
+                                    json(),
+                                    linter(jsonParseLinter()),
+                                    lintGutter(),
+                                    foldGutter(),
+                                    cmSearch({ top: true }),
+                                    keymap.of(searchKeymap),
+                                    EditorView.lineWrapping,
+                                    keymap.of([
+                                        {
+                                            key: 'Mod-Enter',
+                                            run: () => { handleExecute(); return true; }
+                                        },
+                                        {
+                                            key: 'Shift-Alt-f',
+                                            run: () => { formatJson(); return true; }
+                                        },
+                                    ]),
+                                ]}
+                                onChange={(value) => updateActiveTab({ body: value })}
+                                onCreateEditor={(view) => { requestViewRef.current = view; }}
+                                placeholder={t('restModal.bodyPlaceholder')}
+                                basicSetup={{
+                                    foldGutter: false,
+                                    searchKeymap: false,
+                                }}
+                            />
+                            <div className="json-code-viewer-actions">
+                                <button className="json-code-viewer-btn" onClick={openSearchRequest} title="Search (Ctrl+F)">
+                                    <Search size={13} />
+                                </button>
+                                <button className="json-code-viewer-btn" onClick={collapseAllRequest} title="Collapse all">
+                                    <ChevronsDownUp size={13} />
+                                </button>
+                                <button className="json-code-viewer-btn" onClick={expandAllRequest} title="Expand all">
+                                    <ChevronsUpDown size={13} />
+                                </button>
+                                <button className="json-code-viewer-btn" onClick={copyRequest} title="Copy request body">
+                                    {requestCopyDone ? <CheckCircle size={13} /> : <Copy size={13} />}
+                                </button>
+                            </div>
+                        </div>
                     )}
                 </div>
 
