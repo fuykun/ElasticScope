@@ -207,11 +207,15 @@ export const IndexPage: React.FC<IndexPageProps> = ({
     useEffect(() => {
         loadIndexInfo();
         loadFieldsAndConfig();
+        setSortField('');
+        setSortOrder('desc');
     }, [indexName]);
 
     // Initial search when index changes
+    // Sort is reset above, but that state update isn't visible yet in this
+    // effect's closure, so pass an explicit empty sort instead of relying on it
     useEffect(() => {
-        performSearch(null);
+        performSearch(null, 0, []);
     }, [indexName]);
 
     // Close column dropdown on outside click
@@ -778,6 +782,16 @@ export const IndexPage: React.FC<IndexPageProps> = ({
         try {
             const parsedQuery = JSON.parse(query.query);
 
+            // Resolve a saved sort field against the current mapping, falling back to
+            // its .keyword variant, or dropping it if the field no longer exists/isn't sortable
+            const resolveSortField = (field: string | null | undefined): string | undefined => {
+                if (!field) return undefined;
+                if (sortableFields.includes(field)) return field;
+                const keywordVariant = `${field}.keyword`;
+                if (sortableFields.includes(keywordVariant)) return keywordVariant;
+                return undefined;
+            };
+
             // Restore UI state if available
             if (query.ui_state) {
                 try {
@@ -787,22 +801,27 @@ export const IndexPage: React.FC<IndexPageProps> = ({
                     if (uiState.dateFilter !== undefined) setDateFilter(uiState.dateFilter);
                     if (uiState.queryBuilderRootGroup !== undefined) setQueryBuilderRootGroup(uiState.queryBuilderRootGroup);
                     if (uiState.pageSize !== undefined) setPageSize(uiState.pageSize);
-                    if (uiState.sortField !== undefined) setSortField(uiState.sortField);
-                    if (uiState.sortOrder !== undefined) setSortOrder(uiState.sortOrder);
+                    if (uiState.sortField !== undefined) {
+                        const resolvedField = resolveSortField(uiState.sortField);
+                        setSortField(resolvedField || '');
+                        if (resolvedField && uiState.sortOrder !== undefined) setSortOrder(uiState.sortOrder);
+                    }
                 } catch (uiError) {
                     console.error('Failed to parse ui_state:', uiError);
                 }
             } else {
                 // Fallback for queries saved without ui_state
-                if (query.sort_field) {
-                    setSortField(query.sort_field);
+                const resolvedField = resolveSortField(query.sort_field);
+                setSortField(resolvedField || '');
+                if (resolvedField) {
                     setSortOrder((query.sort_order as 'asc' | 'desc') || 'desc');
                 }
             }
 
             // Execute the query
-            const sortObj = query.sort_field
-                ? [{ [query.sort_field]: { order: query.sort_order || 'desc' } }]
+            const resolvedSortField = resolveSortField(query.sort_field);
+            const sortObj = resolvedSortField
+                ? [{ [resolvedSortField]: { order: query.sort_order || 'desc' } }]
                 : undefined;
             performSearch(parsedQuery, 0, sortObj);
             setShowSavedQueriesDropdown(false);
