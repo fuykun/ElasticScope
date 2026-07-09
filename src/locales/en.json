@@ -313,6 +313,7 @@
     },
     "documentViewer": {
         "title": "Document Details",
+        "autoRefresh": "Auto refresh",
         "viewJson": "View JSON",
         "edit": "Edit",
         "copy": "Copy",

@@ -313,6 +313,7 @@
     },
     "documentViewer": {
         "title": "Döküman Detayları",
+        "autoRefresh": "Otomatik yenile",
         "viewJson": "JSON Görüntüle",
         "edit": "Düzenle",
         "copy": "Kopyala",

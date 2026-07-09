@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Copy, Trash2, ChevronDown, ChevronRight, X, Check, Maximize2, GitCompare, Upload, RefreshCw, ArrowUp, ArrowDown } from 'lucide-react';
+import { Copy, Trash2, ChevronDown, ChevronRight, X, Check, Maximize2, GitCompare, Upload, RefreshCw, ArrowUp, ArrowDown, Pause, Play } from 'lucide-react';
 import { SearchHit } from '../types';
 import { deleteDocument, saveDocument, getDocument } from '../api/elasticsearchClient';
 import { DocJsonEditor } from './DocJsonEditor';
@@ -137,6 +137,15 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
     const [saveError, setSaveError] = useState<string | null>(null);
     const [localDocuments, setLocalDocuments] = useState<SearchHit[]>(documents);
     const [refreshingDoc, setRefreshingDoc] = useState<string | null>(null);
+    const [autoRefreshDoc, setAutoRefreshDoc] = useState(false);
+    const [autoRefreshInterval, setAutoRefreshInterval] = useState(5000);
+
+    const AUTO_REFRESH_OPTIONS = [
+        { value: 5000, label: '5s' },
+        { value: 15000, label: '15s' },
+        { value: 30000, label: '30s' },
+        { value: 60000, label: '1m' },
+    ];
 
     React.useEffect(() => {
         setLocalDocuments(documents);
@@ -160,6 +169,17 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
             setRefreshingDoc(null);
         }
     };
+
+    // Auto-refresh the document shown in the fullscreen modal while it's open
+    React.useEffect(() => {
+        if (!autoRefreshDoc || !fullscreenDoc) return;
+
+        const interval = setInterval(() => {
+            handleRefreshDocument(fullscreenDoc);
+        }, autoRefreshInterval);
+
+        return () => clearInterval(interval);
+    }, [autoRefreshDoc, autoRefreshInterval, fullscreenDoc, selectedIndex]);
 
     const handleDelete = async (id: string) => {
         try {
@@ -576,6 +596,23 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
                                 </span>
                             )}
                             <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <select
+                                    className="refresh-interval-select"
+                                    value={autoRefreshInterval}
+                                    onChange={(e) => setAutoRefreshInterval(Number(e.target.value))}
+                                    disabled={!autoRefreshDoc}
+                                >
+                                    {AUTO_REFRESH_OPTIONS.map(opt => (
+                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                    ))}
+                                </select>
+                                <button
+                                    className={`btn btn-icon ${autoRefreshDoc ? 'btn-primary' : ''}`}
+                                    onClick={() => setAutoRefreshDoc(!autoRefreshDoc)}
+                                    title={t('documentViewer.autoRefresh')}
+                                >
+                                    {autoRefreshDoc ? <Pause size={18} /> : <Play size={18} />}
+                                </button>
                                 <button
                                     className={`btn btn-icon ${refreshingDoc === fullscreenDocument._id ? 'btn-loading' : ''}`}
                                     onClick={() => handleRefreshDocument(fullscreenDocument._id)}
