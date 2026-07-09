@@ -420,7 +420,7 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
 
         try {
             let parsedBody: object | undefined;
-            if (currentTab.body.trim()) {
+            if (currentTab.method !== 'GET' && currentTab.body.trim()) {
                 try {
                     parsedBody = JSON.parse(currentTab.body);
                 } catch (e) {
