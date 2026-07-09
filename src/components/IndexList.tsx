@@ -85,6 +85,7 @@ interface IndexListProps {
     selectedIndex: string | null;
     refreshTrigger: number;
     onRefreshNeeded: () => void;
+    onIndexMissing?: (indexName: string) => void;
 }
 
 export const IndexList: React.FC<IndexListProps> = ({
@@ -92,6 +93,7 @@ export const IndexList: React.FC<IndexListProps> = ({
     selectedIndex,
     refreshTrigger,
     onRefreshNeeded,
+    onIndexMissing,
 }) => {
     const { t } = useTranslation();
     const [indices, setIndices] = useState<IndexInfo[]>([]);
@@ -141,7 +143,11 @@ export const IndexList: React.FC<IndexListProps> = ({
 
         try {
             const data = await getIndices();
-            setIndices(data.sort((a, b) => a.index.localeCompare(b.index)));
+            const sorted = data.sort((a, b) => a.index.localeCompare(b.index));
+            setIndices(sorted);
+            if (selectedIndex && !sorted.some((idx) => idx.index === selectedIndex)) {
+                onIndexMissing?.(selectedIndex);
+            }
         } catch (err: any) {
             setError(err.message);
         } finally {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, GitCompare, Github, Star, Code, BarChart3, Linkedin, Coffee } from 'lucide-react';
 import { ConnectionSelector } from './components/ConnectionSelector';
@@ -20,6 +20,7 @@ import { sidebarWidthStorage } from './utils/storage';
 import { MIN_SIDEBAR_WIDTH, MAX_SIDEBAR_WIDTH } from './constants';
 
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? 'dev';
+const SMART_REFRESH_INTERVAL_MS = 10 * 60 * 1000;
 
 function App() {
     const { t } = useTranslation();
@@ -65,6 +66,47 @@ function App() {
         window.addEventListener('popstate', handlePopState);
         return () => window.removeEventListener('popstate', handlePopState);
     }, []);
+
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const lastIndexCheckRef = useRef<number>(Date.now());
+
+    useEffect(() => {
+        if (!toastMessage) return;
+        const timer = setTimeout(() => setToastMessage(null), 4000);
+        return () => clearTimeout(timer);
+    }, [toastMessage]);
+
+    const triggerSmartRefresh = useCallback(() => {
+        const now = Date.now();
+        if (now - lastIndexCheckRef.current < SMART_REFRESH_INTERVAL_MS) return;
+        lastIndexCheckRef.current = now;
+        setRefreshTrigger((prev) => prev + 1);
+    }, []);
+
+    // Smart refresh: on returning to the tab, or every 10min while it stays foregrounded,
+    // re-check the index list so stale deletions/renames surface without a manual reload.
+    useEffect(() => {
+        if (!isConnected) return;
+
+        const handleVisibilityChange = () => {
+            if (!document.hidden) triggerSmartRefresh();
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        const interval = setInterval(() => {
+            if (!document.hidden) triggerSmartRefresh();
+        }, SMART_REFRESH_INTERVAL_MS);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            clearInterval(interval);
+        };
+    }, [isConnected, triggerSmartRefresh]);
+
+    const handleIndexMissing = (indexName: string) => {
+        handleSelectIndex(null);
+        setToastMessage(t('indexList.indexNoLongerExists', { index: indexName }));
+    };
 
     const [comparisonDocs, setComparisonDocs] = useState<Array<{
         _id: string;
@@ -295,6 +337,7 @@ function App() {
                             selectedIndex={selectedIndex}
                             refreshTrigger={refreshTrigger}
                             onRefreshNeeded={() => setRefreshTrigger((prev) => prev + 1)}
+                            onIndexMissing={handleIndexMissing}
                         />
                     </aside>
                     <div
@@ -306,6 +349,7 @@ function App() {
                             <RestPage
                                 initialIndex={selectedIndex || undefined}
                                 connectionId={connectionId || 0}
+                                refreshTrigger={refreshTrigger}
                             />
                         ) : currentView === 'monitor' ? (
                             <ClusterMonitor connectionId={connectionId || 0} />
@@ -332,6 +376,10 @@ function App() {
                     onConnectionSuccess={handleConnectionChange}
                     onAddNewConnection={() => setIsModalOpen(true)}
                 />
+            )}
+
+            {toastMessage && (
+                <div className="app-toast">{toastMessage}</div>
             )}
 
             {showComparisonModal && comparisonDocs.length > 0 && (

@@ -178,7 +178,8 @@
         "searchPlaceholder": "Ara...",
         "noIndices": "Index bulunamadı",
         "grouped": "Prefix'e göre grupla",
-        "flat": "Düz liste"
+        "flat": "Düz liste",
+        "indexNoLongerExists": "\"{{index}}\" index'i artık mevcut değil"
     },
     "reindex": {
         "title": "Reindex",

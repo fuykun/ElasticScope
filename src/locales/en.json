@@ -178,7 +178,8 @@
         "searchPlaceholder": "Search...",
         "noIndices": "No indices found",
         "grouped": "Group by prefix",
-        "flat": "Flat list"
+        "flat": "Flat list",
+        "indexNoLongerExists": "Index \"{{index}}\" no longer exists"
     },
     "reindex": {
         "title": "Reindex",

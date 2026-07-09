@@ -54,9 +54,10 @@ const DEFAULT_TAB: RestTab = {
 interface RestPageProps {
     initialIndex?: string;
     connectionId: number;
+    refreshTrigger?: number;
 }
 
-export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }) => {
+export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId, refreshTrigger }) => {
     const { t } = useTranslation();
 
     // -------------------------------------------------------------------------
@@ -180,7 +181,7 @@ export const RestPage: React.FC<RestPageProps> = ({ initialIndex, connectionId }
             }
         };
         fetchIndices();
-    }, [connectionId]);
+    }, [connectionId, refreshTrigger]);
 
     // Ensure activeTabId is valid
     useEffect(() => {
